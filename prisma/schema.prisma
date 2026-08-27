@@ -1,0 +1,471 @@
+// Portfolio CMS schema.
+// Every public-facing string on the site is a row in here. Nothing is hardcoded.
+//
+// Two conventions the whole app relies on:
+//   1. `status` (ContentStatus) is the single publish gate. Public queries filter
+//      on PUBLISHED. Admin sees everything. Adding a new content type means
+//      adding `status` + `displayOrder` and it inherits the publish workflow.
+//   2. `displayOrder` is the only ordering input the UI trusts. Never count rows.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+/// Publish workflow shared by every content entity.
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+/// Lifecycle badge shown on a project card. Independent of ContentStatus:
+/// a project can be PUBLISHED (visible) while its lifecycle is IN_DEVELOPMENT.
+enum ProjectLifecycle {
+  LIVE
+  IN_DEVELOPMENT
+  ARCHIVED
+  PRIVATE
+  COMING_SOON
+}
+
+enum NavLocation {
+  HEADER
+  FOOTER
+  BOTH
+}
+
+// ---------------------------------------------------------------------------
+// AUTH
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         Role     @default(ADMIN)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  media Media[]
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// PROFILE + SOCIAL
+// ---------------------------------------------------------------------------
+
+/// Singleton. The app reads the first row; admin edits it in place.
+model Profile {
+  id                   String  @id @default(cuid())
+  name                 String
+  headline             String
+  shortHeadline        String?
+  bio                  String  @db.Text
+  longBio              String? @db.Text
+  location             String?
+  email                String?
+  phone                String?
+  profileImage         String?
+  resumeUrl            String?
+  availabilityStatus   String? // OPEN | SELECTIVE | CLOSED
+  availabilityText     String?
+  currentlyWorkingAt   String?
+  currentlyWorkingRole String?
+  yearsOfExperience    Int?
+  heroTagline          String?
+  heroDescription      String? @db.Text
+  philosophy           String? @db.Text
+  technicalInterests   String? @db.Text
+  currentFocus         String? @db.Text
+
+  status      ContentStatus @default(PUBLISHED)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("profiles")
+}
+
+model SocialLink {
+  platform     String
+  label        String
+  url          String
+  icon         String?
+  enabled      Boolean @default(true)
+  displayOrder Int     @default(0)
+
+  id          String        @id @default(cuid())
+  status      ContentStatus @default(PUBLISHED)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([displayOrder])
+  @@map("social_links")
+}
+
+// ---------------------------------------------------------------------------
+// PROJECTS
+// ---------------------------------------------------------------------------
+
+model ProjectCategory {
+  id           String  @id @default(cuid())
+  name         String  @unique
+  slug         String  @unique
+  description  String?
+  displayOrder Int     @default(0)
+
+  status      ContentStatus @default(PUBLISHED)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  projects Project[]
+
+  @@index([displayOrder])
+  @@map("project_categories")
+}
+
+model Project {
+  id               String           @id @default(cuid())
+  title            String
+  slug             String           @unique
+  shortDescription String           @db.Text
+  fullDescription  String?          @db.Text
+  thumbnail        String?
+  heroImage        String?
+  year             Int?
+  lifecycle        ProjectLifecycle @default(LIVE)
+  featured         Boolean          @default(false)
+  liveUrl          String?
+  githubUrl        String?
+  caseStudyUrl     String?
+  role             String?
+  duration         String?
+  challenges       String?          @db.Text
+  solution         String?          @db.Text
+  results          String?          @db.Text
+  architecture     String?          @db.Text
+  lessonsLearned   String?          @db.Text
+  displayOrder     Int              @default(0)
+
+  categoryId String?
+  category   ProjectCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  technologies ProjectTechnology[]
+  metrics      ProjectMetric[]
+  gallery      ProjectImage[]
+
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, displayOrder])
+  @@index([categoryId])
+  @@map("projects")
+}
+
+model ProjectTechnology {
+  id           String  @id @default(cuid())
+  name         String
+  displayOrder Int     @default(0)
+  projectId    String
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, displayOrder])
+  @@map("project_technologies")
+}
+
+model ProjectMetric {
+  id           String  @id @default(cuid())
+  label        String
+  value        String
+  displayOrder Int     @default(0)
+  projectId    String
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, displayOrder])
+  @@map("project_metrics")
+}
+
+model ProjectImage {
+  id           String  @id @default(cuid())
+  url          String
+  alt          String?
+  caption      String?
+  displayOrder Int     @default(0)
+  projectId    String
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, displayOrder])
+  @@map("project_images")
+}
+
+// ---------------------------------------------------------------------------
+// EXPERIENCE + EDUCATION
+// ---------------------------------------------------------------------------
+
+model Experience {
+  id               String    @id @default(cuid())
+  company          String
+  role             String
+  location         String?
+  employmentType   String?
+  startDate        DateTime
+  endDate          DateTime?
+  currentlyWorking Boolean   @default(false)
+  description      String?   @db.Text
+  achievements     String[]  @default([])
+  companyLogo      String?
+  companyUrl       String?
+  displayOrder     Int       @default(0)
+
+  technologies ExperienceTechnology[]
+
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, displayOrder])
+  @@map("experiences")
+}
+
+model ExperienceTechnology {
+  id           String     @id @default(cuid())
+  name         String
+  displayOrder Int        @default(0)
+  experienceId String
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId, displayOrder])
+  @@map("experience_technologies")
+}
+
+model Education {
+  id           String    @id @default(cuid())
+  institution  String
+  degree       String
+  field        String?
+  location     String?
+  startDate    DateTime
+  endDate      DateTime?
+  grade        String?
+  description  String?   @db.Text
+  displayOrder Int       @default(0)
+
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, displayOrder])
+  @@map("education")
+}
+
+// ---------------------------------------------------------------------------
+// SKILLS
+// ---------------------------------------------------------------------------
+
+model SkillCategory {
+  id           String  @id @default(cuid())
+  name         String  @unique
+  slug         String  @unique
+  description  String?
+  displayOrder Int     @default(0)
+
+  skills Skill[]
+
+  status      ContentStatus @default(PUBLISHED)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([displayOrder])
+  @@map("skill_categories")
+}
+
+model Skill {
+  id              String  @id @default(cuid())
+  name            String
+  icon            String?
+  proficiency     Int?    // 0-100
+  yearsExperience Float?
+  featured        Boolean @default(false)
+  displayOrder    Int     @default(0)
+
+  categoryId String?
+  category   SkillCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  status      ContentStatus @default(PUBLISHED)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, displayOrder])
+  @@index([categoryId])
+  @@map("skills")
+}
+
+// ---------------------------------------------------------------------------
+// CREDENTIALS
+// ---------------------------------------------------------------------------
+
+model Certification {
+  id               String    @id @default(cuid())
+  name             String
+  issuer           String
+  issueDate        DateTime?
+  expiryDate       DateTime?
+  credentialId     String?
+  credentialUrl    String?
+  certificateImage String?
+  description      String?   @db.Text
+  featured         Boolean   @default(false)
+  displayOrder     Int       @default(0)
+
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, displayOrder])
+  @@map("certifications")
+}
+
+model Achievement {
+  id           String  @id @default(cuid())
+  label        String
+  value        String
+  description  String?
+  icon         String?
+  displayOrder Int     @default(0)
+
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, displayOrder])
+  @@map("achievements")
+}
+
+// ---------------------------------------------------------------------------
+// SITE CONFIG
+// ---------------------------------------------------------------------------
+
+/// Key/value so new settings never need a migration.
+/// `group` drives which admin screen renders the row (site | seo | theme).
+/// `type` drives the input widget (text | textarea | color | select | boolean | media).
+model SiteSetting {
+  key          String  @id
+  value        String  @db.Text
+  group        String  @default("site")
+  label        String
+  description  String?
+  type         String  @default("text")
+  options      String? // pipe-separated, for type=select (values may contain commas)
+  displayOrder Int     @default(0)
+
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+
+  @@index([group, displayOrder])
+  @@map("site_settings")
+}
+
+model NavigationItem {
+  id           String      @id @default(cuid())
+  label        String
+  href         String
+  icon         String?
+  location     NavLocation @default(HEADER)
+  visible      Boolean     @default(true)
+  external     Boolean     @default(false)
+  displayOrder Int         @default(0)
+
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([location, displayOrder])
+  @@map("navigation_items")
+}
+
+// ---------------------------------------------------------------------------
+// MEDIA + MESSAGES
+// ---------------------------------------------------------------------------
+
+model Media {
+  id       String  @id @default(cuid())
+  filename String
+  url      String
+  key      String  @unique // storage key, used to delete/replace
+  mimeType String
+  size     Int
+  width    Int?
+  height   Int?
+  alt      String?
+
+  uploadedById String?
+  uploadedBy   User?   @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@map("media")
+}
+
+model ContactMessage {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String    @db.Text
+  read      Boolean   @default(false)
+  readAt    DateTime?
+  ip        String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+
+  @@index([read, createdAt])
+  @@map("contact_messages")
+}
+
+/// Fixed-window rate limiter for the public contact form.
+/// In DB rather than memory so it survives restarts and works on serverless.
+model RateLimit {
+  id        String   @id @default(cuid())
+  bucket    String
+  count     Int      @default(0)
+  expiresAt DateTime
+
+  @@unique([bucket])
+  @@index([expiresAt])
+  @@map("rate_limits")
+}
