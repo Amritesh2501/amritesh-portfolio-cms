@@ -102,6 +102,7 @@ and must never be committed.
 | `CONTACT_RATE_LIMIT` | no | Contact submissions allowed per window per IP, default 5. |
 | `CONTACT_RATE_WINDOW_SECONDS` | no | Window length, default 3600. |
 | `NEXT_PUBLIC_SITE_URL` | no | Used for canonical URLs and OG tags. |
+| `SEED_ON_START` | no | `true` runs the seed once at container boot. Off by default. See [Deployment](#deployment). |
 
 ---
 
@@ -305,25 +306,95 @@ boot.
 
 ## Deployment
 
-1. Provision Postgres (Neon, Supabase, RDS, Railway) and set `DATABASE_URL`.
-2. Set `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST=true`, `NEXT_PUBLIC_SITE_URL`.
-3. Set `STORAGE_DRIVER=s3` and the `S3_*` variables. **Do not use the local driver on
-   a platform with an ephemeral filesystem** or uploads disappear on every deploy.
-4. `npm run build`
-5. `npx prisma migrate deploy` against the production database.
-6. Seed **once**, with a strong `SEED_ADMIN_PASSWORD`, then change it or remove the
-   seed variables. The seed refuses to run in production with the placeholder password.
-7. `npm start`
+### The one that bites first
 
-Every page is server-rendered on demand (`force-dynamic`) so admin edits appear
-immediately. If you later want caching, replace `force-dynamic` with tag-based
-revalidation; the write actions already call `revalidatePath("/", "layout")`.
+Almost every failed deploy of this app is the same thing: **`DATABASE_URL` is not
+set in the running container**, so Prisma aborts at startup with a schema
+validation dump. Two rules:
 
----
+1. Environment variables must be set **on the host or platform**, not in `.env`.
+   `.env` is gitignored and excluded by `.dockerignore`, so it never reaches the
+   image. That is deliberate: secrets do not belong in a build artifact.
+2. `localhost` inside a container means **the container itself**. A database on
+   your laptop, or in a sibling compose service, will not resolve. Use the
+   service name (`db`) or the host your managed provider gives you.
+
+The entrypoint checks both variables before doing anything and prints what is
+missing and where to set it, so you get a sentence rather than a wasm trace.
+
+### Required variables
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Postgres URL the container can reach. Managed providers usually need `?sslmode=require`. |
+| `AUTH_SECRET` | Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
+| `AUTH_URL` | Your public origin, for example `https://amritesh.dev` |
+| `AUTH_TRUST_HOST` | `true` behind any proxy (Vercel, Nginx, Coolify, Railway, Fly) |
+| `NEXT_PUBLIC_SITE_URL` | The same public origin |
+| `STORAGE_DRIVER` | `s3` on any platform with an ephemeral filesystem |
+
+First boot only: set `SEED_ON_START=true` plus `SEED_ADMIN_EMAIL` and
+`SEED_ADMIN_PASSWORD` to create the admin account and load the content. **Turn
+`SEED_ON_START` back off afterwards.** It is off by default so that a redeploy
+cannot quietly resurrect content you deleted.
+
+### Docker (recommended, works on any platform)
+
+The repo ships a `Dockerfile`, a `.dockerignore` and `docker-compose.prod.yml`.
+Most platforms (Coolify, Dokploy, Railway, Render, Fly) pick up the `Dockerfile`
+automatically once it exists, instead of guessing at a build.
+
+Whole stack on one host:
+
+```bash
+cp .env.example .env      # fill in POSTGRES_PASSWORD, AUTH_SECRET, AUTH_URL
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Image only, against a managed database:
+
+```bash
+docker build -t portfolio-cms .
+docker run -d -p 3000:3000 \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/db?sslmode=require" \
+  -e AUTH_SECRET="..." \
+  -e AUTH_URL="https://your-domain" \
+  -e AUTH_TRUST_HOST=true \
+  -e NEXT_PUBLIC_SITE_URL="https://your-domain" \
+  -v portfolio_uploads:/app/public/uploads \
+  portfolio-cms
+```
+
+On boot the container validates the environment, runs `prisma migrate deploy`
+(retrying for about 30 seconds while the database finishes starting), optionally
+seeds, then starts the server. It exposes a `HEALTHCHECK` your platform can use.
+
+Neither `prisma generate` nor `next build` needs a reachable database, so the
+image builds with no database credentials at all. Only the runtime needs them.
+
+### Without Docker
+
+```bash
+npm ci
+npx prisma generate
+npm run build
+npx prisma migrate deploy   # needs DATABASE_URL
+npm start
+```
+
+Make the start command run migrations before booting, otherwise a schema change
+ships without its migration.
+
+### Uploads
+
+`STORAGE_DRIVER=local` writes to `public/uploads`, which is **ephemeral in a
+container**. Either mount a volume on `/app/public/uploads` (the compose file
+does this) or set `STORAGE_DRIVER=s3`. On Vercel and Fly machines, S3 is the
+only correct option.
 
 ## What was verified, and how
 
-156 automated checks were run against a live server and a live Postgres, driving the
+212 automated checks were run against a live server and a live Postgres, driving the
 **real** Server Actions over HTTP rather than calling functions directly.
 
 | Area | Checks | Covers |
@@ -332,6 +403,7 @@ revalidation; the write actions already call `revalidatePath("/", "layout")`.
 | CRUD | 42 | Create, publish, update, duplicate, reorder and delete a project through the actual admin actions; child rows (technologies, metrics, gallery) written and removed transactionally; edits appear on the public site; server-side validation rejects bad input; unique-slug collision returns a readable message; **anonymous callers rejected and nothing persisted**; contact form persists; honeypot drops bots; a settings edit reaches the public footer |
 | Media, uploads, rate limiting | 32 | Upload writes bytes to disk and a row to Postgres and serves over HTTP; disallowed MIME types refused; path-traversal filenames flattened; oversized files refused by the app rather than the framework; anonymous and **cross-origin** uploads blocked; alt text; delete removes both row and bytes; the contact limiter blocks on the 6th submission and stores exactly 5 |
 | Restart persistence | 3 | An edit made through the admin survives a full cold restart of both the Postgres container and the Next server |
+| Container deploy | 56 | Image builds with no database credentials; entrypoint refuses to start with a readable message when `DATABASE_URL` or `AUTH_SECRET` is missing; full compose stack migrates, seeds, serves and survives a restart; the whole 53-check read/auth suite passes against the containerised production build |
 | Theme and redesign | 26 | Both light and dark modes render correctly and the mode/colour mismatch guard holds; boot screen, parallax and card surfaces are wired in; no em dashes in rendered output; skip link and section labelling present |
 
 Two real bugs were found and fixed during this run, both worth knowing about:

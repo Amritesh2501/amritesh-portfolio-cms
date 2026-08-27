@@ -1,0 +1,31 @@
+node_modules
+.next
+out
+build
+dist
+
+# Never bake secrets into an image. Set env vars on the host instead.
+.env
+.env.*
+!.env.example
+
+.git
+.gitignore
+.agents
+.claude
+skills-lock.json
+
+# Uploads live on a mounted volume or in S3, never in the image.
+public/uploads
+
+README.md
+Dockerfile
+.dockerignore
+docker-compose*.yml
+*.log
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+next-env.d.ts
+*.tsbuildinfo
