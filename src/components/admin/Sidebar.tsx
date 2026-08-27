@@ -43,7 +43,7 @@ export function Sidebar({
                       href={link.href}
                       onClick={() => setOpen(false)}
                       aria-current={active ? "page" : undefined}
-                      className="flex items-center justify-between gap-2 px-2 py-2 font-mono text-[0.75rem] transition-colors"
+                      className="flex items-center justify-between gap-2 rounded-[var(--r-xs)] px-2.5 py-2 text-[0.8125rem] font-medium tracking-[-0.01em] transition-colors"
                       style={{
                         background: active ? "var(--accent)" : "transparent",
                         color: active ? "#fff" : "var(--muted)",
@@ -52,7 +52,7 @@ export function Sidebar({
                       <span>{link.label}</span>
                       {link.badge ? (
                         <span
-                          className="min-w-5 border px-1 text-center text-[0.625rem] tabular-nums"
+                          className="min-w-5 rounded-[var(--r-full)] border px-1.5 text-center text-[0.625rem] tabular-nums"
                           style={{
                             borderColor: active
                               ? "rgba(255,255,255,0.5)"

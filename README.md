@@ -16,14 +16,15 @@ component. Changing what the site says never means touching source.
 1. [Quick start](#quick-start)
 2. [Environment variables](#environment-variables)
 3. [How to change every kind of content](#how-to-change-every-kind-of-content-without-touching-code)
-4. [Architecture](#architecture)
-5. [Adding a new content type](#adding-a-new-content-type)
-6. [Storage](#storage)
-7. [Security model](#security-model)
-8. [Deployment](#deployment)
-9. [What was verified, and how](#what-was-verified-and-how)
-10. [Decisions and assumptions](#decisions-and-assumptions)
-11. [Before you publish](#before-you-publish)
+4. [Design](#design)
+5. [Architecture](#architecture)
+6. [Adding a new content type](#adding-a-new-content-type)
+7. [Storage](#storage)
+8. [Security model](#security-model)
+9. [Deployment](#deployment)
+10. [What was verified, and how](#what-was-verified-and-how)
+11. [Decisions and assumptions](#decisions-and-assumptions)
+12. [Before you publish](#before-you-publish)
 
 ---
 
@@ -127,7 +128,7 @@ public site on the next page load.
 | GitHub / LinkedIn / email links | **Social links** | Set `Enabled` and publish. `Icon` takes a slug from simpleicons.org. |
 | Header and footer menus | **Navigation** | Rename, reorder, hide, add. `Location` picks header, footer or both. |
 | Site title, tagline, logo, footer text, contact heading and blurb | **Site settings** | |
-| Colours, scanlines, film grain, light/dark | **Theme** | Values are written onto the document root as CSS variables, so the whole site repaints with no rebuild. |
+| Accent colour, substrate colours, film grain, light/dark | **Theme** | Values are written onto the document root as CSS variables, so the whole site repaints with no rebuild. See the note below on how colours and mode interact. |
 | Page title, meta description, keywords, OG image, favicon, robots | **SEO** | Project pages generate their own metadata from the project record. |
 | Upload, replace, describe, delete images and PDFs | **Media** | Every image field has a **Library** button that picks from here. **Copy URL** gives you the path to paste anywhere. |
 | Read and delete contact submissions | **Messages** | Unread count shows in the sidebar. Reply opens your mail client. |
@@ -135,6 +136,43 @@ public site on the next page load.
 **Publish states.** Every content type is `Draft`, `Published` or `Archived`. The public
 site queries only `Published`. Drafts are invisible to visitors, and a draft project's
 detail page returns a real 404, not a blank page.
+
+---
+
+## Design
+
+The surface language is Apple-adjacent (generous space, soft radii, refined
+type, quiet depth) carrying the original identity: dark-first substrate, a
+single accent, and monospace reserved for anything technical.
+
+- **One radius scale** (`--r-xs` through `--r-full`) used everywhere. Buttons are
+  pills, cards are 24px, inputs are 12px. No mixed corner systems.
+- **Type** is Inter for the interface and JetBrains Mono for metadata. Inter is
+  the closest freely licensed analogue to SF Pro.
+- **Motion** is scroll-linked and driven entirely by motion values, never React
+  state, so nothing re-renders per frame. There is no `scroll` event listener
+  anywhere. Every effect collapses under `prefers-reduced-motion`:
+  - `Reveal` / `RevealGroup` sequence a section on entry
+  - `Parallax` gives columns a slight counter-drift
+  - `HeroParallax` hands the viewport off as the hero scrolls away
+  - `ScrollProgress` is the hairline accent bar at the top
+- **Initial loading screen** (`BootScreen`) shows once per browser session,
+  never on internal navigation, is skipped entirely under reduced motion, has a
+  hard dismissal ceiling so it can never trap anyone, and is behind the
+  `site.showIntro` CMS toggle.
+
+### Theme: how colours and mode interact
+
+`theme.mode` picks the base palette. The accent applies to both modes.
+
+The four substrate colours (background, surface, foreground, muted) are a
+**dark-palette customisation**. In light mode they are deliberately not
+injected, because painting dark hex values over the light palette produces
+unreadable text. Light mode uses the built-in light palette plus your accent.
+
+If you want to hand-tune light-mode colours, add `theme.light.*` rows to
+`SiteSetting` and read them in `src/app/layout.tsx`; the settings table needs no
+migration for that.
 
 ---
 
@@ -285,7 +323,7 @@ revalidation; the write actions already call `revalidatePath("/", "layout")`.
 
 ## What was verified, and how
 
-130 automated checks were run against a live server and a live Postgres, driving the
+156 automated checks were run against a live server and a live Postgres, driving the
 **real** Server Actions over HTTP rather than calling functions directly.
 
 | Area | Checks | Covers |
@@ -294,6 +332,7 @@ revalidation; the write actions already call `revalidatePath("/", "layout")`.
 | CRUD | 42 | Create, publish, update, duplicate, reorder and delete a project through the actual admin actions; child rows (technologies, metrics, gallery) written and removed transactionally; edits appear on the public site; server-side validation rejects bad input; unique-slug collision returns a readable message; **anonymous callers rejected and nothing persisted**; contact form persists; honeypot drops bots; a settings edit reaches the public footer |
 | Media, uploads, rate limiting | 32 | Upload writes bytes to disk and a row to Postgres and serves over HTTP; disallowed MIME types refused; path-traversal filenames flattened; oversized files refused by the app rather than the framework; anonymous and **cross-origin** uploads blocked; alt text; delete removes both row and bytes; the contact limiter blocks on the 6th submission and stores exactly 5 |
 | Restart persistence | 3 | An edit made through the admin survives a full cold restart of both the Postgres container and the Next server |
+| Theme and redesign | 26 | Both light and dark modes render correctly and the mode/colour mismatch guard holds; boot screen, parallax and card surfaces are wired in; no em dashes in rendered output; skip link and section labelling present |
 
 Two real bugs were found and fixed during this run, both worth knowing about:
 

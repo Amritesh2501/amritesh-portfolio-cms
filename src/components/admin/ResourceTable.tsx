@@ -101,7 +101,7 @@ export function ResourceTable({
       ) : null}
 
       {rows.length === 0 ? (
-        <div className="border border-dashed border-[var(--line-strong)] px-6 py-16 text-center">
+        <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--line-strong)] px-6 py-16 text-center">
           <p className="t-display text-xl">Nothing here yet</p>
           <p className="mt-3 t-meta">Create the first {singular.toLowerCase()}.</p>
           <Link href={`/admin/${resourceKey}/new`} className="btn btn-accent mt-6">
@@ -109,11 +109,11 @@ export function ResourceTable({
           </Link>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="border border-dashed border-[var(--line-strong)] px-6 py-12 text-center">
+        <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--line-strong)] px-6 py-12 text-center">
           <p className="t-meta">Nothing matches that filter.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto border border-[var(--line)]">
+        <div className="overflow-x-auto rounded-[var(--r-md)] border border-[var(--line)]">
           <table className="w-full min-w-[640px] border-collapse">
             <thead>
               <tr className="border-b border-[var(--line)]">
@@ -272,7 +272,7 @@ function Cell({
 }) {
   if (column.type === "image") {
     return (
-      <span className="flex h-9 w-9 items-center justify-center border border-[var(--line)] bg-[var(--surface)]">
+      <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-[var(--r-xs)] border border-[var(--line)] bg-[var(--surface)]">
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={String(value)} alt="" className="h-full w-full object-cover" />
@@ -322,7 +322,7 @@ function Cell({
     const isLive = value === "PUBLISHED" || value === "LIVE";
     return (
       <span
-        className="inline-block border px-1.5 py-0.5 font-mono text-[0.5625rem] uppercase tracking-[0.1em]"
+        className="inline-block rounded-[var(--r-full)] border px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-[0.1em]"
         style={{
           borderColor: isLive ? "var(--accent)" : "var(--line-strong)",
           color: isLive ? "var(--accent)" : "var(--muted)",

@@ -94,8 +94,8 @@ export function CommandPalette({
         if (e.target === e.currentTarget) setOpen(false);
       }}
     >
-      <div className="w-full max-w-lg border border-[var(--line-strong)] bg-[var(--surface)]">
-        <div className="flex items-center gap-2 border-b border-[var(--line-strong)] px-3">
+      <div className="w-full max-w-lg overflow-hidden rounded-[var(--r-md)] border border-[var(--line-strong)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
+        <div className="flex items-center gap-2.5 border-b border-[var(--line)] px-4">
           <span aria-hidden className="t-meta text-[var(--accent)]">
             {">"}
           </span>
@@ -119,9 +119,9 @@ export function CommandPalette({
             }}
             placeholder="Jump to"
             aria-label="Search commands"
-            className="w-full bg-transparent py-3 font-mono text-sm text-[var(--fg)] outline-none placeholder:text-[var(--muted)]"
+            className="w-full bg-transparent py-3.5 text-[0.9375rem] tracking-[-0.012em] text-[var(--fg)] outline-none placeholder:text-[var(--muted)]"
           />
-          <kbd className="t-meta border border-[var(--line)] px-1.5 py-0.5">esc</kbd>
+          <kbd className="t-meta rounded-[var(--r-xs)] border border-[var(--line)] px-2 py-1 text-[0.5625rem]">esc</kbd>
         </div>
 
         {results.length === 0 ? (
@@ -135,13 +135,13 @@ export function CommandPalette({
                   onMouseEnter={() => setCursor(i)}
                   onClick={command.run}
                   aria-current={i === cursor}
-                  className="flex w-full items-center justify-between gap-4 px-4 py-2.5 text-left transition-colors"
+                  className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition-colors"
                   style={{
                     background: i === cursor ? "var(--accent)" : "transparent",
                     color: i === cursor ? "#fff" : "var(--fg)",
                   }}
                 >
-                  <span className="font-mono text-[0.8125rem]">{command.label}</span>
+                  <span className="text-[0.9375rem] tracking-[-0.012em]">{command.label}</span>
                   <span className="font-mono text-[0.625rem] uppercase tracking-[0.14em] opacity-60">
                     {command.hint}
                   </span>

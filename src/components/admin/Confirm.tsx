@@ -52,8 +52,8 @@ export function ConfirmAction({
             if (e.target === e.currentTarget) setOpen(false);
           }}
         >
-          <div className="w-full max-w-md border border-[var(--accent)] bg-[var(--surface)]">
-            <div className="border-b border-[var(--line-strong)] px-5 py-3">
+          <div className="w-full max-w-md overflow-hidden rounded-[var(--r-md)] border border-[var(--accent)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
+            <div className="border-b border-[var(--line)] px-5 py-3.5">
               <p id="confirm-title" className="t-label text-[var(--accent)]">
                 {title}
               </p>
@@ -61,7 +61,7 @@ export function ConfirmAction({
             <p className="px-5 py-6 text-sm leading-relaxed text-[var(--muted)]">
               {body}
             </p>
-            <div className="flex justify-end gap-2 border-t border-[var(--line-strong)] px-5 py-3">
+            <div className="flex justify-end gap-2 border-t border-[var(--line)] px-5 py-3.5">
               <button
                 type="button"
                 className="btn btn-sm"

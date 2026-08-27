@@ -24,16 +24,17 @@ export default async function LoginPage({
     callbackUrl && /^\/admin(\/|$)/.test(callbackUrl) ? callbackUrl : "/admin";
 
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="border border-[var(--line-strong)] bg-[var(--surface)]">
-          <div className="flex items-center justify-between border-b border-[var(--line-strong)] px-4 py-3">
+    <main className="relative isolate flex min-h-[100dvh] items-center justify-center overflow-hidden px-6">
+      <div className="hero-wash" aria-hidden />
+      <div className="relative w-full max-w-sm">
+        <div className="card overflow-hidden shadow-[var(--shadow-lg)]">
+          <div className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
             <span className="t-meta text-[var(--fg)]">authenticate</span>
             <span className="t-meta text-[var(--accent)]">restricted</span>
           </div>
 
-          <div className="p-6">
-            <h1 className="t-display text-2xl">CMS access</h1>
+          <div className="p-6 sm:p-8">
+            <h1 className="t-display text-[1.75rem]">CMS access</h1>
             <p className="mt-2 t-meta text-[0.625rem] leading-relaxed">
               Credentials are verified on the server against a hashed password.
             </p>

@@ -3,7 +3,8 @@ import { getHomeData } from "@/lib/content";
 import { dateRange } from "@/lib/utils";
 import { Hero } from "@/components/site/Hero";
 import { Section, Empty } from "@/components/site/Section";
-import { Reveal } from "@/components/site/Reveal";
+import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
+import { Parallax } from "@/components/site/Parallax";
 import { Markdown } from "@/components/site/Markdown";
 import { ProjectGrid } from "@/components/site/ProjectGrid";
 import { ContactForm } from "@/components/site/ContactForm";
@@ -29,11 +30,11 @@ export default async function HomePage() {
     return (
       <div className="mx-auto max-w-2xl px-6 py-32">
         <p className="t-display text-3xl">No profile published</p>
-        <p className="mt-4 text-sm text-[var(--muted)]">
+        <p className="mt-4 text-[var(--muted)]">
           Run <code className="md-code">npm run db:seed</code>, or sign in to the
           CMS and publish a profile.
         </p>
-        <Link href="/admin" className="btn mt-8">
+        <Link href="/admin" className="btn btn-accent mt-8">
           Open CMS
         </Link>
       </div>
@@ -57,11 +58,11 @@ export default async function HomePage() {
 
   const skillCount = skillGroups.reduce((n, g) => n + g.skills.length, 0);
 
-  // Real values only. Every readout below is a count of published rows or a
-  // field on the profile, so nothing here is invented precision.
+  // Real values only. Every readout is a count of published rows or a profile
+  // field, so nothing here is invented precision.
   const readouts = [
-    { key: "projects_shipped", value: String(projects.length) },
-    { key: "stack_items", value: String(skillCount) },
+    { key: "projects", value: String(projects.length) },
+    { key: "stack items", value: String(skillCount) },
     { key: "roles", value: String(experience.length) },
     {
       key: "status",
@@ -97,26 +98,35 @@ export default async function HomePage() {
         readouts={readouts}
         bootLines={bootLines}
         hasProjects={projects.length > 0}
+        availability={
+          profile.availabilityText
+            ? {
+                status: profile.availabilityStatus ?? "CLOSED",
+                text: profile.availabilityText,
+              }
+            : null
+        }
       />
 
       {achievements.length > 0 ? (
-        <div className="mx-auto mt-16 w-full max-w-[1400px] px-4 sm:px-6 lg:mt-24 lg:px-10">
-          <dl className="grid-hairline grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mx-auto w-full max-w-[1400px] px-6 pb-8 sm:px-8 lg:px-12">
+          <RevealGroup
+            as="dl"
+            className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-lg)] border border-[var(--line)] bg-[var(--line)] sm:grid-cols-3 lg:grid-cols-6"
+          >
             {achievements.map((item) => (
-              <div key={item.id} className="px-4 py-6">
+              <RevealItem key={item.id} className="bg-[var(--surface)] px-5 py-7">
                 <dd className="t-display text-[clamp(1.5rem,3vw,2.25rem)] text-[var(--accent)]">
                   {item.value}
                 </dd>
-                <dt className="t-meta mt-2 text-[0.625rem] leading-relaxed">
+                <dt className="t-meta mt-2.5 text-[0.5625rem] leading-relaxed">
                   {item.label}
                 </dt>
-              </div>
+              </RevealItem>
             ))}
-          </dl>
+          </RevealGroup>
         </div>
       ) : null}
-
-      <div className="mt-20 lg:mt-28" />
 
       <Section
         id="work"
@@ -129,56 +139,45 @@ export default async function HomePage() {
           categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
         />
         {projects.length > 4 ? (
-          <div className="mt-8">
+          <Reveal className="mt-10">
             <Link href="/projects" className="btn">
               Browse the full index
             </Link>
-          </div>
+          </Reveal>
         ) : null}
       </Section>
 
       <Section id="about" label="About" index="02">
-        <div className="grid gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
-          <div>
+        <div className="grid gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
+          <Reveal>
             <Markdown content={profile.bio} />
             {profile.longBio ? (
-              <div className="mt-10 border-t border-[var(--line)] pt-10">
+              <div className="mt-12 border-t border-[var(--line)] pt-12">
                 <Markdown content={profile.longBio} />
               </div>
             ) : null}
-          </div>
+          </Reveal>
 
-          <div className="grid gap-10">
-            {profile.philosophy ? (
-              <Reveal>
-                <p className="t-meta border-b border-[var(--line)] pb-2">
-                  How I work
-                </p>
-                <Markdown content={profile.philosophy} className="mt-5 text-sm" />
-              </Reveal>
-            ) : null}
-
-            {profile.technicalInterests ? (
-              <Reveal>
-                <p className="t-meta border-b border-[var(--line)] pb-2">
-                  Technical interests
-                </p>
-                <Markdown
-                  content={profile.technicalInterests}
-                  className="mt-5 text-sm"
-                />
-              </Reveal>
-            ) : null}
-
-            {profile.currentFocus ? (
-              <Reveal>
-                <p className="t-meta border-b border-[var(--line)] pb-2">
-                  Current focus
-                </p>
-                <Markdown content={profile.currentFocus} className="mt-5 text-sm" />
-              </Reveal>
-            ) : null}
-          </div>
+          {/* Slight counter-drift so the two columns do not scroll as one slab. */}
+          <Parallax speed={0.035} className="grid content-start gap-5">
+            {[
+              { label: "How I work", body: profile.philosophy },
+              { label: "Technical interests", body: profile.technicalInterests },
+              { label: "Current focus", body: profile.currentFocus },
+            ]
+              .filter((block) => block.body?.trim())
+              .map((block, i) => (
+                <Reveal key={block.label} delay={i * 0.06}>
+                  <div className="card p-6 sm:p-7">
+                    <p className="t-meta text-[0.5625rem]">{block.label}</p>
+                    <Markdown
+                      content={block.body}
+                      className="mt-4 text-[0.9375rem]"
+                    />
+                  </div>
+                </Reveal>
+              ))}
+          </Parallax>
         </div>
       </Section>
 
@@ -186,16 +185,16 @@ export default async function HomePage() {
         {experience.length === 0 ? (
           <Empty>No published roles yet.</Empty>
         ) : (
-          <ol className="grid gap-px bg-[var(--line)]">
+          <ol className="grid gap-px overflow-hidden rounded-[var(--r-lg)] border border-[var(--line)] bg-[var(--line)]">
             {experience.map((role, i) => (
-              <Reveal as="li" key={role.id} delay={i * 0.04}>
-                <article className="grid gap-6 bg-[var(--bg)] py-8 md:grid-cols-[180px_1fr] md:gap-10">
+              <Reveal as="li" key={role.id} delay={i * 0.05}>
+                <article className="grid gap-6 bg-[var(--surface)] p-7 sm:p-9 md:grid-cols-[200px_1fr] md:gap-12">
                   <div>
-                    <p className="t-meta tabular-nums">
+                    <p className="t-meta tabular-nums text-[0.5625rem]">
                       {dateRange(role.startDate, role.endDate, role.currentlyWorking)}
                     </p>
                     {role.location || role.employmentType ? (
-                      <p className="t-meta mt-2 text-[0.625rem]">
+                      <p className="t-meta mt-2 text-[0.5625rem] normal-case tracking-normal">
                         {[role.employmentType, role.location]
                           .filter(Boolean)
                           .join(" / ")}
@@ -204,16 +203,16 @@ export default async function HomePage() {
                   </div>
 
                   <div>
-                    <h3 className="t-display text-[clamp(1.25rem,2.5vw,1.875rem)]">
+                    <h3 className="t-display text-[clamp(1.25rem,2.4vw,1.75rem)]">
                       {role.role}
                     </h3>
-                    <p className="mt-1.5 text-sm text-[var(--accent)]">
+                    <p className="mt-2 text-[0.9375rem] font-medium text-[var(--accent)]">
                       {role.companyUrl ? (
                         <a
                           href={role.companyUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="underline underline-offset-4"
+                          className="hover:underline"
                         >
                           {role.company}
                         </a>
@@ -222,18 +221,21 @@ export default async function HomePage() {
                       )}
                     </p>
 
-                    <Markdown content={role.description} className="mt-4 text-sm" />
+                    <Markdown
+                      content={role.description}
+                      className="mt-5 text-[0.9375rem]"
+                    />
 
                     {role.achievements.length > 0 ? (
-                      <ul className="mt-5 grid gap-2">
+                      <ul className="mt-6 grid gap-2.5">
                         {role.achievements.map((item) => (
                           <li
                             key={item}
-                            className="relative pl-5 text-[0.8125rem] leading-relaxed text-[var(--muted)]"
+                            className="relative pl-6 text-[0.9375rem] leading-relaxed tracking-[-0.012em] text-[var(--muted)]"
                           >
                             <span
                               aria-hidden
-                              className="absolute left-0 top-[0.65em] h-px w-2.5 bg-[var(--accent)]"
+                              className="absolute left-1 top-[0.65em] h-1 w-1 rounded-[var(--r-full)] bg-[var(--accent)]"
                             />
                             {item}
                           </li>
@@ -242,11 +244,11 @@ export default async function HomePage() {
                     ) : null}
 
                     {role.technologies.length > 0 ? (
-                      <div className="mt-5 flex flex-wrap gap-2">
+                      <div className="mt-6 flex flex-wrap gap-2">
                         {role.technologies.map((tech) => (
                           <span
                             key={tech.id}
-                            className="border border-[var(--line)] px-2 py-1 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-[var(--muted)]"
+                            className="rounded-[var(--r-full)] border border-[var(--line)] px-2.5 py-1 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-[var(--muted)]"
                           >
                             {tech.name}
                           </span>
@@ -261,22 +263,24 @@ export default async function HomePage() {
         )}
 
         {education.length > 0 ? (
-          <div className="mt-14 border-t border-[var(--line)] pt-10">
-            <p className="t-meta">Education</p>
-            <ul className="mt-6 grid gap-px bg-[var(--line)] sm:grid-cols-2">
+          <div className="mt-16">
+            <Reveal>
+              <p className="t-meta">Education</p>
+            </Reveal>
+            <RevealGroup as="ul" className="mt-6 grid gap-5 sm:grid-cols-2">
               {education.map((entry) => (
-                <li key={entry.id} className="bg-[var(--bg)] py-5 sm:px-5 sm:first:pl-0">
-                  <p className="t-display text-lg">{entry.degree}</p>
-                  <p className="mt-1 text-sm text-[var(--muted)]">
+                <RevealItem as="li" key={entry.id} className="card p-6 sm:p-7">
+                  <p className="t-display text-[1.25rem]">{entry.degree}</p>
+                  <p className="mt-2 text-[0.9375rem] text-[var(--muted)]">
                     {[entry.field, entry.institution].filter(Boolean).join(", ")}
                   </p>
-                  <p className="t-meta mt-2 tabular-nums">
+                  <p className="t-meta mt-3 tabular-nums text-[0.5625rem]">
                     {dateRange(entry.startDate, entry.endDate, false)}
                     {entry.location ? ` / ${entry.location}` : ""}
                   </p>
-                </li>
+                </RevealItem>
               ))}
-            </ul>
+            </RevealGroup>
           </div>
         ) : null}
       </Section>
@@ -285,21 +289,24 @@ export default async function HomePage() {
         {skillGroups.length === 0 ? (
           <Empty>No published skills yet.</Empty>
         ) : (
-          <div className="grid-hairline grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <RevealGroup
+            className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            stagger={0.05}
+          >
             {skillGroups.map((group) => (
-              <div key={group.id} className="p-5 sm:p-6">
-                <p className="t-meta border-b border-[var(--line)] pb-2 text-[var(--fg)]">
+              <RevealItem key={group.id} className="card p-6 sm:p-7">
+                <p className="t-meta text-[0.5625rem] text-[var(--fg)]">
                   {group.name}
                 </p>
-                <ul className="mt-4 grid gap-2.5">
+                <ul className="mt-5 grid gap-3.5">
                   {group.skills.map((skill) => (
-                    <li key={skill.id} className="grid gap-1.5">
+                    <li key={skill.id} className="grid gap-2">
                       <div className="flex items-baseline justify-between gap-3">
-                        <span className="font-mono text-[0.8125rem] text-[var(--fg)]">
+                        <span className="text-[0.9375rem] tracking-[-0.012em] text-[var(--fg)]">
                           {skill.name}
                         </span>
                         {skill.proficiency != null ? (
-                          <span className="t-meta text-[0.625rem] tabular-nums">
+                          <span className="t-meta text-[0.5625rem] tabular-nums">
                             {skill.proficiency}
                           </span>
                         ) : null}
@@ -307,33 +314,41 @@ export default async function HomePage() {
                       {skill.proficiency != null ? (
                         <span
                           aria-hidden
-                          className="block h-px w-full"
-                          style={{
-                            background: `linear-gradient(to right, var(--accent) ${skill.proficiency}%, var(--line) ${skill.proficiency}%)`,
-                          }}
-                        />
+                          className="block h-[3px] w-full overflow-hidden rounded-[var(--r-full)] bg-[var(--line)]"
+                        >
+                          <span
+                            className="block h-full rounded-[var(--r-full)] bg-[var(--accent)]"
+                            style={{ width: `${skill.proficiency}%` }}
+                          />
+                        </span>
                       ) : null}
                     </li>
                   ))}
                 </ul>
-              </div>
+              </RevealItem>
             ))}
-          </div>
+          </RevealGroup>
         )}
 
         {certifications.length > 0 ? (
-          <div className="mt-14 border-t border-[var(--line)] pt-10">
-            <p className="t-meta">Certifications</p>
-            <ul className="mt-6 grid gap-px bg-[var(--line)] sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-16">
+            <Reveal>
+              <p className="t-meta">Certifications</p>
+            </Reveal>
+            <RevealGroup
+              as="ul"
+              className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+              stagger={0.04}
+            >
               {certifications.map((cert) => (
-                <li key={cert.id} className="bg-[var(--bg)] p-5">
-                  <p className="text-sm font-semibold leading-snug text-[var(--fg)]">
+                <RevealItem as="li" key={cert.id} className="card p-6">
+                  <p className="text-[0.9375rem] font-medium leading-snug tracking-[-0.012em] text-[var(--fg)]">
                     {cert.credentialUrl ? (
                       <a
                         href={cert.credentialUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="underline underline-offset-4 hover:text-[var(--accent)]"
+                        className="hover:text-[var(--accent)]"
                       >
                         {cert.name}
                       </a>
@@ -341,10 +356,10 @@ export default async function HomePage() {
                       cert.name
                     )}
                   </p>
-                  <p className="t-meta mt-2">{cert.issuer}</p>
-                </li>
+                  <p className="t-meta mt-3 text-[0.5625rem]">{cert.issuer}</p>
+                </RevealItem>
               ))}
-            </ul>
+            </RevealGroup>
           </div>
         ) : null}
       </Section>
@@ -356,52 +371,65 @@ export default async function HomePage() {
         title={settings.get("site.contactHeading", "Let's work together")}
         intro={settings.get("site.contactBlurb")}
       >
-        <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
-          <ContactForm />
+        <div className="grid gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
+          <Reveal>
+            <ContactForm />
+          </Reveal>
 
-          <div className="grid content-start gap-8">
+          <Parallax speed={0.03} className="grid content-start gap-5">
             {settings.get("site.contactEmail") ? (
-              <div>
-                <p className="t-meta border-b border-[var(--line)] pb-2">Direct</p>
-                <a
-                  href={`mailto:${settings.get("site.contactEmail")}`}
-                  className="t-display mt-4 block break-all text-[clamp(1.125rem,2.5vw,1.75rem)] text-[var(--fg)] transition-colors hover:text-[var(--accent)]"
-                >
-                  {settings.get("site.contactEmail")}
-                </a>
-              </div>
+              <Reveal>
+                <div className="card p-6 sm:p-7">
+                  <p className="t-meta text-[0.5625rem]">Direct</p>
+                  <a
+                    href={`mailto:${settings.get("site.contactEmail")}`}
+                    className="t-display mt-3 block break-all text-[clamp(1.125rem,2.2vw,1.5rem)] text-[var(--fg)] transition-colors hover:text-[var(--accent)]"
+                  >
+                    {settings.get("site.contactEmail")}
+                  </a>
+                </div>
+              </Reveal>
             ) : null}
 
             {socials.length > 0 ? (
-              <div>
-                <p className="t-meta border-b border-[var(--line)] pb-2">Elsewhere</p>
-                <ul className="mt-4 grid gap-px bg-[var(--line)]">
-                  {socials.map((social) => (
-                    <li key={social.id} className="bg-[var(--bg)]">
-                      <a
-                        href={social.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between gap-4 py-3 transition-colors hover:text-[var(--accent)]"
-                      >
-                        <span className="t-label">{social.label}</span>
-                        <span aria-hidden className="t-meta">
-                          {">>"}
-                        </span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <Reveal delay={0.06}>
+                <div className="card p-6 sm:p-7">
+                  <p className="t-meta text-[0.5625rem]">Elsewhere</p>
+                  <ul className="mt-4 grid gap-1">
+                    {socials.map((social) => (
+                      <li key={social.id}>
+                        <a
+                          href={social.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex items-center justify-between gap-4 rounded-[var(--r-xs)] py-2.5 text-[0.9375rem] tracking-[-0.012em] transition-colors hover:text-[var(--accent)]"
+                        >
+                          <span>{social.label}</span>
+                          <span
+                            aria-hidden
+                            className="text-[var(--muted)] transition-transform duration-300 group-hover:translate-x-1"
+                          >
+                            &rarr;
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
             ) : null}
 
             {profile.location ? (
-              <div>
-                <p className="t-meta border-b border-[var(--line)] pb-2">Based in</p>
-                <p className="mt-4 text-sm text-[var(--fg)]">{profile.location}</p>
-              </div>
+              <Reveal delay={0.12}>
+                <div className="card p-6 sm:p-7">
+                  <p className="t-meta text-[0.5625rem]">Based in</p>
+                  <p className="mt-3 text-[0.9375rem] text-[var(--fg)]">
+                    {profile.location}
+                  </p>
+                </div>
+              </Reveal>
             ) : null}
-          </div>
+          </Parallax>
         </div>
       </Section>
     </>

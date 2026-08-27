@@ -34,7 +34,7 @@ export function MediaField({
   return (
     <div className="grid gap-2">
       <div className="flex items-start gap-3">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center border border-[var(--line-strong)] bg-[var(--surface)]">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[var(--r-sm)] border border-[var(--line-strong)] bg-[var(--surface)]">
           {value ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -147,8 +147,8 @@ export function MediaLibrary({
       style={{ background: "color-mix(in srgb, #000 76%, transparent)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col border border-[var(--line-strong)] bg-[var(--bg)]">
-        <div className="flex items-center gap-3 border-b border-[var(--line-strong)] px-4 py-3">
+      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-[var(--r-lg)] border border-[var(--line-strong)] bg-[var(--bg)] shadow-[var(--shadow-lg)]">
+        <div className="flex items-center gap-3 border-b border-[var(--line)] px-4 py-3">
           <input
             autoFocus
             className="field flex-1"
@@ -189,7 +189,7 @@ export function MediaLibrary({
               ))}
             </div>
           ) : items.length === 0 ? (
-            <div className="border border-dashed border-[var(--line-strong)] px-6 py-12 text-center">
+            <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--line-strong)] px-6 py-12 text-center">
               <p className="t-meta">
                 {query ? "Nothing matches that." : "No files yet. Upload one."}
               </p>
@@ -201,7 +201,7 @@ export function MediaLibrary({
                   <button
                     type="button"
                     onClick={() => onSelect(item)}
-                    className="group block w-full border border-[var(--line-strong)] text-left transition-colors hover:border-[var(--accent)]"
+                    className="group block w-full overflow-hidden rounded-[var(--r-sm)] border border-[var(--line-strong)] text-left transition-colors hover:border-[var(--accent)]"
                   >
                     <span className="flex aspect-square items-center justify-center overflow-hidden bg-[var(--surface)]">
                       {item.mimeType.startsWith("image/") ? (

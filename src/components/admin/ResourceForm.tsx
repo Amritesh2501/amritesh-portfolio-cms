@@ -155,7 +155,7 @@ export function ResourceForm({
       {serverError ? (
         <p
           role="alert"
-          className="mb-6 border border-[var(--accent)] px-4 py-3 font-mono text-[0.75rem] text-[var(--accent)]"
+          className="mb-6 rounded-[var(--r-sm)] border border-[var(--accent)] bg-[var(--accent-soft)] px-4 py-3 text-[0.875rem] text-[var(--accent)]"
         >
           {serverError}
         </p>
@@ -163,7 +163,7 @@ export function ResourceForm({
 
       <div className="grid gap-10">
         {sections.map(([title, sectionFields]) => (
-          <fieldset key={title} className="border border-[var(--line)]">
+          <fieldset key={title} className="rounded-[var(--r-lg)] border border-[var(--line)]">
             <legend className="t-meta mx-3 px-2 text-[var(--fg)]">{title}</legend>
             <div className="grid gap-6 p-5 sm:grid-cols-2 sm:p-6">
               {sectionFields.map((field) => (
@@ -423,7 +423,7 @@ function RowsEditor({
   );
 
   return (
-    <div className="border border-[var(--line)]">
+    <div className="rounded-[var(--r-sm)] border border-[var(--line)]">
       {rows.length === 0 ? (
         <p className="px-4 py-6 text-center t-meta">Nothing added yet.</p>
       ) : (

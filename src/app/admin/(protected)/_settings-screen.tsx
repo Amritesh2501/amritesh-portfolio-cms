@@ -37,7 +37,7 @@ export async function SettingsScreen({
 
       <div className="mt-8">
         {settings.length === 0 ? (
-          <div className="border border-dashed border-[var(--line-strong)] px-6 py-12 text-center">
+          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--line-strong)] px-6 py-12 text-center">
             <p className="t-meta">
               No settings in this group. Run the seed to create them.
             </p>

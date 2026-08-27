@@ -85,14 +85,14 @@ export function MediaManager({ items }: { items: Item[] }) {
       </div>
 
       {items.length === 0 ? (
-        <div className="border border-dashed border-[var(--line-strong)] px-6 py-16 text-center">
+        <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--line-strong)] px-6 py-16 text-center">
           <p className="t-display text-xl">No files yet</p>
           <p className="mt-3 t-meta">
             Images up to the configured limit. JPEG, PNG, WebP, AVIF, GIF, SVG, PDF.
           </p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="border border-dashed border-[var(--line-strong)] px-6 py-12 text-center">
+        <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--line-strong)] px-6 py-12 text-center">
           <p className="t-meta">Nothing matches that.</p>
         </div>
       ) : (
@@ -135,7 +135,7 @@ function MediaCard({
 
   return (
     <li className="flex flex-col p-4" style={{ opacity: busy ? 0.55 : 1 }}>
-      <div className="flex aspect-video items-center justify-center overflow-hidden border border-[var(--line)] bg-[var(--surface)]">
+      <div className="flex aspect-video items-center justify-center overflow-hidden rounded-[var(--r-sm)] border border-[var(--line)] bg-[var(--surface)]">
         {item.mimeType.startsWith("image/") ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.url} alt={item.alt ?? ""} className="h-full w-full object-cover" />

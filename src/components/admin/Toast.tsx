@@ -57,7 +57,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, x: 0 }}
               exit={reduce ? { opacity: 0 } : { opacity: 0, x: 16 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="pointer-events-auto block border bg-[var(--surface)] px-4 py-3 font-mono text-[0.75rem] leading-relaxed"
+              className="pointer-events-auto block rounded-[var(--r-sm)] border bg-[var(--surface)] px-4 py-3 text-[0.8125rem] leading-relaxed shadow-[var(--shadow-lg)]"
               style={{
                 borderColor:
                   toast.tone === "error" ? "var(--accent)" : "var(--line-strong)",

@@ -47,10 +47,12 @@ export function ContactForm() {
     return (
       <div
         role="status"
-        className="border border-[var(--accent)] bg-[var(--surface)] p-8"
+        className="card border-[var(--accent)] p-8 sm:p-10"
       >
-        <p className="t-display text-2xl text-[var(--fg)]">Sent</p>
-        <p className="mt-3 max-w-[48ch] text-sm text-[var(--muted)]">{sent}</p>
+        <p className="t-display text-[1.75rem] text-[var(--fg)]">Sent</p>
+        <p className="mt-4 max-w-[48ch] text-[0.9375rem] leading-relaxed text-[var(--muted)]">
+          {sent}
+        </p>
         <button
           type="button"
           className="btn btn-sm mt-6"
@@ -106,14 +108,17 @@ export function ContactForm() {
           {...register("message")}
         />
         {errors.message ? (
-          <p id="message-error" role="alert" className="t-meta text-[var(--accent)]">
+          <p id="message-error" role="alert" className="text-[0.8125rem] text-[var(--accent)]">
             {errors.message.message}
           </p>
         ) : null}
       </div>
 
       {serverError ? (
-        <p role="alert" className="border border-[var(--accent)] px-4 py-3 t-meta text-[var(--accent)]">
+        <p
+          role="alert"
+          className="rounded-[var(--r-sm)] border border-[var(--accent)] bg-[var(--accent-soft)] px-4 py-3 text-[0.875rem] text-[var(--accent)]"
+        >
           {serverError}
         </p>
       ) : null}
@@ -154,7 +159,7 @@ function Field({
         {...props}
       />
       {error ? (
-        <p id={`${id}-error`} role="alert" className="t-meta text-[var(--accent)]">
+        <p id={`${id}-error`} role="alert" className="text-[0.8125rem] text-[var(--accent)]">
           {error}
         </p>
       ) : null}

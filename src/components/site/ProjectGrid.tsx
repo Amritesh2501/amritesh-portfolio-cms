@@ -6,9 +6,8 @@ import { ProjectCard, type CardProject } from "./ProjectCard";
 import { Empty } from "./Section";
 
 /**
- * Filters are derived from the project data, never from a hardcoded list.
- * Add a category in admin, attach a published project to it, and the chip
- * appears here on the next request.
+ * Filters are derived from project data, never a hardcoded list. Add a category
+ * in admin, attach a published project, and the chip appears on next request.
  */
 export function ProjectGrid({
   projects,
@@ -17,7 +16,7 @@ export function ProjectGrid({
   projects: CardProject[];
   categories: { slug: string; name: string }[];
 }) {
-  const [active, setActive] = useState<string>("all");
+  const [active, setActive] = useState("all");
   const reduce = useReducedMotion();
 
   const counts = useMemo(() => {
@@ -31,9 +30,7 @@ export function ProjectGrid({
 
   const filtered = useMemo(
     () =>
-      active === "all"
-        ? projects
-        : projects.filter((p) => p.categorySlug === active),
+      active === "all" ? projects : projects.filter((p) => p.categorySlug === active),
     [projects, active],
   );
 
@@ -47,7 +44,7 @@ export function ProjectGrid({
         <div
           role="group"
           aria-label="Filter projects by category"
-          className="no-scrollbar -mx-4 mb-8 flex gap-px overflow-x-auto px-4 sm:mx-0 sm:px-0"
+          className="no-scrollbar -mx-6 mb-10 flex gap-2 overflow-x-auto px-6 sm:mx-0 sm:px-0"
         >
           <FilterChip
             active={active === "all"}
@@ -72,16 +69,20 @@ export function ProjectGrid({
       {filtered.length === 0 ? (
         <Empty>Nothing published in this category yet.</Empty>
       ) : (
-        <div className="grid-hairline grid-cols-1 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:gap-6">
           <AnimatePresence mode="popLayout" initial={false}>
             {filtered.map((project, index) => (
               <motion.article
                 key={project.id}
                 layout={!reduce}
-                initial={reduce ? false : { opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                initial={reduce ? false : { opacity: 0, y: 20, filter: "blur(6px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+                transition={{
+                  duration: 0.5,
+                  delay: reduce ? 0 : Math.min(index, 4) * 0.05,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
                 className={project.featured ? "md:col-span-2" : ""}
               >
                 <ProjectCard
@@ -114,15 +115,15 @@ function FilterChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className="flex shrink-0 items-center gap-2 border px-3 py-2 font-mono text-[0.6875rem] uppercase tracking-[0.1em] transition-colors"
+      className="flex shrink-0 items-center gap-2 rounded-[var(--r-full)] border px-4 py-2 text-[0.875rem] font-medium tracking-[-0.01em] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
       style={{
-        borderColor: active ? "var(--accent)" : "var(--line-strong)",
-        background: active ? "var(--accent)" : "transparent",
-        color: active ? "#fff" : "var(--muted)",
+        borderColor: active ? "transparent" : "var(--line-strong)",
+        background: active ? "var(--fg)" : "transparent",
+        color: active ? "var(--bg)" : "var(--muted)",
       }}
     >
       {children}
-      <span className="tabular-nums opacity-60">{count}</span>
+      <span className="tabular-nums text-[0.75rem] opacity-55">{count}</span>
     </button>
   );
 }

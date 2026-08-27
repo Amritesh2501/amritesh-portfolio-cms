@@ -43,7 +43,7 @@ export function MessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="border border-dashed border-[var(--line-strong)] px-6 py-16 text-center">
+      <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--line-strong)] px-6 py-16 text-center">
         <p className="t-display text-xl">No messages</p>
         <p className="mt-3 t-meta">
           Submissions from the contact form land here.
@@ -84,11 +84,11 @@ export function MessageList({
       </div>
 
       {visible.length === 0 ? (
-        <div className="border border-dashed border-[var(--line-strong)] px-6 py-12 text-center">
+        <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--line-strong)] px-6 py-12 text-center">
           <p className="t-meta">Nothing unread.</p>
         </div>
       ) : (
-        <ul className="border border-[var(--line)]" style={{ opacity: pending ? 0.6 : 1 }}>
+        <ul className="overflow-hidden rounded-[var(--r-md)] border border-[var(--line)]" style={{ opacity: pending ? 0.6 : 1 }}>
           {visible.map((message) => {
             const open = openId === message.id;
             return (
@@ -106,7 +106,7 @@ export function MessageList({
                 >
                   <span
                     aria-hidden
-                    className="mt-1.5 h-1.5 w-1.5 shrink-0"
+                    className="mt-2 h-1.5 w-1.5 shrink-0 rounded-[var(--r-full)]"
                     style={{
                       background: message.read ? "var(--line-strong)" : "var(--accent)",
                     }}

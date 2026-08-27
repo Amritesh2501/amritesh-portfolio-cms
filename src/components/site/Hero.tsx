@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Telemetry, type TelemetryReadout } from "./Telemetry";
+import { HeroParallax } from "./Parallax";
 import { Reveal } from "./Reveal";
 
 export function Hero({
@@ -11,6 +12,7 @@ export function Hero({
   readouts,
   bootLines,
   hasProjects,
+  availability,
 }: {
   name: string;
   headline: string;
@@ -20,9 +22,10 @@ export function Hero({
   readouts: TelemetryReadout[];
   bootLines: string[];
   hasProjects: boolean;
+  availability: { status: string; text: string } | null;
 }) {
-  // Positioning is stored as one string and split on the separator, so editing
-  // "Full Stack Developer / Cloud & AI Engineer" in admin changes both halves.
+  // Positioning is one CMS string split on its separator, so editing
+  // "Full Stack Developer | Cloud & AI Engineer" in admin changes both halves.
   const positions = headline
     .split(/\s*[|/]\s*/)
     .map((p) => p.trim())
@@ -31,74 +34,105 @@ export function Hero({
   return (
     <section
       aria-labelledby="hero-heading"
-      className="mx-auto w-full max-w-[1400px] px-4 pt-16 sm:px-6 lg:px-10 lg:pt-24"
+      className="relative isolate overflow-hidden"
     >
-      <div className="grid items-end gap-12 lg:grid-cols-[1.35fr_1fr] lg:gap-16">
-        <div>
-          <Reveal>
-            <p className="t-meta">
-              {positions.map((position, i) => (
-                <span key={position}>
-                  {i > 0 ? <span className="text-[var(--accent)]"> / </span> : null}
-                  {position}
+      <div className="hero-wash" aria-hidden />
+
+      <div className="relative mx-auto w-full max-w-[1400px] px-6 pb-20 pt-20 sm:px-8 lg:px-12 lg:pb-28 lg:pt-24">
+        <div className="grid items-center gap-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
+          <HeroParallax depth={0.55}>
+            {availability?.text ? (
+              <Reveal y={16} blur={false}>
+                <span className="inline-flex items-center gap-2.5 rounded-[var(--r-full)] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-1.5">
+                  {/* Real semantic state: whether he is open to work right now. */}
+                  <span
+                    aria-hidden
+                    className="h-1.5 w-1.5 rounded-[var(--r-full)]"
+                    style={{
+                      background:
+                        availability.status === "OPEN" ? "#30d158" : "var(--muted)",
+                    }}
+                  />
+                  <span className="text-[0.8125rem] font-medium tracking-[-0.01em] text-[var(--fg)]">
+                    {availability.text}
+                  </span>
                 </span>
-              ))}
-            </p>
-          </Reveal>
+              </Reveal>
+            ) : null}
 
-          <Reveal delay={0.06}>
-            <h1
-              id="hero-heading"
-              className="t-display mt-5 text-[clamp(2.75rem,9vw,7rem)] text-[var(--fg)]"
-            >
-              {name}
-            </h1>
-          </Reveal>
+            <Reveal delay={0.06}>
+              <h1
+                id="hero-heading"
+                className="t-display-lg mt-7 text-[clamp(3rem,8.5vw,6.5rem)] text-[var(--fg)]"
+              >
+                {name}
+              </h1>
+            </Reveal>
 
-          {tagline ? (
             <Reveal delay={0.12}>
-              <p className="mt-6 max-w-[34ch] text-[clamp(1rem,2vw,1.375rem)] leading-snug text-[var(--fg)]">
-                {tagline}
+              <p className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[clamp(1rem,1.8vw,1.25rem)] font-medium tracking-[-0.018em] text-[var(--fg)]">
+                {positions.map((position, i) => (
+                  <span key={position} className="flex items-center gap-3">
+                    {i > 0 ? (
+                      <span
+                        aria-hidden
+                        className="h-1 w-1 rounded-[var(--r-full)] bg-[var(--accent)]"
+                      />
+                    ) : null}
+                    {position}
+                  </span>
+                ))}
               </p>
             </Reveal>
-          ) : null}
 
-          {description ? (
-            <Reveal delay={0.16}>
-              <p className="mt-4 max-w-[52ch] text-[0.9375rem] leading-relaxed text-[var(--muted)]">
-                {description}
-              </p>
-            </Reveal>
-          ) : null}
+            {tagline ? (
+              <Reveal delay={0.18}>
+                <p className="t-lead mt-8 max-w-[38ch] text-[clamp(1.25rem,2.6vw,1.875rem)] leading-[1.3] text-[var(--fg)]">
+                  {tagline}
+                </p>
+              </Reveal>
+            ) : null}
 
-          <Reveal delay={0.22}>
-            <div className="mt-9 flex flex-wrap gap-3">
-              {hasProjects ? (
-                <Link href="/#work" className="btn btn-accent">
-                  View projects
+            {description ? (
+              <Reveal delay={0.24}>
+                <p className="mt-5 max-w-[52ch] text-[1.0625rem] leading-relaxed tracking-[-0.014em] text-[var(--muted)]">
+                  {description}
+                </p>
+              </Reveal>
+            ) : null}
+
+            <Reveal delay={0.3} blur={false}>
+              <div className="mt-10 flex flex-wrap gap-3">
+                {hasProjects ? (
+                  <Link href="/#work" className="btn btn-accent">
+                    View projects
+                  </Link>
+                ) : null}
+                <Link href="/#contact" className="btn">
+                  Let&apos;s work together
                 </Link>
-              ) : null}
-              <Link href="/#contact" className="btn">
-                Let&apos;s work together
-              </Link>
-              {resumeUrl ? (
-                <a
-                  href={resumeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn"
-                  download
-                >
-                  Resume
-                </a>
-              ) : null}
-            </div>
-          </Reveal>
-        </div>
+                {resumeUrl ? (
+                  <a
+                    href={resumeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn"
+                    download
+                  >
+                    Resume
+                  </a>
+                ) : null}
+              </div>
+            </Reveal>
+          </HeroParallax>
 
-        <Reveal delay={0.1} className="lg:pb-2">
-          <Telemetry readouts={readouts} bootLines={bootLines} />
-        </Reveal>
+          {/* Slower layer, so the panel settles behind the headline on scroll. */}
+          <HeroParallax depth={1.15} className="lg:pt-6">
+            <Reveal delay={0.16} y={36}>
+              <Telemetry readouts={readouts} bootLines={bootLines} />
+            </Reveal>
+          </HeroParallax>
+        </div>
       </div>
     </section>
   );

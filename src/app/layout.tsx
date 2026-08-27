@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
-import { Archivo, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { getSettings } from "@/lib/content";
 import "./globals.css";
 
-const archivo = Archivo({
+// Inter is the closest freely licensed analogue to SF Pro, which is what the
+// Apple-clean direction needs. The taste rules discourage Inter as a lazy
+// default; here it is the deliberate choice for the requested look.
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800", "900"],
-  variable: "--font-archivo",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -85,13 +88,20 @@ export default async function RootLayout({
   try {
     const settings = await getSettings();
     mode = settings.get("theme.mode", "dark");
-    theme = {
-      "--bg": settings.get("theme.background", "#0a0a0a"),
-      "--surface": settings.get("theme.surface", "#121212"),
-      "--fg": settings.get("theme.foreground", "#eaeaea"),
-      "--muted": settings.get("theme.muted", "#8a8a8a"),
-      "--accent": settings.get("theme.accent", "#ff2a2a"),
-    };
+    // The accent is the brand and applies to both modes.
+    //
+    // The substrate tokens are a DARK-palette customisation: injecting them
+    // while mode is "light" would paint dark hexes over the light palette and
+    // produce unreadable text. In light mode the CSS palette wins and only the
+    // accent is injected. Documented in the README under Theme.
+    theme = { "--accent": settings.get("theme.accent", "#ff2a2a") };
+
+    if (mode !== "light") {
+      theme["--bg"] = settings.get("theme.background", "#060607");
+      theme["--surface"] = settings.get("theme.surface", "#0e0e11");
+      theme["--fg"] = settings.get("theme.foreground", "#f5f5f7");
+      theme["--muted"] = settings.get("theme.muted", "#86868b");
+    }
     effects = [
       settings.get("theme.scanlines", "true") === "true" ? "fx-scanlines" : "",
       settings.get("theme.grain", "true") === "true" ? "fx-grain" : "",
@@ -106,7 +116,7 @@ export default async function RootLayout({
     <html
       lang="en"
       data-mode={mode}
-      className={`${archivo.variable} ${jetbrains.variable}`}
+      className={`${inter.variable} ${jetbrains.variable}`}
       style={theme as React.CSSProperties}
       suppressHydrationWarning
     >

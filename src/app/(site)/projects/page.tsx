@@ -36,23 +36,26 @@ export default async function ProjectsPage() {
   }));
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
-      <Reveal>
-        <p className="t-meta">Index</p>
-        <h1 className="t-display mt-4 text-[clamp(2.5rem,8vw,5.5rem)]">
-          All projects
-        </h1>
-        <p className="mt-5 max-w-[52ch] text-[0.9375rem] leading-relaxed text-[var(--muted)]">
-          Everything currently published, newest ordering first. Filters come
-          from the categories attached to each project.
-        </p>
-      </Reveal>
+    <div className="relative isolate">
+      <div className="hero-wash" aria-hidden />
+      <div className="relative mx-auto w-full max-w-[1400px] px-6 py-20 sm:px-8 lg:px-12 lg:py-28">
+        <Reveal>
+          <p className="t-meta">Index</p>
+          <h1 className="t-display-lg mt-5 text-[clamp(2.5rem,7.5vw,5rem)]">
+            All projects
+          </h1>
+          <p className="t-lead mt-7 max-w-[54ch]">
+            Everything currently published, newest ordering first. Filters come
+            from the categories attached to each project.
+          </p>
+        </Reveal>
 
-      <div className="mt-14">
-        <ProjectGrid
-          projects={cards}
-          categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
-        />
+        <div className="mt-16">
+          <ProjectGrid
+            projects={cards}
+            categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
+          />
+        </div>
       </div>
     </div>
   );
