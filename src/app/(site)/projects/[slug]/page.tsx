@@ -204,7 +204,7 @@ export default async function ProjectPage({
       {project.heroImage ? (
         <div className="mx-auto w-full max-w-[1400px] px-6 sm:px-8 lg:px-12">
           <Parallax speed={0.05}>
-            <div className="relative aspect-[16/8] w-full overflow-hidden rounded-[var(--r-xl)] border border-[var(--line)] shadow-[var(--shadow-lg)]">
+            <div className="mg-panel mg-tone relative aspect-[16/8] w-full overflow-hidden">
               <Image
                 src={project.heroImage}
                 alt={`${project.title} interface`}
@@ -292,7 +292,7 @@ export default async function ProjectPage({
               {project.gallery.map((image) => (
                 <RevealItem key={image.id}>
                   <figure className="card overflow-hidden">
-                    <div className="relative aspect-[16/10] w-full">
+                    <div className="mg-panel mg-tone relative aspect-[16/9] w-full overflow-hidden">
                       <Image
                         src={image.url}
                         alt={image.alt ?? ""}

@@ -43,7 +43,7 @@ export function ProjectCard({
     >
       <div
         className={`mg-tone relative overflow-hidden ${
-          featured ? "aspect-[16/7]" : "aspect-[16/10]"
+          featured ? "aspect-[21/9]" : "aspect-[16/9]"
         }`}
       >
         {project.thumbnail ? (
@@ -51,7 +51,11 @@ export function ProjectCard({
             src={project.thumbnail}
             alt=""
             fill
-            sizes={featured ? "100vw" : "(max-width: 768px) 100vw, 50vw"}
+            sizes={
+              featured
+                ? "(max-width: 1400px) 100vw, 1400px"
+                : "(max-width: 768px) 100vw, (max-width: 1400px) 50vw, 700px"
+            }
             className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
           />
         ) : (

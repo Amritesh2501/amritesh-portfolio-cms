@@ -120,605 +120,622 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   Typography
+   Everything below lives in @layer components.
+
+   Tailwind v4 puts its utilities in cascade layers, and UNLAYERED css beats
+   LAYERED css no matter the specificity. Left unlayered, .btn{display:inline-flex}
+   silently outranked .lg:hidden{display:none} and the mobile menu button stayed
+   visible on desktop. Every utility that collides with a component class here
+   had the same problem waiting.
+
+   Inside a layer these lose to utilities, which is the correct order: the
+   component sets the default, the utility overrides it at the call site.
    ------------------------------------------------------------------------- */
 
-.t-display {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.032em;
-  line-height: 1.06;
-}
+@layer components {
 
-.t-display-lg {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.04em;
-  line-height: 1;
-}
+  /* ---------------------------------------------------------------------------
+     Typography
+     ------------------------------------------------------------------------- */
 
-/* Technical metadata keeps the monospace voice from the original identity. */
-.t-meta {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
+  .t-display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.032em;
+    line-height: 1.06;
+  }
 
-.t-label {
-  font-family: var(--font-display);
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: -0.006em;
-}
+  .t-display-lg {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
 
-.t-lead {
-  font-size: clamp(1.0625rem, 1.6vw, 1.375rem);
-  line-height: 1.5;
-  letter-spacing: -0.016em;
-  color: var(--muted);
-}
+  /* Technical metadata keeps the monospace voice from the original identity. */
+  .t-meta {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
 
-/* ---------------------------------------------------------------------------
-   Surfaces
-   ------------------------------------------------------------------------- */
+  .t-label {
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: -0.006em;
+  }
 
-.card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  transition:
-    background-color 0.4s var(--ease-out),
-    border-color 0.4s var(--ease-out),
-    transform 0.4s var(--ease-out),
-    box-shadow 0.4s var(--ease-out);
-}
+  .t-lead {
+    font-size: clamp(1.0625rem, 1.6vw, 1.375rem);
+    line-height: 1.5;
+    letter-spacing: -0.016em;
+    color: var(--muted);
+  }
 
-.card-hover:hover {
-  background: var(--elevated);
-  border-color: var(--line-strong);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-}
+  /* ---------------------------------------------------------------------------
+     Surfaces
+     ------------------------------------------------------------------------- */
 
-/* Replaces the old 1px-gap brutalist grid with spaced cards. Same call sites. */
-.grid-hairline {
-  display: grid;
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-}
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    transition:
+      background-color 0.4s var(--ease-out),
+      border-color 0.4s var(--ease-out),
+      transform 0.4s var(--ease-out),
+      box-shadow 0.4s var(--ease-out);
+  }
 
-.grid-hairline > * {
-  background: var(--surface);
-}
+  .card-hover:hover {
+    background: var(--elevated);
+    border-color: var(--line-strong);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
 
-.glass {
-  background: color-mix(in srgb, var(--bg) 72%, transparent);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-}
+  /* Replaces the old 1px-gap brutalist grid with spaced cards. Same call sites. */
+  .grid-hairline {
+    display: grid;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
 
-@media (prefers-reduced-transparency: reduce) {
+  .grid-hairline > * {
+    background: var(--surface);
+  }
+
   .glass {
-    background: var(--bg);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
   }
-}
 
-.rule {
-  border: 0;
-  border-top: 1px solid var(--line);
-}
+  @media (prefers-reduced-transparency: reduce) {
+    .glass {
+      background: var(--bg);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+  }
 
-/* ---------------------------------------------------------------------------
-   Controls. Pill buttons, one scale, real contrast in every variant.
-   ------------------------------------------------------------------------- */
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--line);
+  }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  white-space: nowrap;
-  padding: 0.75rem 1.375rem;
-  border-radius: var(--r-full);
-  font-family: var(--font-display);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  border: 1px solid var(--line-strong);
-  color: var(--fg);
-  background: transparent;
-  cursor: pointer;
-  transition:
-    background-color 0.25s var(--ease-out),
-    color 0.25s var(--ease-out),
-    border-color 0.25s var(--ease-out),
-    transform 0.12s var(--ease-out);
-}
+  /* ---------------------------------------------------------------------------
+     Controls. Pill buttons, one scale, real contrast in every variant.
+     ------------------------------------------------------------------------- */
 
-.btn:hover:not(:disabled) {
-  background: var(--elevated);
-  border-color: var(--line-strong);
-}
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    padding: 0.75rem 1.375rem;
+    border-radius: var(--r-full);
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    border: 1px solid var(--line-strong);
+    color: var(--fg);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      background-color 0.25s var(--ease-out),
+      color 0.25s var(--ease-out),
+      border-color 0.25s var(--ease-out),
+      transform 0.12s var(--ease-out);
+  }
 
-.btn:active:not(:disabled) {
-  transform: scale(0.97);
-}
+  .btn:hover:not(:disabled) {
+    background: var(--elevated);
+    border-color: var(--line-strong);
+  }
 
-.btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+  .btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
 
-.btn-accent {
-  background: var(--accent);
-  border-color: transparent;
-  color: #fff;
-}
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 
-.btn-accent:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 86%, #fff);
-  border-color: transparent;
-  color: #fff;
-}
+  .btn-accent {
+    background: var(--accent);
+    border-color: transparent;
+    color: #fff;
+  }
 
-.btn-solid {
-  background: var(--fg);
-  border-color: transparent;
-  color: var(--bg);
-}
+  .btn-accent:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 86%, #fff);
+    border-color: transparent;
+    color: #fff;
+  }
 
-.btn-solid:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--fg) 88%, var(--bg));
-  color: var(--bg);
-}
+  .btn-solid {
+    background: var(--fg);
+    border-color: transparent;
+    color: var(--bg);
+  }
 
-.btn-sm {
-  padding: 0.4375rem 0.875rem;
-  font-size: 0.8125rem;
-  border-radius: var(--r-full);
-}
+  .btn-solid:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--fg) 88%, var(--bg));
+    color: var(--bg);
+  }
 
-.btn-danger:hover:not(:disabled) {
-  background: var(--accent);
-  border-color: transparent;
-  color: #fff;
-}
+  .btn-sm {
+    padding: 0.4375rem 0.875rem;
+    font-size: 0.8125rem;
+    border-radius: var(--r-full);
+  }
 
-.field {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-sm);
-  color: var(--fg);
-  font-family: var(--font-display);
-  font-size: 0.9375rem;
-  letter-spacing: -0.01em;
-  transition:
-    border-color 0.2s var(--ease-out),
-    background-color 0.2s var(--ease-out),
-    box-shadow 0.2s var(--ease-out);
-}
+  .btn-danger:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: transparent;
+    color: #fff;
+  }
 
-.field::placeholder {
-  color: color-mix(in srgb, var(--fg) 38%, transparent);
-}
+  .field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    color: var(--fg);
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
+    letter-spacing: -0.01em;
+    transition:
+      border-color 0.2s var(--ease-out),
+      background-color 0.2s var(--ease-out),
+      box-shadow 0.2s var(--ease-out);
+  }
 
-.field:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--fg) 26%, transparent);
-}
+  .field::placeholder {
+    color: color-mix(in srgb, var(--fg) 38%, transparent);
+  }
 
-.field:focus {
-  outline: none;
-  background: var(--elevated);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
-}
+  .field:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--fg) 26%, transparent);
+  }
 
-.field[aria-invalid="true"] {
-  border-color: var(--accent);
-}
+  .field:focus {
+    outline: none;
+    background: var(--elevated);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
 
-select.field {
-  appearance: none;
-  background-image:
-    linear-gradient(45deg, transparent 50%, currentColor 50%),
-    linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position:
-    calc(100% - 18px) calc(50% + 2px),
-    calc(100% - 13px) calc(50% + 2px);
-  background-size: 5px 5px;
-  background-repeat: no-repeat;
-  padding-right: 2.25rem;
-}
+  .field[aria-invalid="true"] {
+    border-color: var(--accent);
+  }
 
-textarea.field {
-  min-height: 7rem;
-  resize: vertical;
-  line-height: 1.6;
-}
+  select.field {
+    appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+      calc(100% - 18px) calc(50% + 2px),
+      calc(100% - 13px) calc(50% + 2px);
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 2.25rem;
+  }
 
-/* ---------------------------------------------------------------------------
-   CMS prose
-   ------------------------------------------------------------------------- */
+  textarea.field {
+    min-height: 7rem;
+    resize: vertical;
+    line-height: 1.6;
+  }
 
-.prose-tech {
-  font-size: 1.0625rem;
-  line-height: 1.65;
-  letter-spacing: -0.014em;
-  color: var(--muted);
-  max-width: 68ch;
-}
+  /* ---------------------------------------------------------------------------
+     CMS prose
+     ------------------------------------------------------------------------- */
 
-.prose-tech > * + * {
-  margin-top: 1.25em;
-}
+  .prose-tech {
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    letter-spacing: -0.014em;
+    color: var(--muted);
+    max-width: 68ch;
+  }
 
-.prose-tech h2,
-.prose-tech h3,
-.prose-tech h4,
-.prose-tech h5 {
-  font-weight: 600;
-  letter-spacing: -0.022em;
-  color: var(--fg);
-  font-size: 1.25rem;
-  margin-top: 2em;
-  line-height: 1.25;
-}
+  .prose-tech > * + * {
+    margin-top: 1.25em;
+  }
 
-.prose-tech strong {
-  color: var(--fg);
-  font-weight: 600;
-}
+  .prose-tech h2,
+  .prose-tech h3,
+  .prose-tech h4,
+  .prose-tech h5 {
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    color: var(--fg);
+    font-size: 1.25rem;
+    margin-top: 2em;
+    line-height: 1.25;
+  }
 
-.prose-tech a {
-  color: var(--accent);
-  text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-  transition: border-color 0.2s var(--ease-out);
-}
+  .prose-tech strong {
+    color: var(--fg);
+    font-weight: 600;
+  }
 
-.prose-tech a:hover {
-  border-color: var(--accent);
-}
+  .prose-tech a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    transition: border-color 0.2s var(--ease-out);
+  }
 
-.prose-tech ul,
-.prose-tech ol {
-  display: grid;
-  gap: 0.625rem;
-  padding-left: 1.1rem;
-}
+  .prose-tech a:hover {
+    border-color: var(--accent);
+  }
 
-.prose-tech ul {
-  list-style: none;
-  padding-left: 0;
-}
+  .prose-tech ul,
+  .prose-tech ol {
+    display: grid;
+    gap: 0.625rem;
+    padding-left: 1.1rem;
+  }
 
-.prose-tech ul > li {
-  position: relative;
-  padding-left: 1.5rem;
-}
+  .prose-tech ul {
+    list-style: none;
+    padding-left: 0;
+  }
 
-.prose-tech ul > li::before {
-  content: "";
-  position: absolute;
-  left: 0.25rem;
-  top: 0.7em;
-  width: 5px;
-  height: 5px;
-  border-radius: var(--r-full);
-  background: var(--accent);
-}
+  .prose-tech ul > li {
+    position: relative;
+    padding-left: 1.5rem;
+  }
 
-.prose-tech ol {
-  list-style: decimal;
-}
+  .prose-tech ul > li::before {
+    content: "";
+    position: absolute;
+    left: 0.25rem;
+    top: 0.7em;
+    width: 5px;
+    height: 5px;
+    border-radius: var(--r-full);
+    background: var(--accent);
+  }
 
-.prose-tech .md-code {
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-  padding: 0.15em 0.4em;
-  border-radius: var(--r-xs);
-  background: var(--elevated);
-  border: 1px solid var(--line);
-  color: var(--fg);
-}
+  .prose-tech ol {
+    list-style: decimal;
+  }
 
-/* ---------------------------------------------------------------------------
-   Texture. Kept from the original identity but dialled far down, and always on
-   a fixed pointer-events-none layer so it never repaints a scrolling container.
-   ------------------------------------------------------------------------- */
+  .prose-tech .md-code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    padding: 0.15em 0.4em;
+    border-radius: var(--r-xs);
+    background: var(--elevated);
+    border: 1px solid var(--line);
+    color: var(--fg);
+  }
 
-.fx-scanlines::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-grain);
-  pointer-events: none;
-  opacity: 0.14;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent 0px,
-    transparent 2px,
-    rgba(0, 0, 0, 0.5) 3px,
-    rgba(0, 0, 0, 0.5) 4px
-  );
-}
+  /* ---------------------------------------------------------------------------
+     Texture. Kept from the original identity but dialled far down, and always on
+     a fixed pointer-events-none layer so it never repaints a scrolling container.
+     ------------------------------------------------------------------------- */
 
-.fx-grain::before {
-  content: "";
-  position: fixed;
-  inset: -50%;
-  z-index: var(--z-grain);
-  pointer-events: none;
-  opacity: 0.022;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* Soft radial wash behind the hero. Replaces the brutalist flat plane with
-   quiet depth without reaching for a mesh gradient. */
-.hero-wash {
-  position: absolute;
-  inset: -20% -10% auto -10%;
-  height: 120%;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      60% 50% at 50% 0%,
-      color-mix(in srgb, var(--accent) 9%, transparent) 0%,
-      transparent 70%
-    ),
-    radial-gradient(
-      45% 40% at 80% 20%,
-      color-mix(in srgb, var(--fg) 5%, transparent) 0%,
-      transparent 70%
+  .fx-scanlines::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-grain);
+    pointer-events: none;
+    opacity: 0.14;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.5) 3px,
+      rgba(0, 0, 0, 0.5) 4px
     );
-}
-
-/* ---------------------------------------------------------------------------
-   Motion primitives
-   ------------------------------------------------------------------------- */
-
-@keyframes blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-
-.cursor-blink {
-  animation: blink 1.05s steps(1) infinite;
-}
-
-@keyframes sweep {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.skeleton {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--r-sm);
-  background: var(--surface);
-}
-
-.skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--fg) 7%, transparent),
-    transparent
-  );
-  animation: sweep 1.6s var(--ease-in-out) infinite;
-}
-
-.no-scrollbar {
-  scrollbar-width: none;
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* ---------------------------------------------------------------------------
-   Manga layer
-
-   Comic-book language built entirely from CSS and inline SVG: no illustration
-   assets, no new dependencies. Everything below derives its colour from the
-   existing tokens, so the CMS theme still drives the palette and light mode
-   keeps working.
-
-   The vocabulary is four things a manga page actually uses: inked panels with
-   a hard offset shadow, screentone dots for shading, speed lines for motion,
-   and lettering boxes (bubbles, captions, SFX).
-   ------------------------------------------------------------------------- */
-
-/* Ink weight. Manga panels have a heavy, consistent stroke; deriving it from
-   --fg means it inverts correctly in light mode instead of vanishing. */
-:root {
-  --ink: color-mix(in srgb, var(--fg) 88%, transparent);
-  --ink-soft: color-mix(in srgb, var(--fg) 26%, transparent);
-  --tone-size: 6px;
-}
-
-/* --- panels --------------------------------------------------------------- */
-
-/* The core unit. Square corners and an offset shadow read as printed ink
-   rather than as a UI card, which is the whole difference between "comic" and
-   "dark theme with a border". */
-.mg-panel {
-  position: relative;
-  border: 2px solid var(--ink);
-  border-radius: 0;
-  background: var(--surface);
-  box-shadow: 6px 6px 0 0 var(--ink);
-  transition:
-    transform 0.28s var(--ease-out),
-    box-shadow 0.28s var(--ease-out);
-}
-
-.mg-panel-hover:hover {
-  transform: translate(-3px, -3px);
-  box-shadow: 10px 10px 0 0 var(--ink);
-}
-
-/* Slight rotation, applied per-panel, so a grid reads as a hand-pasted page
-   rather than a CSS grid. Kept under 1deg: past that it stops looking
-   deliberate and starts looking broken. */
-.mg-tilt-l { transform: rotate(-0.6deg); }
-.mg-tilt-r { transform: rotate(0.6deg); }
-.mg-panel-hover.mg-tilt-l:hover { transform: rotate(-0.6deg) translate(-3px, -3px); }
-.mg-panel-hover.mg-tilt-r:hover { transform: rotate(0.6deg) translate(-3px, -3px); }
-
-/* --- screentone ----------------------------------------------------------- */
-
-/* Halftone dots. A repeating radial-gradient is the cheapest honest screentone;
-   masking it to a gradient keeps it from flattening the whole surface. */
-.mg-tone::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.5;
-  background-image: radial-gradient(
-    var(--ink-soft) 1px,
-    transparent 1.15px
-  );
-  background-size: var(--tone-size) var(--tone-size);
-  -webkit-mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
-  mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
-}
-
-.mg-tone-accent::after {
-  background-image: radial-gradient(
-    color-mix(in srgb, var(--accent) 55%, transparent) 1px,
-    transparent 1.15px
-  );
-  opacity: 0.7;
-}
-
-/* --- speed lines ---------------------------------------------------------- */
-
-/* Radial motion streaks. repeating-conic-gradient draws them in one paint with
-   no SVG round-trip; the radial mask hollows out the centre so content stays
-   readable on top. */
-.mg-speed {
-  position: relative;
-}
-
-.mg-speed::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.28;
-  background: repeating-conic-gradient(
-    from 0deg at 50% 50%,
-    var(--ink-soft) 0deg 0.35deg,
-    transparent 0.35deg 2.4deg
-  );
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 32%, #000 76%);
-  mask-image: radial-gradient(circle at 50% 50%, transparent 32%, #000 76%);
-}
-
-/* --- lettering ------------------------------------------------------------ */
-
-/* Speech balloon with a real tail. The tail is a rotated square rather than a
-   border triangle so it inherits the balloon's border on two sides. */
-.mg-bubble {
-  position: relative;
-  display: inline-block;
-  border: 2px solid var(--ink);
-  border-radius: 18px;
-  background: var(--bg);
-  padding: 0.85rem 1.15rem;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  line-height: 1.5;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--fg);
-}
-
-.mg-bubble::after {
-  content: "";
-  position: absolute;
-  left: 26px;
-  bottom: -8px;
-  width: 13px;
-  height: 13px;
-  background: var(--bg);
-  border-right: 2px solid var(--ink);
-  border-bottom: 2px solid var(--ink);
-  transform: rotate(45deg);
-}
-
-/* Caption box: the rectangular narration block, pinned to a panel corner. */
-.mg-caption {
-  display: inline-block;
-  border: 2px solid var(--ink);
-  background: var(--accent);
-  color: var(--bg);
-  padding: 0.4rem 0.7rem;
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-/* Sound effect lettering. Heavy, skewed, outlined — the one place the type
-   is allowed to shout. */
-.mg-sfx {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-style: italic;
-  letter-spacing: -0.03em;
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--ink);
-  transform: skewX(-8deg);
-  opacity: 0.55;
-  user-select: none;
-}
-
-/* Panel number, the 01/02/03 gutter marker. */
-.mg-num {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 0.6875rem;
-  letter-spacing: 0.18em;
-  border: 2px solid var(--ink);
-  background: var(--fg);
-  color: var(--bg);
-  padding: 0.15rem 0.5rem;
-}
-
-/* --- motion --------------------------------------------------------------- */
-
-/* Slow drift on the speed lines. Rotation only, so it never triggers layout. */
-@keyframes mg-drift {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.mg-speed-spin::before {
-  animation: mg-drift 90s linear infinite;
-}
-
-/* Respect the OS setting. Decorative motion is exactly what this is for. */
-@media (prefers-reduced-motion: reduce) {
-  .mg-speed-spin::before { animation: none; }
-  .mg-panel,
-  .mg-panel-hover:hover {
-    transition: none;
   }
+
+  .fx-grain::before {
+    content: "";
+    position: fixed;
+    inset: -50%;
+    z-index: var(--z-grain);
+    pointer-events: none;
+    opacity: 0.022;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Soft radial wash behind the hero. Replaces the brutalist flat plane with
+     quiet depth without reaching for a mesh gradient. */
+  .hero-wash {
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    height: 120%;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        60% 50% at 50% 0%,
+        color-mix(in srgb, var(--accent) 9%, transparent) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        45% 40% at 80% 20%,
+        color-mix(in srgb, var(--fg) 5%, transparent) 0%,
+        transparent 70%
+      );
+  }
+
+  /* ---------------------------------------------------------------------------
+     Motion primitives
+     ------------------------------------------------------------------------- */
+
+  @keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+
+  .cursor-blink {
+    animation: blink 1.05s steps(1) infinite;
+  }
+
+  @keyframes sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--r-sm);
+    background: var(--surface);
+  }
+
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--fg) 7%, transparent),
+      transparent
+    );
+    animation: sweep 1.6s var(--ease-in-out) infinite;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ---------------------------------------------------------------------------
+     Manga layer
+
+     Comic-book language built entirely from CSS and inline SVG: no illustration
+     assets, no new dependencies. Everything below derives its colour from the
+     existing tokens, so the CMS theme still drives the palette and light mode
+     keeps working.
+
+     The vocabulary is four things a manga page actually uses: inked panels with
+     a hard offset shadow, screentone dots for shading, speed lines for motion,
+     and lettering boxes (bubbles, captions, SFX).
+     ------------------------------------------------------------------------- */
+
+  /* Ink weight. Manga panels have a heavy, consistent stroke; deriving it from
+     --fg means it inverts correctly in light mode instead of vanishing. */
+  :root {
+    --ink: color-mix(in srgb, var(--fg) 88%, transparent);
+    --ink-soft: color-mix(in srgb, var(--fg) 26%, transparent);
+    --tone-size: 6px;
+  }
+
+  /* --- panels --------------------------------------------------------------- */
+
+  /* The core unit. Square corners and an offset shadow read as printed ink
+     rather than as a UI card, which is the whole difference between "comic" and
+     "dark theme with a border". */
+  .mg-panel {
+    position: relative;
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    background: var(--surface);
+    box-shadow: 6px 6px 0 0 var(--ink);
+    transition:
+      transform 0.28s var(--ease-out),
+      box-shadow 0.28s var(--ease-out);
+  }
+
+  .mg-panel-hover:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 10px 10px 0 0 var(--ink);
+  }
+
+  /* Slight rotation, applied per-panel, so a grid reads as a hand-pasted page
+     rather than a CSS grid. Kept under 1deg: past that it stops looking
+     deliberate and starts looking broken. */
+  .mg-tilt-l { transform: rotate(-0.6deg); }
+  .mg-tilt-r { transform: rotate(0.6deg); }
+  .mg-panel-hover.mg-tilt-l:hover { transform: rotate(-0.6deg) translate(-3px, -3px); }
+  .mg-panel-hover.mg-tilt-r:hover { transform: rotate(0.6deg) translate(-3px, -3px); }
+
+  /* --- screentone ----------------------------------------------------------- */
+
+  /* Halftone dots. A repeating radial-gradient is the cheapest honest screentone;
+     masking it to a gradient keeps it from flattening the whole surface. */
+  .mg-tone::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image: radial-gradient(
+      var(--ink-soft) 1px,
+      transparent 1.15px
+    );
+    background-size: var(--tone-size) var(--tone-size);
+    -webkit-mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
+    mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
+  }
+
+  .mg-tone-accent::after {
+    background-image: radial-gradient(
+      color-mix(in srgb, var(--accent) 55%, transparent) 1px,
+      transparent 1.15px
+    );
+    opacity: 0.7;
+  }
+
+  /* --- speed lines ---------------------------------------------------------- */
+
+  /* Radial motion streaks. repeating-conic-gradient draws them in one paint with
+     no SVG round-trip; the radial mask hollows out the centre so content stays
+     readable on top. */
+  .mg-speed {
+    position: relative;
+  }
+
+  .mg-speed::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.28;
+    background: repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      var(--ink-soft) 0deg 0.35deg,
+      transparent 0.35deg 2.4deg
+    );
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 32%, #000 76%);
+    mask-image: radial-gradient(circle at 50% 50%, transparent 32%, #000 76%);
+  }
+
+  /* --- lettering ------------------------------------------------------------ */
+
+  /* Speech balloon with a real tail. The tail is a rotated square rather than a
+     border triangle so it inherits the balloon's border on two sides. */
+  .mg-bubble {
+    position: relative;
+    display: inline-block;
+    border: 2px solid var(--ink);
+    border-radius: 18px;
+    background: var(--bg);
+    padding: 0.85rem 1.15rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+
+  .mg-bubble::after {
+    content: "";
+    position: absolute;
+    left: 26px;
+    bottom: -8px;
+    width: 13px;
+    height: 13px;
+    background: var(--bg);
+    border-right: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    transform: rotate(45deg);
+  }
+
+  /* Caption box: the rectangular narration block, pinned to a panel corner. */
+  .mg-caption {
+    display: inline-block;
+    border: 2px solid var(--ink);
+    background: var(--accent);
+    color: var(--bg);
+    padding: 0.4rem 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* Sound effect lettering. Heavy, skewed, outlined — the one place the type
+     is allowed to shout. */
+  .mg-sfx {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: -0.03em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--ink);
+    transform: skewX(-8deg);
+    opacity: 0.55;
+    user-select: none;
+  }
+
+  /* Panel number, the 01/02/03 gutter marker. */
+  .mg-num {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    border: 2px solid var(--ink);
+    background: var(--fg);
+    color: var(--bg);
+    padding: 0.15rem 0.5rem;
+  }
+
+  /* --- motion --------------------------------------------------------------- */
+
+  /* Slow drift on the speed lines. Rotation only, so it never triggers layout. */
+  @keyframes mg-drift {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .mg-speed-spin::before {
+    animation: mg-drift 90s linear infinite;
+  }
+
+  /* Respect the OS setting. Decorative motion is exactly what this is for. */
+  @media (prefers-reduced-motion: reduce) {
+    .mg-speed-spin::before { animation: none; }
+    .mg-panel,
+    .mg-panel-hover:hover {
+      transition: none;
+    }
+  }
+
 }
