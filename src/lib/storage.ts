@@ -100,15 +100,32 @@ const localDriver: StorageDriver = {
       await mkdir(UPLOAD_DIR, { recursive: true });
       await writeFile(path.join(UPLOAD_DIR, key), buffer);
     } catch (e) {
-      // Serverless platforms mount a read-only filesystem, so this driver
-      // cannot work there at all. Say that plainly instead of surfacing EROFS.
+      // These three failures have different fixes, so they get different
+      // messages. Collapsing them into one "read-only filesystem" string sent
+      // a real debugging session after the wrong cause: the fault was a
+      // mistyped UPLOAD_DIR, and the error insisted the host was read-only.
       const code = (e as NodeJS.ErrnoException).code;
-      if (code === "EROFS" || code === "EACCES" || code === "EPERM") {
+      if (code === "EROFS") {
         throw new UploadError(
-          "Cannot write to the uploads directory. This host has a read-only " +
-            "filesystem, so STORAGE_DRIVER=\"local\" will never work here. " +
-            "Set STORAGE_DRIVER=\"s3\" and the S3_* variables, or mount a " +
-            "writable volume at public/uploads.",
+          `Cannot write to ${UPLOAD_DIR}: the filesystem is read-only. ` +
+            `Serverless hosts mount one, so STORAGE_DRIVER="local" cannot ` +
+            `work there. Set STORAGE_DRIVER="s3" with the S3_* variables, or ` +
+            `deploy somewhere with a writable volume.`,
+        );
+      }
+      if (code === "EACCES" || code === "EPERM") {
+        throw new UploadError(
+          `Cannot write to ${UPLOAD_DIR}: permission denied. The directory ` +
+            `exists but this process cannot write to it. A mounted volume is ` +
+            `usually owned by root while the app runs as a non-root user. ` +
+            `Check that UPLOAD_DIR points at the volume mount path and that ` +
+            `the mount is writable by the runtime user.`,
+        );
+      }
+      if (code === "ENOENT") {
+        throw new UploadError(
+          `Cannot write to ${UPLOAD_DIR}: the path could not be created. ` +
+            `Check UPLOAD_DIR is an absolute path that exists on this host.`,
         );
       }
       throw e;
