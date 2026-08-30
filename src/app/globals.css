@@ -104,7 +104,13 @@ body {
   border-radius: var(--r-xs);
 }
 
-/* Anything above MOTION_INTENSITY 3 has to collapse. Non-negotiable. */
+/* Reduced motion: remove movement, keep fades.
+   The accessibility risk is vestibular — translation, parallax, scale, spin.
+   An opacity or colour crossfade carries none of it. The previous rule
+   flattened transition-duration to 0.001ms for everything, which also killed
+   every fade and left the site feeling dead rather than calm, and gave anyone
+   with the OS setting on no feedback that the page was responding at all.
+   So: loops and transforms stop, opacity and colour still ease. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -114,8 +120,10 @@ body {
   *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+    transition-property: opacity, color, background-color, border-color, fill,
+      stroke !important;
+    transition-duration: 0.3s !important;
   }
 }
 
