@@ -39,10 +39,10 @@ export function ProjectCard({
   return (
     <Link
       href={`/projects/${project.slug}`}
-      className="card card-hover group flex h-full flex-col overflow-hidden"
+      className="mg-panel mg-panel-hover group flex h-full flex-col overflow-hidden"
     >
       <div
-        className={`relative overflow-hidden ${
+        className={`mg-tone relative overflow-hidden ${
           featured ? "aspect-[16/7]" : "aspect-[16/10]"
         }`}
       >
@@ -72,9 +72,7 @@ export function ProjectCard({
           </div>
         )}
 
-        <span className="absolute left-4 top-4 rounded-[var(--r-full)] border border-[var(--line-strong)] bg-[color-mix(in_srgb,var(--bg)_75%,transparent)] px-2.5 py-1 backdrop-blur-md">
-          <span className="t-meta text-[0.5625rem] text-[var(--fg)]">{label}</span>
-        </span>
+        <span className="mg-caption absolute left-0 top-0">{label}</span>
       </div>
 
       <div className="flex flex-1 flex-col p-6 sm:p-7">
@@ -120,7 +118,7 @@ export function ProjectCard({
           {project.technologies.slice(0, techLimit).map((tech) => (
             <span
               key={tech}
-              className="rounded-[var(--r-full)] border border-[var(--line)] px-2.5 py-1 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-[var(--muted)]"
+              className="border-2 border-[var(--ink-soft)] px-2.5 py-1 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-[var(--muted)] transition-colors group-hover:border-[var(--ink)]"
             >
               {tech}
             </span>
@@ -132,7 +130,7 @@ export function ProjectCard({
           ) : null}
         </div>
 
-        <span className="mt-7 flex items-center gap-2 border-t border-[var(--line)] pt-5 text-[0.875rem] font-medium tracking-[-0.01em] text-[var(--fg)]">
+        <span className="mt-7 flex items-center gap-2 border-t-2 border-[var(--ink-soft)] pt-5 text-[0.875rem] font-medium tracking-[-0.01em] text-[var(--fg)]">
           Read the case study
           <span
             aria-hidden

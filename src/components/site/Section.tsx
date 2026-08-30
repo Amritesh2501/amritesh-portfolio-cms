@@ -3,9 +3,10 @@ import { Reveal } from "./Reveal";
 /**
  * The structural compartment used across the public site.
  *
- * Apple-clean rhythm: a wide gutter, a quiet mono label, then the headline
- * carrying the weight. The label is the section's own heading rendered once,
- * not a decorative eyebrow stacked above another heading.
+ * Manga page rhythm: a numbered gutter marker, the section label as an inked
+ * caption, then the headline carrying the weight. The label is the section's
+ * own heading rendered once, not a decorative eyebrow stacked above another
+ * heading, so the document outline stays correct.
  */
 export function Section({
   id,
@@ -28,16 +29,27 @@ export function Section({
     <section
       id={id}
       aria-labelledby={`${id}-heading`}
-      className="scroll-mt-24 border-t border-[var(--line)]"
+      className="relative scroll-mt-24 border-t-2 border-[var(--ink)]"
     >
-      <div className="mx-auto w-full max-w-[1400px] px-6 py-20 sm:px-8 lg:px-12 lg:py-28">
+      <div
+        aria-hidden
+        className="mg-tone pointer-events-none absolute inset-0 opacity-40"
+      />
+      <div className="relative mx-auto w-full max-w-[1400px] px-6 py-20 sm:px-8 lg:px-12 lg:py-28">
         <Reveal>
-          <div className="flex flex-wrap items-baseline justify-between gap-4">
-            <h2 id={`${id}-heading`} className="t-meta text-[var(--fg)]">
-              {index ? <span className="text-[var(--accent)]">{index} </span> : null}
-              {label}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h2
+              id={`${id}-heading`}
+              className="flex items-center gap-3 text-[var(--fg)]"
+            >
+              {index ? <span className="mg-num">{index}</span> : null}
+              <span className="t-meta text-[var(--fg)]">{label}</span>
+              <span
+                aria-hidden
+                className="hidden h-[2px] w-16 bg-[var(--ink)] sm:block"
+              />
             </h2>
-            {aside ? <span className="t-meta">{aside}</span> : null}
+            {aside ? <span className="mg-caption">{aside}</span> : null}
           </div>
         </Reveal>
 
@@ -65,7 +77,7 @@ export function Section({
 /** Consistent empty state. Every list on the site routes through this. */
 export function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--line-strong)] px-6 py-16 text-center">
+    <div className="mg-panel px-6 py-16 text-center">
       <p className="t-meta">{children}</p>
     </div>
   );

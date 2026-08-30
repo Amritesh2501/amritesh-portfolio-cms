@@ -527,3 +527,198 @@ textarea.field {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ---------------------------------------------------------------------------
+   Manga layer
+
+   Comic-book language built entirely from CSS and inline SVG: no illustration
+   assets, no new dependencies. Everything below derives its colour from the
+   existing tokens, so the CMS theme still drives the palette and light mode
+   keeps working.
+
+   The vocabulary is four things a manga page actually uses: inked panels with
+   a hard offset shadow, screentone dots for shading, speed lines for motion,
+   and lettering boxes (bubbles, captions, SFX).
+   ------------------------------------------------------------------------- */
+
+/* Ink weight. Manga panels have a heavy, consistent stroke; deriving it from
+   --fg means it inverts correctly in light mode instead of vanishing. */
+:root {
+  --ink: color-mix(in srgb, var(--fg) 88%, transparent);
+  --ink-soft: color-mix(in srgb, var(--fg) 26%, transparent);
+  --tone-size: 6px;
+}
+
+/* --- panels --------------------------------------------------------------- */
+
+/* The core unit. Square corners and an offset shadow read as printed ink
+   rather than as a UI card, which is the whole difference between "comic" and
+   "dark theme with a border". */
+.mg-panel {
+  position: relative;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--surface);
+  box-shadow: 6px 6px 0 0 var(--ink);
+  transition:
+    transform 0.28s var(--ease-out),
+    box-shadow 0.28s var(--ease-out);
+}
+
+.mg-panel-hover:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 10px 10px 0 0 var(--ink);
+}
+
+/* Slight rotation, applied per-panel, so a grid reads as a hand-pasted page
+   rather than a CSS grid. Kept under 1deg: past that it stops looking
+   deliberate and starts looking broken. */
+.mg-tilt-l { transform: rotate(-0.6deg); }
+.mg-tilt-r { transform: rotate(0.6deg); }
+.mg-panel-hover.mg-tilt-l:hover { transform: rotate(-0.6deg) translate(-3px, -3px); }
+.mg-panel-hover.mg-tilt-r:hover { transform: rotate(0.6deg) translate(-3px, -3px); }
+
+/* --- screentone ----------------------------------------------------------- */
+
+/* Halftone dots. A repeating radial-gradient is the cheapest honest screentone;
+   masking it to a gradient keeps it from flattening the whole surface. */
+.mg-tone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: radial-gradient(
+    var(--ink-soft) 1px,
+    transparent 1.15px
+  );
+  background-size: var(--tone-size) var(--tone-size);
+  -webkit-mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
+  mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
+}
+
+.mg-tone-accent::after {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--accent) 55%, transparent) 1px,
+    transparent 1.15px
+  );
+  opacity: 0.7;
+}
+
+/* --- speed lines ---------------------------------------------------------- */
+
+/* Radial motion streaks. repeating-conic-gradient draws them in one paint with
+   no SVG round-trip; the radial mask hollows out the centre so content stays
+   readable on top. */
+.mg-speed {
+  position: relative;
+}
+
+.mg-speed::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.28;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    var(--ink-soft) 0deg 0.35deg,
+    transparent 0.35deg 2.4deg
+  );
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 32%, #000 76%);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 32%, #000 76%);
+}
+
+/* --- lettering ------------------------------------------------------------ */
+
+/* Speech balloon with a real tail. The tail is a rotated square rather than a
+   border triangle so it inherits the balloon's border on two sides. */
+.mg-bubble {
+  position: relative;
+  display: inline-block;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  background: var(--bg);
+  padding: 0.85rem 1.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.mg-bubble::after {
+  content: "";
+  position: absolute;
+  left: 26px;
+  bottom: -8px;
+  width: 13px;
+  height: 13px;
+  background: var(--bg);
+  border-right: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  transform: rotate(45deg);
+}
+
+/* Caption box: the rectangular narration block, pinned to a panel corner. */
+.mg-caption {
+  display: inline-block;
+  border: 2px solid var(--ink);
+  background: var(--accent);
+  color: var(--bg);
+  padding: 0.4rem 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Sound effect lettering. Heavy, skewed, outlined — the one place the type
+   is allowed to shout. */
+.mg-sfx {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -0.03em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--ink);
+  transform: skewX(-8deg);
+  opacity: 0.55;
+  user-select: none;
+}
+
+/* Panel number, the 01/02/03 gutter marker. */
+.mg-num {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  border: 2px solid var(--ink);
+  background: var(--fg);
+  color: var(--bg);
+  padding: 0.15rem 0.5rem;
+}
+
+/* --- motion --------------------------------------------------------------- */
+
+/* Slow drift on the speed lines. Rotation only, so it never triggers layout. */
+@keyframes mg-drift {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.mg-speed-spin::before {
+  animation: mg-drift 90s linear infinite;
+}
+
+/* Respect the OS setting. Decorative motion is exactly what this is for. */
+@media (prefers-reduced-motion: reduce) {
+  .mg-speed-spin::before { animation: none; }
+  .mg-panel,
+  .mg-panel-hover:hover {
+    transition: none;
+  }
+}

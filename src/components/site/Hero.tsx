@@ -38,16 +38,20 @@ export function Hero({
     >
       <div className="hero-wash" aria-hidden />
 
+      <div
+        aria-hidden
+        className="mg-speed mg-speed-spin pointer-events-none absolute inset-0"
+      />
       <div className="relative mx-auto w-full max-w-[1400px] px-6 pb-20 pt-20 sm:px-8 lg:px-12 lg:pb-28 lg:pt-24">
         <div className="grid items-center gap-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
           <HeroParallax depth={0.55}>
             {availability?.text ? (
               <Reveal y={16} blur={false}>
-                <span className="inline-flex items-center gap-2.5 rounded-[var(--r-full)] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-1.5">
+                <span className="inline-flex items-center gap-2.5 border-2 border-[var(--ink)] bg-[var(--surface)] px-3.5 py-1.5 shadow-[4px_4px_0_0_var(--ink)]">
                   {/* Real semantic state: whether he is open to work right now. */}
                   <span
                     aria-hidden
-                    className="h-1.5 w-1.5 rounded-[var(--r-full)]"
+                    className="h-1.5 w-1.5"
                     style={{
                       background:
                         availability.status === "OPEN" ? "#30d158" : "var(--muted)",
@@ -87,7 +91,7 @@ export function Hero({
 
             {tagline ? (
               <Reveal delay={0.18}>
-                <p className="t-lead mt-8 max-w-[38ch] text-[clamp(1.25rem,2.6vw,1.875rem)] leading-[1.3] text-[var(--fg)]">
+                <p className="mg-bubble mt-8 max-w-[42ch] !text-[0.8125rem] !leading-[1.7]">
                   {tagline}
                 </p>
               </Reveal>
