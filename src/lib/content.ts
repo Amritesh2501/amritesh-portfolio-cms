@@ -35,6 +35,52 @@ export const getSettings = cache(async () => {
   };
 });
 
+/**
+ * Chrome-safe reads.
+ *
+ * The header and footer are rendered by a layout, and an error thrown inside a
+ * layout bubbles PAST that segment error boundary. Left unguarded, a database
+ * blip therefore replaces the whole site with a bare 500 instead of showing the
+ * shell plus an explanation. These variants degrade to empty rather than throw;
+ * page-level reads still throw, so a genuine failure is never silently hidden.
+ */
+export async function getSettingsSafe() {
+  try {
+    return await getSettings();
+  } catch {
+    const empty: Record<string, string> = {};
+    return {
+      all: [] as Awaited<ReturnType<typeof getSettings>>["all"],
+      get: (_key: string, fallback = "") => fallback,
+      map: empty,
+    };
+  }
+}
+
+export async function getNavigationSafe(location: "HEADER" | "FOOTER") {
+  try {
+    return await getNavigation(location);
+  } catch {
+    return [];
+  }
+}
+
+export async function getProfileSafe() {
+  try {
+    return await getProfile();
+  } catch {
+    return null;
+  }
+}
+
+export async function getSocialLinksSafe() {
+  try {
+    return await getSocialLinks();
+  } catch {
+    return [];
+  }
+}
+
 export const getNavigation = cache(async (location: "HEADER" | "FOOTER") => {
   return prisma.navigationItem.findMany({
     where: {

@@ -30,6 +30,19 @@ const config: NextConfig = {
         : []),
     ],
   },
+  async rewrites() {
+    // Next serves public/ from a manifest built at BUILD time, so a file the
+    // CMS uploads afterwards 404s under `next start`. beforeFiles runs ahead of
+    // static file matching, so /uploads/* reaches the route handler that reads
+    // from disk. Keeps stored URLs clean and old rows working.
+    return {
+      beforeFiles: [
+        { source: "/uploads/:path*", destination: "/api/uploads/:path*" },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
   async headers() {
     return [
       {

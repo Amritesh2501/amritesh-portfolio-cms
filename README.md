@@ -246,9 +246,14 @@ delete, plus a validated edit form. To surface it publicly, add a query to
 
 Uploads go through one interface with two drivers, chosen by `STORAGE_DRIVER`.
 
-**`local`** (default) writes to `public/uploads/` and Next serves the files statically.
-Good for development and single-server deploys. It does **not** survive an ephemeral
-filesystem, so do not use it on Vercel or Fly machines.
+**`local`** (default) writes to `public/uploads/`. Those files are served by a
+route handler at `/api/uploads/*`, with a `beforeFiles` rewrite pointing
+`/uploads/*` at it, because Next builds its `public/` manifest at BUILD time: a
+file the CMS uploads afterwards is on disk and in the database but 404s under
+`next start`. The dev server hides this by reading `public/` per request, so it
+only shows up in production. Good for development and single-server deploys. It
+does **not** survive an ephemeral filesystem, so do not use it on Vercel or Fly
+machines.
 
 **`s3`** talks to any S3-compatible bucket (AWS S3, Cloudflare R2, MinIO, DigitalOcean
 Spaces) over plain `fetch` with SigV4 request signing. There is no AWS SDK dependency:
@@ -394,7 +399,7 @@ only correct option.
 
 ## What was verified, and how
 
-212 automated checks were run against a live server and a live Postgres, driving the
+224 automated checks were run against a live server and a live Postgres, driving the
 **real** Server Actions over HTTP rather than calling functions directly.
 
 | Area | Checks | Covers |
@@ -403,6 +408,7 @@ only correct option.
 | CRUD | 42 | Create, publish, update, duplicate, reorder and delete a project through the actual admin actions; child rows (technologies, metrics, gallery) written and removed transactionally; edits appear on the public site; server-side validation rejects bad input; unique-slug collision returns a readable message; **anonymous callers rejected and nothing persisted**; contact form persists; honeypot drops bots; a settings edit reaches the public footer |
 | Media, uploads, rate limiting | 32 | Upload writes bytes to disk and a row to Postgres and serves over HTTP; disallowed MIME types refused; path-traversal filenames flattened; oversized files refused by the app rather than the framework; anonymous and **cross-origin** uploads blocked; alt text; delete removes both row and bytes; the contact limiter blocks on the 6th submission and stores exactly 5 |
 | Restart persistence | 3 | An edit made through the admin survives a full cold restart of both the Postgres container and the Next server |
+| Resilience | 12 | Correct status codes with the database down (500 on pages, 503 on `/api/health`), the app recovers when the database returns without a restart, path traversal against the uploads route is refused with no leakage |
 | Container deploy | 56 | Image builds with no database credentials; entrypoint refuses to start with a readable message when `DATABASE_URL` or `AUTH_SECRET` is missing; full compose stack migrates, seeds, serves and survives a restart; the whole 53-check read/auth suite passes against the containerised production build |
 | Theme and redesign | 26 | Both light and dark modes render correctly and the mode/colour mismatch guard holds; boot screen, parallax and card surfaces are wired in; no em dashes in rendered output; skip link and section labelling present |
 
@@ -418,6 +424,26 @@ Two real bugs were found and fixed during this run, both worth knowing about:
    documented 5 MB limit was a lie and any file over 1 MB failed with an opaque
    framework error. Fixed by deriving `serverActions.bodySizeLimit` from
    `UPLOAD_MAX_BYTES`, with headroom so near-miss uploads get the app's own message.
+3. **Uploaded files 404 in production.** Next builds its `public/` manifest at
+   build time, so anything the CMS uploaded afterwards was never served by
+   `next start`, even though the bytes were on disk and the row was in Postgres.
+   Every CMS-uploaded image would have been broken on a real deploy. The dev
+   server reads `public/` per request, which is why it never showed locally.
+   Fixed with a route handler plus a rewrite; see [Storage](#storage).
+4. **A database blip took the whole site down with an opaque 500.** The public
+   layout read the database unguarded, and an error thrown in a layout bubbles
+   past that segment error boundary. Fixed with error boundaries at the root,
+   the public segment and the admin, plus chrome-safe readers so the header and
+   footer degrade instead of failing the page. Added `/api/health`, which
+   round-trips to Postgres, and pointed the container healthcheck at it: the old
+   check hit a page that renders without the database, so it reported healthy
+   while every public page returned 500.
+5. **The home-page loading skeleton lied about status codes.** A `loading.tsx`
+   opens a Suspense boundary, which flushes the shell and locks the response at
+   200 before the page body runs. It produced a soft 404 on unknown project
+   slugs, and later a 200 carrying a skeleton when the database was down.
+   Removed: the page is server-rendered in tens of milliseconds, so the skeleton
+   was buying a flash and costing correct status codes twice.
 
 Not covered by automation: `replaceMedia` (it takes two arguments, one a `FormData`,
 which the test harness could not encode; it is `storage.put` + `storage.delete` +

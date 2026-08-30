@@ -1,4 +1,8 @@
-import { getNavigation, getProfile, getSettings } from "@/lib/content";
+import {
+  getNavigationSafe,
+  getProfileSafe,
+  getSettingsSafe,
+} from "@/lib/content";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { CommandPalette } from "@/components/site/CommandPalette";
@@ -10,10 +14,14 @@ export default async function SiteLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Safe variants: an error thrown in a layout bubbles past this segment
+  // error boundary, so a database blip here would replace the whole site with
+  // a bare 500. The shell degrades instead, and the page below still surfaces
+  // the failure through error.tsx.
   const [settings, nav, profile] = await Promise.all([
-    getSettings(),
-    getNavigation("HEADER"),
-    getProfile(),
+    getSettingsSafe(),
+    getNavigationSafe("HEADER"),
+    getProfileSafe(),
   ]);
 
   const navItems = nav.map((item) => ({

@@ -1,11 +1,17 @@
 import Link from "next/link";
-import { getNavigation, getSettings, getSocialLinks } from "@/lib/content";
+import {
+  getNavigationSafe,
+  getSettingsSafe,
+  getSocialLinksSafe,
+} from "@/lib/content";
 
 export async function SiteFooter() {
+  // Rendered inside the layout, so it degrades rather than throwing. See the
+  // note on the safe readers in lib/content.ts.
   const [settings, nav, socials] = await Promise.all([
-    getSettings(),
-    getNavigation("FOOTER"),
-    getSocialLinks(),
+    getSettingsSafe(),
+    getNavigationSafe("FOOTER"),
+    getSocialLinksSafe(),
   ]);
 
   return (
