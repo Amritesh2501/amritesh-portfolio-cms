@@ -51,7 +51,6 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # STORAGE_DRIVER=local writes here. A container filesystem is ephemeral, so
 # mount a volume on this path or set STORAGE_DRIVER=s3. See the README.
 RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
-VOLUME ["/app/public/uploads"]
 
 USER nextjs
 EXPOSE 3000
