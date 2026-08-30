@@ -32,6 +32,13 @@ if [ -z "$DATABASE_URL" ]; then
  Managed providers usually also want ?sslmode=require on the end."
 fi
 
+# Migrations read DIRECT_URL. Without a connection pooler it is simply the same
+# value, so default it rather than making every deploy set two identical vars.
+if [ -z "$DIRECT_URL" ]; then
+  export DIRECT_URL="$DATABASE_URL"
+  echo "> DIRECT_URL not set, defaulting it to DATABASE_URL"
+fi
+
 if [ -z "$AUTH_SECRET" ]; then
   fail "AUTH_SECRET is not set.
 

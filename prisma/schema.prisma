@@ -14,6 +14,16 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+
+  // Migrations cannot run through a transaction-mode connection pooler
+  // (PgBouncer, the Neon and Supabase poolers, Prisma Accelerate), because they
+  // need session-level statements the pooler will not carry. DATABASE_URL is
+  // therefore the pooled URL the app queries through, and DIRECT_URL is the
+  // unpooled one migrations use.
+  //
+  // Without a pooler the two are simply the same value, and the Docker
+  // entrypoint defaults DIRECT_URL to DATABASE_URL so you can ignore it.
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {

@@ -88,9 +88,26 @@ const localDriver: StorageDriver = {
   async put(file) {
     assertUploadable(file);
     const key = safeKey(file.name);
-    await mkdir(UPLOAD_DIR, { recursive: true });
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(path.join(UPLOAD_DIR, key), buffer);
+
+    try {
+      await mkdir(UPLOAD_DIR, { recursive: true });
+      await writeFile(path.join(UPLOAD_DIR, key), buffer);
+    } catch (e) {
+      // Serverless platforms mount a read-only filesystem, so this driver
+      // cannot work there at all. Say that plainly instead of surfacing EROFS.
+      const code = (e as NodeJS.ErrnoException).code;
+      if (code === "EROFS" || code === "EACCES" || code === "EPERM") {
+        throw new UploadError(
+          "Cannot write to the uploads directory. This host has a read-only " +
+            "filesystem, so STORAGE_DRIVER=\"local\" will never work here. " +
+            "Set STORAGE_DRIVER=\"s3\" and the S3_* variables, or mount a " +
+            "writable volume at public/uploads.",
+        );
+      }
+      throw e;
+    }
+
     return {
       key,
       url: `/uploads/${key}`,

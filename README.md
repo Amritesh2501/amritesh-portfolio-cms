@@ -102,6 +102,7 @@ and must never be committed.
 | `CONTACT_RATE_LIMIT` | no | Contact submissions allowed per window per IP, default 5. |
 | `CONTACT_RATE_WINDOW_SECONDS` | no | Window length, default 3600. |
 | `NEXT_PUBLIC_SITE_URL` | no | Used for canonical URLs and OG tags. |
+| `DIRECT_URL` | migrations | Unpooled URL used only by migrations. Same value as `DATABASE_URL` when there is no connection pooler; the Docker entrypoint defaults it for you. |
 | `SEED_ON_START` | no | `true` runs the seed once at container boot. Off by default. See [Deployment](#deployment). |
 
 ---
@@ -342,6 +343,9 @@ First boot only: set `SEED_ON_START=true` plus `SEED_ADMIN_EMAIL` and
 `SEED_ADMIN_PASSWORD` to create the admin account and load the content. **Turn
 `SEED_ON_START` back off afterwards.** It is off by default so that a redeploy
 cannot quietly resurrect content you deleted.
+
+**Platform-specific walkthroughs for Railway and Vercel, with a full variable
+matrix, are in [DEPLOYMENT.md](DEPLOYMENT.md).**
 
 ### Docker (recommended, works on any platform)
 
