@@ -9,6 +9,9 @@ import { Markdown } from "@/components/site/Markdown";
 import { ProjectGrid } from "@/components/site/ProjectGrid";
 import { ContactForm } from "@/components/site/ContactForm";
 import type { CardProject } from "@/components/site/ProjectCard";
+import { JsonLd } from "@/components/site/JsonLd";
+import { getSiteUrl } from "@/lib/site-url";
+import { plainText } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +43,8 @@ export default async function HomePage() {
       </div>
     );
   }
+
+  const base = await getSiteUrl();
 
   const cards: CardProject[] = projects.map((p) => ({
     id: p.id,
@@ -89,6 +94,28 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Person",
+          name: profile.name,
+          url: base,
+          ...(profile.headline ? { jobTitle: profile.headline } : {}),
+          ...(profile.bio ? { description: plainText(profile.bio, 300) } : {}),
+          ...(profile.location ? { address: profile.location } : {}),
+          ...(profile.email ? { email: profile.email } : {}),
+          ...(profile.profileImage ? { image: profile.profileImage } : {}),
+          ...(socials.length ? { sameAs: socials.map((s) => s.url) } : {}),
+        }}
+      />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: settings.get("site.title", profile.name),
+          url: base,
+        }}
+      />
       <Hero
         name={profile.name}
         headline={profile.headline}

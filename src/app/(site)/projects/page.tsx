@@ -3,6 +3,9 @@ import { getProjectCategories, getProjects, getSettings } from "@/lib/content";
 import { ProjectGrid } from "@/components/site/ProjectGrid";
 import { Reveal } from "@/components/site/Reveal";
 import type { CardProject } from "@/components/site/ProjectCard";
+import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import { JsonLd, breadcrumbList } from "@/components/site/JsonLd";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +18,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ProjectsPage() {
-  const [projects, categories] = await Promise.all([
+  const [projects, categories, base] = await Promise.all([
     getProjects(),
     getProjectCategories(),
+    getSiteUrl(),
   ]);
 
   const cards: CardProject[] = projects.map((p) => ({
@@ -39,6 +43,15 @@ export default async function ProjectsPage() {
     <div className="relative isolate">
       <div className="hero-wash" aria-hidden />
       <div className="relative mx-auto w-full max-w-[1400px] px-6 py-20 sm:px-8 lg:px-12 lg:py-28">
+        <JsonLd
+          data={breadcrumbList(base, [
+            { name: "Home", path: "/" },
+            { name: "Projects", path: "/projects" },
+          ])}
+        />
+        <Breadcrumbs
+          items={[{ name: "Home", path: "/" }, { name: "Projects" }]}
+        />
         <Reveal>
           <p className="t-meta">Index</p>
           <h1 className="t-display-lg mt-5 text-[clamp(2.5rem,7.5vw,5rem)]">

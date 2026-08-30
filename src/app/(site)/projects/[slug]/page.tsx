@@ -7,6 +7,9 @@ import { plainText } from "@/lib/utils";
 import { Markdown } from "@/components/site/Markdown";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
 import { Parallax } from "@/components/site/Parallax";
+import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import { JsonLd, breadcrumbList } from "@/components/site/JsonLd";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +64,7 @@ export default async function ProjectPage({
   const project = await getProjectBySlug(slug);
   if (!project) notFound();
 
+  const base = await getSiteUrl();
   const all = await getProjects();
   const index = all.findIndex((p) => p.id === project.id);
   const next = all[(index + 1) % all.length];
@@ -81,26 +85,38 @@ export default async function ProjectPage({
     { label: "Year", value: project.year ? String(project.year) : null },
   ].filter((f) => f.value);
 
+  const crumbs = [
+    { name: "Home", path: "/" },
+    { name: "Projects", path: "/projects" },
+    { name: project.title, path: `/projects/${project.slug}` },
+  ];
+
   return (
     <article>
+      <JsonLd data={breadcrumbList(base, crumbs)} />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "CreativeWork",
+          name: project.title,
+          description: plainText(project.shortDescription, 300),
+          url: `${base}/projects/${project.slug}`,
+          dateModified: project.updatedAt.toISOString(),
+          ...(project.heroImage || project.thumbnail
+            ? { image: project.heroImage ?? project.thumbnail }
+            : {}),
+          ...(project.technologies.length
+            ? { keywords: project.technologies.map((t) => t.name).join(", ") }
+            : {}),
+        }}
+      />
       <div className="relative isolate overflow-hidden">
         <div className="hero-wash" aria-hidden />
 
         <div className="relative mx-auto w-full max-w-[1400px] px-6 sm:px-8 lg:px-12">
-          <nav aria-label="Breadcrumb" className="py-6">
-            <Link
-              href="/projects"
-              className="group inline-flex items-center gap-2 text-[0.875rem] font-medium tracking-[-0.01em] text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
-            >
-              <span
-                aria-hidden
-                className="transition-transform duration-300 group-hover:-translate-x-1"
-              >
-                &larr;
-              </span>
-              All projects
-            </Link>
-          </nav>
+          <div className="py-6">
+            <Breadcrumbs items={crumbs} />
+          </div>
 
           <header className="grid gap-12 pb-16 pt-8 lg:grid-cols-[1.4fr_0.6fr] lg:gap-20 lg:pb-24 lg:pt-14">
             <div>
