@@ -81,7 +81,13 @@ export function safeKey(originalName: string) {
 // local disk
 // ---------------------------------------------------------------------------
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+// Railway (and any ext4 volume) drops a root-owned `lost+found` into the mount
+// root. Mounted under public/, Next scandirs it at startup, hits EACCES as the
+// non-root user and the whole server dies. Nothing needs these files under
+// public/ anyway: they are served by the /api/uploads route, not the static
+// manifest. So the path is overridable and the volume mounts outside public/.
+export const UPLOAD_DIR =
+  process.env.UPLOAD_DIR || path.join(process.cwd(), "public", "uploads");
 
 const localDriver: StorageDriver = {
   name: "local",

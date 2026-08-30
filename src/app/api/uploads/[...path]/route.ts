@@ -1,6 +1,7 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { UPLOAD_DIR } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export const dynamic = "force-dynamic";
  *
  * Only reachable when STORAGE_DRIVER=local; the s3 driver stores absolute URLs.
  */
-const ROOT = path.join(process.cwd(), "public", "uploads");
+const ROOT = UPLOAD_DIR;
 
 const CONTENT_TYPES: Record<string, string> = {
   ".png": "image/png",
