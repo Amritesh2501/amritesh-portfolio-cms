@@ -60,7 +60,7 @@ it builds in. Most platforms keep those separate, and that is the usual cause.
 | Variable | Value | Notes |
 |---|---|---|
 | `DATABASE_URL` | `postgresql://user:pass@host:5432/db` | The URL the app queries through. Managed providers usually need `?sslmode=require`. |
-| `DIRECT_URL` | Same as `DATABASE_URL`, unless you use a pooler | Migrations only. See below. |
+| `DIRECT_URL` | Only if your database is behind a pooler | Migrations only. Defaults to `DATABASE_URL` automatically, on both platforms. See below. |
 | `AUTH_SECRET` | 32 random bytes, base64 | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
 | `AUTH_URL` | `https://your-domain` | Your public origin. No trailing slash. |
 | `AUTH_TRUST_HOST` | `true` | Required behind any proxy, which includes both platforms. |
@@ -71,9 +71,9 @@ it builds in. Most platforms keep those separate, and that is the usual cause.
 Migrations cannot run through a transaction-mode connection pooler, because they
 need session-level statements the pooler will not carry.
 
-- **No pooler** (Railway Postgres, plain RDS): set `DIRECT_URL` to exactly the
-  same string as `DATABASE_URL`. On Railway you can skip it entirely, because
-  the Docker entrypoint defaults it for you.
+- **No pooler** (Railway Postgres, plain RDS): **do not set it at all.** Both
+  the Docker entrypoint and the build-time migration step copy `DATABASE_URL`
+  into it when it is missing, so one database variable is enough.
 - **Neon**: `DATABASE_URL` is the `-pooler` host, `DIRECT_URL` is the same host
   with `-pooler` removed.
 - **Supabase**: `DATABASE_URL` is port `6543` (transaction pooler),
@@ -227,12 +227,18 @@ The repo defines a `vercel-build` script, and Vercel runs that automatically
 when it exists:
 
 ```
-prisma generate && prisma migrate deploy && next build
+prisma generate && node scripts/migrate.mjs && next build
 ```
 
 That is what applies your migrations. Vercel has no container start hook, so
-this is the only place migrations can run automatically. `migrate deploy` is
+this is the only place they can run automatically. `migrate deploy` is
 idempotent, so running it on every deploy is fine.
+
+`scripts/migrate.mjs` defaults `DIRECT_URL` to `DATABASE_URL` when it is unset,
+and **fails the build** if it cannot migrate. That is deliberate: the
+alternative is a deploy that reports success and then returns 500 on every page
+because the tables do not exist. If a build fails there, read its message. It
+names the variable and where to set it.
 
 ### 3. Set the environment variables
 
@@ -242,7 +248,7 @@ idempotent, so running it on every deploy is fine.
 | Variable | Value |
 |---|---|
 | `DATABASE_URL` | the **pooled** connection string |
-| `DIRECT_URL` | the **direct** connection string |
+| `DIRECT_URL` | the **direct** connection string. Only needed because Neon and Supabase pool by default. Omit it on an unpooled database. |
 | `AUTH_SECRET` | your generated secret |
 | `AUTH_URL` | `https://your-project.vercel.app` |
 | `AUTH_TRUST_HOST` | `true` |
@@ -312,6 +318,18 @@ random rather than like a configuration problem.
 ---
 
 ## Troubleshooting
+
+**Everything 500s, and `/api/health` returns 404**
+A 404 on `/api/health`, `/icon.svg` or `/favicon.ico` means the platform is
+serving an OLD commit: those routes exist in the current code. Check what your
+git remote actually has. A deploy builds what is pushed, not what is on your
+laptop.
+
+**The build fails on the migration step**
+Read the message it prints. Almost always `DATABASE_URL` is missing from the
+BUILD environment specifically, or scoped to one Vercel environment and not the
+one being deployed. A failed build is the intended outcome here: it stops a
+green deploy that would 500 on every page.
 
 **`Environment variable not found: DATABASE_URL`**
 The variable is missing in the environment that step runs in. On Vercel, check
