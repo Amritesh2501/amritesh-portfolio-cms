@@ -32,6 +32,17 @@ if [ -z "$DATABASE_URL" ]; then
  Managed providers usually also want ?sslmode=require on the end."
 fi
 
+# A mounted volume arrives owned by root, so the non-root runtime user cannot
+# write to it and every upload fails with EACCES. The image cannot fix this at
+# build time: the mount replaces whatever the build chowned. So take ownership
+# here, while still root, then drop privileges before the server starts.
+UPLOAD_DIR="${UPLOAD_DIR:-/app/public/uploads}"
+if [ "$(id -u)" = "0" ]; then
+  mkdir -p "$UPLOAD_DIR"
+  chown -R nextjs:nodejs "$UPLOAD_DIR" 2>/dev/null ||
+    echo "> could not chown $UPLOAD_DIR, uploads may fail"
+fi
+
 # Migrations read DIRECT_URL. Without a connection pooler it is simply the same
 # value, so default it rather than making every deploy set two identical vars.
 if [ -z "$DIRECT_URL" ]; then
@@ -71,4 +82,10 @@ if [ "$SEED_ON_START" = "true" ]; then
 fi
 
 echo "> starting server"
+
+# The application never runs as root. Root was only ever needed to chown the
+# volume above; su-exec replaces this shell so signals still reach the server.
+if [ "$(id -u)" = "0" ]; then
+  exec su-exec nextjs:nodejs "$@"
+fi
 exec "$@"

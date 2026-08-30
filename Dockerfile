@@ -7,7 +7,7 @@
 
 FROM node:22-alpine AS base
 # openssl is required by the Prisma engines; libc6-compat by the Next binary.
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat openssl su-exec
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -52,7 +52,9 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # mount a volume on this path or set STORAGE_DRIVER=s3. See the README.
 RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
 
-USER nextjs
+# Deliberately NOT "USER nextjs": the entrypoint needs root to chown the
+# volume mount, and drops to nextjs with su-exec before starting the server.
+# The application process itself never runs as root.
 EXPOSE 3000
 
 # /api/health round-trips to Postgres. Pointing this at a page that renders
