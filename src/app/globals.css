@@ -225,8 +225,8 @@ body {
 
   .glass {
     background: color-mix(in srgb, var(--bg) 72%, transparent);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   @media (prefers-reduced-transparency: reduce) {
@@ -563,14 +563,17 @@ body {
      ------------------------------------------------------------------------- */
 
   :root {
-    /* One static feTurbulence tile, rasterised once and reused by every fog
-       layer. Loops translate it by exactly one tile width, so they are seamless. */
-    --cloud-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='900'%3E%3Cfilter id='c' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0035 0.006' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.78 0 0 0 0 1 2.4 0 0 0 -1.05'/%3E%3C/filter%3E%3Crect width='1400' height='900' filter='url(%23c)'/%3E%3C/svg%3E");
+    /* One static feTurbulence tile, reused by every fog layer. Rendered at
+       half size and drawn at 1400x900: a quarter of the pixels to rasterise,
+       and fog is soft enough that the upscale does not show. Loops translate
+       it by exactly one drawn tile width, so they are seamless. */
+    --cloud-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='450'%3E%3Cfilter id='c' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.007 0.012' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.78 0 0 0 0 1 2.4 0 0 0 -1.05'/%3E%3C/filter%3E%3Crect width='700' height='450' filter='url(%23c)'/%3E%3C/svg%3E");
     --glow: color-mix(in srgb, var(--accent) 50%, transparent);
   }
 
   /* Ambient fog fixed behind every page, so sections below the hero still
-     read as the same night rather than a flat fill. */
+     read as the same night rather than a flat fill. Deliberately static: see
+     the performance note on RiverScene. */
   .site-mist {
     position: fixed;
     inset: 0;
@@ -592,7 +595,6 @@ body {
     background-image: var(--cloud-tex);
     background-size: 1400px 900px;
     opacity: 0.06;
-    animation: river-drift 220s linear infinite;
   }
 
   /* Soft haze wash for section backgrounds. */
@@ -622,9 +624,7 @@ body {
     gap: 0.4rem;
     border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
     border-radius: var(--r-full);
-    background: color-mix(in srgb, var(--bg) 70%, transparent);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
     color: color-mix(in srgb, var(--accent) 70%, var(--fg));
     padding: 0.3rem 0.75rem;
     font-size: 0.625rem;
@@ -666,9 +666,10 @@ body {
      Hover layer
 
      Scoped to .fx, which only the public site sets, so the CMS keeps calm
-     controls. HoverFx writes the pointer position onto the hovered element as
-     --mx/--my (and --rx/--ry for tilt, --bx/--by for magnetic buttons); all
-     drawing happens here.
+     controls. HoverFx moves one shared pair of light elements into the hovered
+     card and positions them, and writes tilt and magnetic pull, all as plain
+     transforms. Nothing here reads a per-frame custom property, so hovering
+     never re-styles or repaints the card itself.
      ------------------------------------------------------------------------- */
 
   .fx :is(.card, .spot) {
@@ -676,50 +677,68 @@ body {
     isolation: isolate;
   }
 
-  /* Moonlight that follows the cursor across the surface. */
-  .fx :is(.card, .spot)::before {
-    content: "";
+  .fx-light,
+  .fx-edge {
     position: absolute;
     inset: 0;
-    z-index: 2;
     border-radius: inherit;
+    overflow: hidden;
     pointer-events: none;
-    background: radial-gradient(
-      380px circle at var(--mx, 50%) var(--my, 50%),
-      color-mix(in srgb, var(--accent) 15%, transparent),
-      transparent 45%
-    );
     opacity: 0;
     transition: opacity 0.45s var(--ease-out);
   }
 
-  /* The edge lights up nearest the cursor: a 1px ring cut out with a mask so
-     it never covers content. */
-  .fx .card::after {
-    content: "";
+  .fx-light.on,
+  .fx-edge.on {
+    opacity: 1;
+  }
+
+  /* Moonlight that follows the cursor across the surface. */
+  .fx-light {
+    z-index: 2;
+  }
+
+  .fx-light-spot,
+  .fx-edge-spot {
     position: absolute;
-    inset: 0;
+    left: 0;
+    top: 0;
+    border-radius: 50%;
+    will-change: transform;
+  }
+
+  .fx-light-spot {
+    width: 340px;
+    height: 340px;
+    margin: -170px 0 0 -170px;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--accent) 15%, transparent),
+      transparent
+    );
+  }
+
+  /* The edge lights up nearest the cursor: a 1px ring cut out with a static
+     mask, with the light moving inside it. */
+  .fx-edge {
     z-index: 3;
     padding: 1px;
-    border-radius: inherit;
-    pointer-events: none;
-    background: radial-gradient(
-      240px circle at var(--mx, 50%) var(--my, 50%),
-      color-mix(in srgb, var(--accent) 80%, #fff),
-      transparent 60%
-    );
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 0.45s var(--ease-out);
   }
 
-  .fx :is(.card, .spot):hover::before,
-  .fx .card:hover::after {
-    opacity: 1;
+  .fx-edge-spot {
+    width: 300px;
+    height: 300px;
+    margin: -150px 0 0 -150px;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--accent) 80%, #fff),
+      transparent
+    );
   }
 
   .fx .card {
@@ -735,25 +754,23 @@ body {
     box-shadow: 0 24px 70px -34px var(--glow);
   }
 
-  /* Linked cards float up and tilt toward the cursor. */
+  /* Linked cards float and tilt; the transform itself comes from HoverFx. */
   .fx .card-hover:hover {
-    transform: perspective(1100px) rotateX(var(--ry, 0deg)) rotateY(var(--rx, 0deg))
-      translateY(-6px);
     box-shadow: 0 36px 90px -36px var(--glow);
   }
 
-  /* Buttons: magnetic pull plus a sheen of light passing across. */
+  /* Buttons: magnetic pull (from HoverFx) plus a sheen of light passing across. */
   .fx .btn {
     position: relative;
     overflow: hidden;
     isolation: isolate;
-    transform: translate3d(var(--bx, 0px), var(--by, 0px), 0);
     transition:
       background-color 0.25s var(--ease-out),
       color 0.25s var(--ease-out),
       border-color 0.25s var(--ease-out),
       box-shadow 0.35s var(--ease-out),
-      transform 0.35s var(--ease-out);
+      transform 0.35s var(--ease-out),
+      scale 0.12s var(--ease-out);
   }
 
   .fx .btn::before {
@@ -781,8 +798,9 @@ body {
     transform: translateX(120%);
   }
 
+  /* The individual scale property composes with the inline pull transform. */
   .fx .btn:active:not(:disabled) {
-    transform: translate3d(var(--bx, 0px), var(--by, 0px), 0) scale(0.96);
+    scale: 0.96;
   }
 
   /* Text links: an underline of light drawn from the left. */
@@ -992,8 +1010,9 @@ body {
    River hero
 
    Layers are CSS; fish, motes and ripples are drawn on a canvas by RiverScene,
-   which also shifts each [data-depth] layer with the pointer and writes the
-   pointer onto --mx/--my so the fog parts around it.
+   which also shifts each [data-depth] layer with the pointer and carries the
+   lantern. Everything that moves animates transform or opacity only: no masks,
+   filters or custom properties change per frame.
    ------------------------------------------------------------------------- */
 
 @layer components {
@@ -1015,10 +1034,24 @@ body {
     --muted: #a898c8;
     --elevated: rgba(239, 231, 255, 0.08);
     --line-strong: rgba(239, 231, 255, 0.24);
+    /* The ambient glow is painted here, once, rather than as its own animated
+       full-screen layer: every translucent layer over the canvas is blended
+       again on every frame, and that fill cost is what lagged on laptop GPUs. */
     background:
+      radial-gradient(28% 32% at 64% 30%, rgba(122, 70, 180, 0.45), transparent 70%),
+      radial-gradient(24% 40% at 0% 32%, rgba(90, 50, 150, 0.4), transparent 70%),
       radial-gradient(70% 60% at 55% 40%, #4c2379 0%, transparent 70%),
       linear-gradient(160deg, #2c1452 0%, #3a1a66 45%, #231043 80%, #140a26 100%);
     color: var(--fg);
+  }
+
+  /* RiverScene sets data-paused while the hero is off screen. Running CSS
+     animations still cost a style pass every frame even when nobody can see
+     them; paused ones cost nothing. */
+  .river[data-paused] *,
+  .river[data-paused] *::before,
+  .river[data-paused] *::after {
+    animation-play-state: paused !important;
   }
 
   .river .btn-solid,
@@ -1033,7 +1066,6 @@ body {
     will-change: transform;
   }
 
-  .river-glow,
   .river-band,
   .river-cloud,
   .river-fog,
@@ -1041,14 +1073,6 @@ body {
   .river-lantern {
     position: absolute;
     pointer-events: none;
-  }
-
-  .river-glow {
-    inset: -10%;
-    background:
-      radial-gradient(40% 35% at 62% 30%, rgba(122, 70, 180, 0.45), transparent 70%),
-      radial-gradient(30% 45% at 0% 30%, rgba(90, 50, 150, 0.4), transparent 70%);
-    animation: river-breathe 14s var(--ease-in-out) infinite alternate;
   }
 
   /* The river itself: a long diagonal sheet of light that swells and fades. */
@@ -1065,7 +1089,6 @@ body {
       transparent 72%
     );
     transform: rotate(-32deg);
-    filter: blur(8px);
     animation: river-shimmer 11s var(--ease-in-out) infinite alternate;
   }
 
@@ -1085,27 +1108,13 @@ body {
   }
 
   .river-cloud-near {
+    width: calc(100% + 2100px);
+    background-size: 2100px 1350px;
     opacity: 0.11;
-    transform-origin: 0 0;
-    animation: river-drift-near 90s linear infinite reverse;
+    animation: river-drift-near 90s linear infinite;
   }
 
-  /* The pointer parts the fog: everything in this layer thins out in a soft
-     circle around it. The 60px offsets the layer's own bleed. */
-  .river-fogs {
-    -webkit-mask-image: radial-gradient(
-      circle 220px at calc(var(--mx, -999px) + 60px) calc(var(--my, -999px) + 60px),
-      rgba(0, 0, 0, 0.12) 0%,
-      #000 100%
-    );
-    mask-image: radial-gradient(
-      circle 220px at calc(var(--mx, -999px) + 60px) calc(var(--my, -999px) + 60px),
-      rgba(0, 0, 0, 0.12) 0%,
-      #000 100%
-    );
-  }
-
-  /* Low fog banks hugging the water, drifting against each other. */
+  /* A low fog bank hugging the water, drifting against the clouds. */
   .river-fog {
     left: -30%;
     width: 160%;
@@ -1122,12 +1131,6 @@ body {
     animation: river-fog-a 30s var(--ease-in-out) infinite alternate;
   }
 
-  .river-fog-b {
-    top: 5%;
-    opacity: 0.85;
-    animation: river-fog-b 42s var(--ease-in-out) infinite alternate;
-  }
-
   /* Moonlight carried by the pointer. */
   .river-lantern {
     left: 0;
@@ -1136,8 +1139,10 @@ body {
     height: 460px;
     margin: -230px 0 0 -230px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(205, 175, 255, 0.16), transparent 65%);
-    transform: translate3d(var(--mx, -999px), var(--my, -999px), 0);
+    background: radial-gradient(circle, rgba(205, 175, 255, 0.18), transparent 65%);
+    opacity: 0;
+    transition: opacity 0.6s var(--ease-out);
+    will-change: transform;
   }
 
   .river-vignette {
@@ -1167,29 +1172,19 @@ body {
     animation: river-drip 2.4s var(--ease-in-out) infinite;
   }
 
-  @keyframes river-breathe {
-    from { opacity: 0.7; transform: scale(1); }
-    to { opacity: 1; transform: scale(1.08); }
-  }
-
   @keyframes river-shimmer {
     from { opacity: 0.65; transform: rotate(-32deg) scale(0.94, 0.9); }
     to { opacity: 1; transform: rotate(-30deg) scale(1.08, 1.05); }
   }
 
   @keyframes river-drift-near {
-    from { transform: scale(1.6) translateX(-1400px); }
-    to { transform: scale(1.6) translateX(0); }
+    from { transform: translateX(-2100px); }
+    to { transform: translateX(0); }
   }
 
   @keyframes river-fog-a {
     from { transform: translate3d(-8%, 0, 0); }
     to { transform: translate3d(10%, -5%, 0); }
-  }
-
-  @keyframes river-fog-b {
-    from { transform: translate3d(9%, 2%, 0); }
-    to { transform: translate3d(-11%, -4%, 0); }
   }
 
   @keyframes river-drip {

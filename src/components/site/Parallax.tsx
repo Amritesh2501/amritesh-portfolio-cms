@@ -92,7 +92,6 @@ export function HeroParallax({
 
   const y = useTransform(scrollY, [0, 800], [0, 120 * depth]);
   const opacity = useTransform(scrollY, [0, 420], [1, 0]);
-  const blur = useTransform(scrollY, [0, 500], ["blur(0px)", "blur(6px)"]);
 
   if (reduce) {
     return <div className={className}>{children}</div>;
@@ -101,7 +100,9 @@ export function HeroParallax({
   return (
     <motion.div
       className={className}
-      style={{ y, opacity, filter: blur, willChange: "transform, opacity" }}
+      // No scroll-linked blur: a filter on the hero copy re-rasterised it on
+      // every scroll frame, on top of the animated scene below.
+      style={{ y, opacity, willChange: "transform, opacity" }}
     >
       {children}
     </motion.div>
