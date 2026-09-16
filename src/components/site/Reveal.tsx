@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useReducedMotion, useScroll, useSpring } from "motion/react";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "motion/react";
 
 // A long, soft settle: fast out of the gate, then a slow glide into place.
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -177,13 +184,93 @@ export function DrawLine({
 /** A vertical rail that fills with light in step with scrolling past it. */
 export function TimelineRail() {
   const ref = useRef<HTMLSpanElement>(null);
-  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 70%", "end 55%"] });
   const fill = useSpring(scrollYProgress, { stiffness: 110, damping: 28, restDelta: 0.001 });
 
   return (
     <span ref={ref} aria-hidden className="timeline-rail">
-      <motion.span className="timeline-rail-fill" style={{ scaleY: reduce ? 1 : fill }} />
+      {/* Reduced motion shows it full via CSS; see LitWord for why. */}
+      <motion.span className="timeline-rail-fill" style={{ scaleY: fill }} />
+    </span>
+  );
+}
+
+/**
+ * A statement whose words light up one after another as it scrolls through
+ * the viewport, so the reader's eye is paced through it. Every word is always
+ * in the DOM at full contrast for assistive tech; only the visual opacity
+ * changes. Under reduced motion it is simply shown.
+ */
+export function ScrollLitText({ text, className }: { text: string; className?: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 85%", "end 50%"] });
+  const words = text.split(/\s+/).filter(Boolean);
+
+  return (
+    <p ref={ref} className={className}>
+      {words.map((word, i) => (
+        <LitWord
+          key={i}
+          progress={scrollYProgress}
+          from={i / words.length}
+          to={(i + 1) / words.length}
+        >
+          {word}
+        </LitWord>
+      ))}
+    </p>
+  );
+}
+
+function LitWord({
+  children,
+  progress,
+  from,
+  to,
+}: {
+  children: string;
+  progress: MotionValue<number>;
+  from: number;
+  to: number;
+}) {
+  const opacity = useTransform(progress, [from, to], [0.16, 1]);
+  // Reduced motion is handled in CSS (.lit-word), not by swapping in a static
+  // value: the server renders the dimmed start, and a reduced-motion client
+  // passing a plain 1 never overwrote it, leaving the statement dim for good.
+  return (
+    <>
+      <motion.span className="lit-word" style={{ opacity }}>
+        {children}
+      </motion.span>{" "}
+    </>
+  );
+}
+
+/** A skill as a pill whose background fills to its level when it scrolls in. */
+export function LevelPill({ name, value }: { name: string; value: number | null }) {
+  const reduce = useReducedMotion();
+  const level = value == null ? null : Math.max(0, Math.min(100, value));
+
+  return (
+    <span className="level-pill">
+      {level != null ? (
+        <motion.span
+          aria-hidden
+          className="level-pill-fill"
+          style={{ originX: 0 }}
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: level / 100 }}
+          viewport={{ once: true, margin: "0px 0px -40px 0px" }}
+          transition={reduce ? { duration: 0 } : { duration: 1.2, delay: 0.15, ease: EASE }}
+        />
+      ) : null}
+      <span className="relative">{name}</span>
+      {level != null ? (
+        <span className="level-pill-value relative">
+          {level}
+          <span className="sr-only"> out of 100</span>
+        </span>
+      ) : null}
     </span>
   );
 }

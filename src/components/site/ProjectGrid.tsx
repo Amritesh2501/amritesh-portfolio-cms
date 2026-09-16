@@ -69,7 +69,7 @@ export function ProjectGrid({
       {filtered.length === 0 ? (
         <Empty>Nothing published in this category yet.</Empty>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-7">
           <AnimatePresence mode="popLayout" initial={false}>
             {filtered.map((project, index) => (
               <motion.article

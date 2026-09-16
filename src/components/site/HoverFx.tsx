@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 
-const TILT_DEG = 7;
+// Kept low: the project cards are large, and a big tilt reads as wobble.
+const TILT_DEG = 3.5;
 const MAGNET = 0.22;
 
 /**

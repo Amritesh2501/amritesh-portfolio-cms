@@ -10,6 +10,11 @@ import { BootScreen } from "@/components/site/BootScreen";
 import { ScrollProgress } from "@/components/site/Parallax";
 import { HoverFx } from "@/components/site/HoverFx";
 
+// Runs before first paint. When a page is framed (the project card previews
+// load case study pages into a window), it drops the site chrome and skips the
+// intro so the frame shows only the page.
+const MARK_EMBED = `try{if(window.top!==window.self){var d=document.documentElement.dataset;d.embed="1";d.intro="seen"}}catch(e){}`;
+
 export default async function SiteLayout({
   children,
 }: {
@@ -41,6 +46,7 @@ export default async function SiteLayout({
 
   return (
     <div className="fx relative flex min-h-[100dvh] flex-col">
+      <script dangerouslySetInnerHTML={{ __html: MARK_EMBED }} />
       <div aria-hidden className="site-mist keep-motion" />
       <HoverFx />
 

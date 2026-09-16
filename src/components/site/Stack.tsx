@@ -1,8 +1,12 @@
 import type { HomeData } from "@/lib/content";
-import { RevealGroup, RevealItem, Reveal } from "./Reveal";
+import { LevelPill, Reveal, RevealGroup, RevealItem } from "./Reveal";
 import { Empty } from "./Section";
-import { StackTabs } from "./StackTabs";
 
+/**
+ * Stack as an atlas: a slow marquee of every skill name as the section's
+ * banner, then one row per area, each skill a pill that fills to its level.
+ * Everything is visible at once; nothing is hidden behind tabs.
+ */
 export function Stack({
   skillGroups,
   certifications,
@@ -10,28 +14,54 @@ export function Stack({
   skillGroups: HomeData["skillGroups"];
   certifications: HomeData["certifications"];
 }) {
+  const names = skillGroups.flatMap((group) => group.skills.map((skill) => skill.name));
+  const half = Math.ceil(names.length / 2);
+
   return (
     <>
+      {names.length > 0 ? (
+        <div aria-hidden className="-mx-6 grid gap-3 sm:-mx-8 lg:-mx-12">
+          <Marquee items={names.slice(0, half)} />
+          <Marquee items={names.slice(half)} reverse />
+        </div>
+      ) : null}
+
       {skillGroups.length === 0 ? (
         <Empty>No published skills yet.</Empty>
       ) : (
-        <Reveal>
-          <StackTabs
-            groups={skillGroups.map((group) => ({
-              id: group.id,
-              name: group.name,
-              skills: group.skills.map((skill) => ({
-                id: skill.id,
-                name: skill.name,
-                proficiency: skill.proficiency,
-              })),
-            }))}
-          />
-        </Reveal>
+        <ol className="mt-16">
+          {skillGroups.map((group, i) => (
+            <Reveal
+              as="li"
+              key={group.id}
+              delay={Math.min(i, 4) * 0.03}
+              className="grid gap-5 border-t border-[var(--line)] py-8 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-12"
+            >
+              <div className="flex items-baseline gap-4">
+                <span className="t-serif text-[1.75rem] leading-none text-[var(--accent)]">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h3 className="t-display text-[1.25rem] text-[var(--fg)]">{group.name}</h3>
+                  <p className="t-meta mt-1.5 text-[0.5625rem]">
+                    {group.skills.length} {group.skills.length === 1 ? "skill" : "skills"}
+                  </p>
+                </div>
+              </div>
+              <ul className="flex flex-wrap content-start gap-2.5">
+                {group.skills.map((skill) => (
+                  <li key={skill.id}>
+                    <LevelPill name={skill.name} value={skill.proficiency} />
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          ))}
+        </ol>
       )}
 
       {certifications.length > 0 ? (
-        <div className="mt-20">
+        <div className="mt-16">
           <Reveal>
             <p className="text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--fg)]">
               Certifications
@@ -84,5 +114,26 @@ export function Stack({
         </div>
       ) : null}
     </>
+  );
+}
+
+function Marquee({ items, reverse = false }: { items: string[]; reverse?: boolean }) {
+  if (items.length === 0) return null;
+  // Two copies side by side; the track slides by exactly one copy, so it loops
+  // without a seam.
+  const copy = (key: string) => (
+    <span key={key} className="marquee-copy">
+      {items.map((item, i) => (
+        <span key={i} className="marquee-item">
+          {item}
+          <span className="marquee-star">&#10022;</span>
+        </span>
+      ))}
+    </span>
+  );
+  return (
+    <div className={`marquee ${reverse ? "marquee-reverse" : ""}`}>
+      <div className="marquee-track">{[copy("a"), copy("b")]}</div>
+    </div>
   );
 }
