@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { CommandPalette } from "@/components/site/CommandPalette";
 import { BootScreen } from "@/components/site/BootScreen";
 import { ScrollProgress } from "@/components/site/Parallax";
+import { HoverFx } from "@/components/site/HoverFx";
 
 export default async function SiteLayout({
   children,
@@ -39,7 +40,10 @@ export default async function SiteLayout({
     : null;
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col">
+    <div className="fx relative flex min-h-[100dvh] flex-col">
+      <div aria-hidden className="site-mist keep-motion" />
+      <HoverFx />
+
       {settings.get("site.showIntro", "true") === "true" ? (
         <BootScreen
           logoText={settings.get("site.logoText", "AT")}

@@ -26,12 +26,13 @@
 }
 
 :root {
-  --bg: #060607;
-  --surface: #0e0e11;
-  --elevated: #16161a;
-  --fg: #f5f5f7;
-  --muted: #86868b;
-  --accent: #ff2a2a;
+  /* River at night: violet-black water, lavender light. */
+  --bg: #0d0718;
+  --surface: #170d2b;
+  --elevated: #221539;
+  --fg: #efe7ff;
+  --muted: #a898c8;
+  --accent: #b18cff;
 
   --line: color-mix(in srgb, var(--fg) 9%, transparent);
   --line-strong: color-mix(in srgb, var(--fg) 16%, transparent);
@@ -46,9 +47,9 @@
   --r-full: 999px;
 
   /* Depth is tinted to the substrate, never pure black. */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 24px -6px rgba(0, 0, 0, 0.55);
-  --shadow-lg: 0 24px 70px -20px rgba(0, 0, 0, 0.75);
+  --shadow-sm: 0 1px 2px rgba(6, 2, 16, 0.5);
+  --shadow-md: 0 4px 24px -6px rgba(6, 2, 16, 0.65);
+  --shadow-lg: 0 24px 70px -20px rgba(6, 2, 16, 0.85);
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
@@ -64,11 +65,11 @@
 }
 
 :root[data-mode="light"] {
-  --bg: #fbfbfd;
+  --bg: #f5f0fc;
   --surface: #ffffff;
-  --elevated: #f5f5f7;
-  --fg: #1d1d1f;
-  --muted: #6e6e73;
+  --elevated: #ede4fa;
+  --fg: #221338;
+  --muted: #6b5a8a;
   --line: color-mix(in srgb, var(--fg) 10%, transparent);
   --line-strong: color-mix(in srgb, var(--fg) 18%, transparent);
   --shadow-md: 0 4px 24px -6px rgba(0, 0, 0, 0.1);
@@ -95,7 +96,7 @@ body {
 
 ::selection {
   background: var(--accent);
-  color: #fff;
+  color: #150a26;
 }
 
 :where(a, button, input, textarea, select, [tabindex]):focus-visible {
@@ -104,26 +105,26 @@ body {
   border-radius: var(--r-xs);
 }
 
-/* Reduced motion: remove movement, keep fades.
-   The accessibility risk is vestibular — translation, parallax, scale, spin.
-   An opacity or colour crossfade carries none of it. The previous rule
-   flattened transition-duration to 0.001ms for everything, which also killed
-   every fade and left the site feeling dead rather than calm, and gave anyone
-   with the OS setting on no feedback that the page was responding at all.
-   So: loops and transforms stop, opacity and colour still ease. */
+/* Reduced motion: stop ambient loops, keep feedback.
+   Keyframe loops are what the OS setting is really asking to stop, so they end
+   on their first frame. Transitions are left alone: they only run in response
+   to the visitor's own hover or click, and flattening them made every control
+   feel dead. Scroll parallax and reveals handle the setting in their own
+   components.
+
+   .keep-motion opts a subtree out: the hero scene and the loader, which were
+   explicitly asked to move. ponytail: blanket opt-out, give them a gentler
+   reduced variant if a visitor reports discomfort. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
-  *,
-  *::before,
-  *::after {
+  :not(.keep-motion, .keep-motion *),
+  :not(.keep-motion, .keep-motion *)::before,
+  :not(.keep-motion, .keep-motion *)::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
-    transition-property: opacity, color, background-color, border-color, fill,
-      stroke !important;
-    transition-duration: 0.3s !important;
   }
 }
 
@@ -189,7 +190,11 @@ body {
      ------------------------------------------------------------------------- */
 
   .card {
-    background: var(--surface);
+    background: linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--surface) 92%, transparent),
+      color-mix(in srgb, var(--bg) 80%, transparent)
+    );
     border: 1px solid var(--line);
     border-radius: var(--r-lg);
     transition:
@@ -200,9 +205,7 @@ body {
   }
 
   .card-hover:hover {
-    background: var(--elevated);
     border-color: var(--line-strong);
-    transform: translateY(-3px);
     box-shadow: var(--shadow-lg);
   }
 
@@ -280,16 +283,17 @@ body {
     cursor: not-allowed;
   }
 
+  /* Dark lettering: a lavender accent cannot carry white text. */
   .btn-accent {
     background: var(--accent);
     border-color: transparent;
-    color: #fff;
+    color: #150a26;
   }
 
   .btn-accent:hover:not(:disabled) {
     background: color-mix(in srgb, var(--accent) 86%, #fff);
     border-color: transparent;
-    color: #fff;
+    color: #150a26;
   }
 
   .btn-solid {
@@ -486,8 +490,7 @@ body {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  /* Soft radial wash behind the hero. Replaces the brutalist flat plane with
-     quiet depth without reaching for a mesh gradient. */
+  /* Violet haze at the top of inner pages: the river light seen from afar. */
   .hero-wash {
     position: absolute;
     inset: -20% -10% auto -10%;
@@ -496,12 +499,12 @@ body {
     background:
       radial-gradient(
         60% 50% at 50% 0%,
-        color-mix(in srgb, var(--accent) 9%, transparent) 0%,
+        color-mix(in srgb, var(--accent) 16%, transparent) 0%,
         transparent 70%
       ),
       radial-gradient(
-        45% 40% at 80% 20%,
-        color-mix(in srgb, var(--fg) 5%, transparent) 0%,
+        45% 40% at 85% 20%,
+        color-mix(in srgb, var(--accent) 9%, transparent) 0%,
         transparent 70%
       );
   }
@@ -552,210 +555,445 @@ body {
   }
 
   /* ---------------------------------------------------------------------------
-     Manga layer
+     Mist layer
 
-     Comic-book language built entirely from CSS and inline SVG: no illustration
-     assets, no new dependencies. Everything below derives its colour from the
-     existing tokens, so the CMS theme still drives the palette and light mode
-     keeps working.
-
-     The vocabulary is four things a manga page actually uses: inked panels with
-     a hard offset shadow, screentone dots for shading, speed lines for motion,
-     and lettering boxes (bubbles, captions, SFX).
+     The whole site sits on the hero's river at night: violet glass instead of
+     inked panels, haze instead of screentone, light instead of hard shadow.
+     Colours still derive from the tokens, so Admin > Theme keeps working.
      ------------------------------------------------------------------------- */
 
-  /* Ink weight. Manga panels have a heavy, consistent stroke; deriving it from
-     --fg means it inverts correctly in light mode instead of vanishing. */
   :root {
-    --ink: color-mix(in srgb, var(--fg) 88%, transparent);
-    --ink-soft: color-mix(in srgb, var(--fg) 26%, transparent);
-    --tone-size: 6px;
+    /* One static feTurbulence tile, rasterised once and reused by every fog
+       layer. Loops translate it by exactly one tile width, so they are seamless. */
+    --cloud-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='900'%3E%3Cfilter id='c' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0035 0.006' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.78 0 0 0 0 1 2.4 0 0 0 -1.05'/%3E%3C/filter%3E%3Crect width='1400' height='900' filter='url(%23c)'/%3E%3C/svg%3E");
+    --glow: color-mix(in srgb, var(--accent) 50%, transparent);
   }
 
-  /* --- panels --------------------------------------------------------------- */
-
-  /* The core unit. Square corners and an offset shadow read as printed ink
-     rather than as a UI card, which is the whole difference between "comic" and
-     "dark theme with a border". */
-  .mg-panel {
-    position: relative;
-    border: 2px solid var(--ink);
-    border-radius: 0;
-    background: var(--surface);
-    box-shadow: 6px 6px 0 0 var(--ink);
-    transition:
-      transform 0.28s var(--ease-out),
-      box-shadow 0.28s var(--ease-out);
+  /* Ambient fog fixed behind every page, so sections below the hero still
+     read as the same night rather than a flat fill. */
+  .site-mist {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    background:
+      radial-gradient(55% 45% at 85% 0%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 70%),
+      radial-gradient(50% 45% at 0% 100%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%);
   }
 
-  .mg-panel-hover:hover {
-    transform: translate(-3px, -3px);
-    box-shadow: 10px 10px 0 0 var(--ink);
-  }
-
-  /* Slight rotation, applied per-panel, so a grid reads as a hand-pasted page
-     rather than a CSS grid. Kept under 1deg: past that it stops looking
-     deliberate and starts looking broken. */
-  .mg-tilt-l { transform: rotate(-0.6deg); }
-  .mg-tilt-r { transform: rotate(0.6deg); }
-  .mg-panel-hover.mg-tilt-l:hover { transform: rotate(-0.6deg) translate(-3px, -3px); }
-  .mg-panel-hover.mg-tilt-r:hover { transform: rotate(0.6deg) translate(-3px, -3px); }
-
-  /* --- screentone ----------------------------------------------------------- */
-
-  /* Halftone dots. A repeating radial-gradient is the cheapest honest screentone;
-     masking it to a gradient keeps it from flattening the whole surface. */
-  .mg-tone::after {
+  .site-mist::before {
     content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: calc(100% + 1400px);
+    background-image: var(--cloud-tex);
+    background-size: 1400px 900px;
+    opacity: 0.06;
+    animation: river-drift 220s linear infinite;
+  }
+
+  /* Soft haze wash for section backgrounds. */
+  .haze {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.5;
-    background-image: radial-gradient(
-      var(--ink-soft) 1px,
-      transparent 1.15px
-    );
-    background-size: var(--tone-size) var(--tone-size);
-    -webkit-mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
-    mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
+    background:
+      radial-gradient(40% 60% at 100% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+      radial-gradient(35% 50% at 0% 80%, color-mix(in srgb, var(--fg) 3%, transparent), transparent 70%);
   }
 
-  .mg-tone-accent::after {
-    background-image: radial-gradient(
-      color-mix(in srgb, var(--accent) 55%, transparent) 1px,
-      transparent 1.15px
-    );
-    opacity: 0.7;
-  }
-
-  /* --- speed lines ---------------------------------------------------------- */
-
-  /* Radial motion streaks. repeating-conic-gradient draws them in one paint with
-     no SVG round-trip; the radial mask hollows out the centre so content stays
-     readable on top. */
-  .mg-speed {
-    position: relative;
-  }
-
-  .mg-speed::before {
-    content: "";
+  /* Glowing hairline that replaces the inked section rule. */
+  .mist-rule {
     position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.28;
-    background: repeating-conic-gradient(
-      from 0deg at 50% 50%,
-      var(--ink-soft) 0deg 0.35deg,
-      transparent 0.35deg 2.4deg
-    );
-    -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 32%, #000 76%);
-    mask-image: radial-gradient(circle at 50% 50%, transparent 32%, #000 76%);
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--line-strong) 20%, var(--glow) 50%, var(--line-strong) 80%, transparent);
   }
 
-  /* --- lettering ------------------------------------------------------------ */
-
-  /* Speech balloon with a real tail. The tail is a rotated square rather than a
-     border triangle so it inherits the balloon's border on two sides. */
-  .mg-bubble {
-    position: relative;
-    display: inline-block;
-    border: 2px solid var(--ink);
-    border-radius: 18px;
-    background: var(--bg);
-    padding: 0.85rem 1.15rem;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    line-height: 1.5;
-    letter-spacing: 0.06em;
+  /* Pill label: lifecycle, counts, section asides. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    border-radius: var(--r-full);
+    background: color-mix(in srgb, var(--bg) 70%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: color-mix(in srgb, var(--accent) 70%, var(--fg));
+    padding: 0.3rem 0.75rem;
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
+  }
+
+  /* Section index, lettered in the hero's italic serif. */
+  .num {
+    font-family: var(--font-serif), Georgia, serif;
+    font-style: italic;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 18px var(--glow);
+  }
+
+  .tag {
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-full);
+    padding: 0.25rem 0.65rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    transition:
+      border-color 0.3s var(--ease-out),
+      color 0.3s var(--ease-out);
+  }
+
+  .group:hover .tag {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
     color: var(--fg);
   }
 
-  .mg-bubble::after {
+  /* ---------------------------------------------------------------------------
+     Hover layer
+
+     Scoped to .fx, which only the public site sets, so the CMS keeps calm
+     controls. HoverFx writes the pointer position onto the hovered element as
+     --mx/--my (and --rx/--ry for tilt, --bx/--by for magnetic buttons); all
+     drawing happens here.
+     ------------------------------------------------------------------------- */
+
+  .fx :is(.card, .spot) {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* Moonlight that follows the cursor across the surface. */
+  .fx :is(.card, .spot)::before {
     content: "";
     position: absolute;
-    left: 26px;
-    bottom: -8px;
-    width: 13px;
-    height: 13px;
-    background: var(--bg);
-    border-right: 2px solid var(--ink);
-    border-bottom: 2px solid var(--ink);
-    transform: rotate(45deg);
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      380px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in srgb, var(--accent) 15%, transparent),
+      transparent 45%
+    );
+    opacity: 0;
+    transition: opacity 0.45s var(--ease-out);
   }
 
-  /* Caption box: the rectangular narration block, pinned to a panel corner. */
-  .mg-caption {
-    display: inline-block;
-    border: 2px solid var(--ink);
-    background: var(--accent);
-    color: var(--bg);
-    padding: 0.4rem 0.7rem;
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+  /* The edge lights up nearest the cursor: a 1px ring cut out with a mask so
+     it never covers content. */
+  .fx .card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      240px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in srgb, var(--accent) 80%, #fff),
+      transparent 60%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.45s var(--ease-out);
   }
 
-  /* Sound effect lettering. Heavy, skewed, outlined — the one place the type
-     is allowed to shout. */
-  .mg-sfx {
-    font-family: var(--font-display);
-    font-weight: 800;
+  .fx :is(.card, .spot):hover::before,
+  .fx .card:hover::after {
+    opacity: 1;
+  }
+
+  .fx .card {
+    transition:
+      background-color 0.4s var(--ease-out),
+      border-color 0.4s var(--ease-out),
+      transform 0.5s var(--ease-out),
+      box-shadow 0.5s var(--ease-out);
+  }
+
+  .fx .card:hover {
+    border-color: var(--line-strong);
+    box-shadow: 0 24px 70px -34px var(--glow);
+  }
+
+  /* Linked cards float up and tilt toward the cursor. */
+  .fx .card-hover:hover {
+    transform: perspective(1100px) rotateX(var(--ry, 0deg)) rotateY(var(--rx, 0deg))
+      translateY(-6px);
+    box-shadow: 0 36px 90px -36px var(--glow);
+  }
+
+  /* Buttons: magnetic pull plus a sheen of light passing across. */
+  .fx .btn {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    transform: translate3d(var(--bx, 0px), var(--by, 0px), 0);
+    transition:
+      background-color 0.25s var(--ease-out),
+      color 0.25s var(--ease-out),
+      border-color 0.25s var(--ease-out),
+      box-shadow 0.35s var(--ease-out),
+      transform 0.35s var(--ease-out);
+  }
+
+  .fx .btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      color-mix(in srgb, #fff 26%, transparent) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.8s var(--ease-out);
+  }
+
+  .fx .btn:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    box-shadow: 0 10px 34px -12px var(--glow);
+  }
+
+  .fx .btn:hover:not(:disabled)::before {
+    transform: translateX(120%);
+  }
+
+  .fx .btn:active:not(:disabled) {
+    transform: translate3d(var(--bx, 0px), var(--by, 0px), 0) scale(0.96);
+  }
+
+  /* Text links: an underline of light drawn from the left. */
+  .fx .u-link {
+    position: relative;
+  }
+
+  .fx .u-link::after {
+    content: "";
+    position: absolute;
+    left: var(--u-inset, 0);
+    right: var(--u-inset, 0);
+    bottom: -2px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 30%, #fff));
+    box-shadow: 0 0 10px var(--glow);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.45s var(--ease-out);
+  }
+
+  .fx .u-link:hover::after,
+  .fx .u-link:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  /* Small controls lift and glow. */
+  .fx .lift {
+    transition:
+      transform 0.35s var(--ease-out),
+      box-shadow 0.35s var(--ease-out),
+      border-color 0.3s var(--ease-out),
+      background-color 0.3s var(--ease-out),
+      color 0.3s var(--ease-out);
+  }
+
+  .fx .lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px -12px var(--glow);
+  }
+
+  /* ---------------------------------------------------------------------------
+     Loader
+
+     Server-rendered, so it covers the page from the very first paint; an inline
+     script hides it before paint when this session has already seen it. The
+     whole sequence is CSS-timed, which doubles as the hard ceiling: even with
+     JavaScript disabled it dissolves on its own.
+     ------------------------------------------------------------------------- */
+
+  html[data-intro="seen"] .boot {
+    display: none;
+  }
+
+  .boot {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-boot);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    color: #efe7ff;
+    background:
+      radial-gradient(60% 55% at 50% 48%, #3f1d6b 0%, transparent 70%),
+      linear-gradient(160deg, #2a1350 0%, #1a0c33 60%, #0d0718 100%);
+    animation: boot-out 0.9s var(--ease-in-out) 2s forwards;
+  }
+
+  .boot-clouds {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: calc(100% + 1400px);
+    background-image: var(--cloud-tex);
+    background-size: 1400px 900px;
+    opacity: 0.2;
+    animation: river-drift 50s linear infinite;
+  }
+
+  .boot-stage {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 1.25rem;
+    animation: boot-stage-out 0.9s var(--ease-in-out) 2s forwards;
+  }
+
+  .boot-orbit {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 9.5rem;
+    height: 9.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Rings spreading out across still water. */
+  .boot-orbit::before,
+  .boot-orbit::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(239, 231, 255, 0.35);
+    animation: boot-ripple 2.4s var(--ease-out) infinite;
+  }
+
+  .boot-orbit::after {
+    animation-delay: 1.2s;
+  }
+
+  /* Two koi chasing each other round the ring. */
+  .boot-koi {
+    position: absolute;
+    inset: 0.75rem;
+    animation: boot-spin 3.2s linear infinite;
+  }
+
+  .boot-koi svg {
+    position: absolute;
+    left: 50%;
+    top: -7px;
+    fill: #efe7ff;
+    filter: drop-shadow(0 0 6px rgba(206, 180, 255, 0.8));
+    transform: translateX(-50%);
+  }
+
+  .boot-koi-b {
+    animation-delay: -1.6s;
+  }
+
+  .boot-mark {
+    font-family: var(--font-serif), Georgia, serif;
     font-style: italic;
-    letter-spacing: -0.03em;
-    color: transparent;
-    -webkit-text-stroke: 1.5px var(--ink);
-    transform: skewX(-8deg);
-    opacity: 0.55;
-    user-select: none;
+    font-size: 2.75rem;
+    line-height: 1;
+    text-shadow: 0 0 30px rgba(190, 150, 255, 0.6);
+    animation: boot-mark 1.1s var(--ease-out) 0.1s both;
   }
 
-  /* Panel number, the 01/02/03 gutter marker. */
-  .mg-num {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 0.6875rem;
-    letter-spacing: 0.18em;
-    border: 2px solid var(--ink);
-    background: var(--fg);
-    color: var(--bg);
-    padding: 0.15rem 0.5rem;
+  .boot-name {
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: #a898c8;
+    animation: boot-fade 0.8s var(--ease-out) 0.45s both;
   }
 
-  /* --- motion --------------------------------------------------------------- */
+  .boot-line {
+    width: 10rem;
+    height: 1px;
+    overflow: hidden;
+    background: rgba(239, 231, 255, 0.14);
+  }
 
-  /* Slow drift on the speed lines. Rotation only, so it never triggers layout. */
-  @keyframes mg-drift {
-    from { transform: rotate(0deg); }
+  .boot-line::after {
+    content: "";
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, #efe7ff);
+    box-shadow: 0 0 8px #c9b3ff;
+    transform-origin: left;
+    animation: boot-fill 1.7s var(--ease-in-out) 0.2s both;
+  }
+
+  @keyframes boot-out {
+    to { opacity: 0; visibility: hidden; }
+  }
+
+  @keyframes boot-stage-out {
+    to { opacity: 0; transform: scale(1.12); filter: blur(10px); }
+  }
+
+  @keyframes boot-ripple {
+    from { transform: scale(0.35); opacity: 0.9; }
+    to { transform: scale(1.35); opacity: 0; }
+  }
+
+  @keyframes boot-spin {
     to { transform: rotate(360deg); }
   }
 
-  .mg-speed-spin::before {
-    animation: mg-drift 90s linear infinite;
+  @keyframes boot-mark {
+    from { opacity: 0; filter: blur(14px); letter-spacing: 0.3em; }
+    to { opacity: 1; filter: blur(0); letter-spacing: -0.02em; }
   }
 
-  /* Respect the OS setting. Decorative motion is exactly what this is for. */
-  @media (prefers-reduced-motion: reduce) {
-    .mg-speed-spin::before { animation: none; }
-    .mg-panel,
-    .mg-panel-hover:hover {
-      transition: none;
-    }
+  @keyframes boot-fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
   }
 
+  @keyframes boot-fill {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  @keyframes river-drift {
+    to { transform: translateX(-1400px); }
+  }
 }
 
 /* ---------------------------------------------------------------------------
    River hero
 
-   A foggy violet river at night: drifting cloud texture, two fog banks, a
-   shimmering band of light, motes and small fish. CSS and inline SVG only,
-   and every loop animates transform or opacity so it stays on the compositor.
-   The cloud texture is a static feTurbulence tile translated by exactly one
-   tile width, so the loop is seamless and the noise is rasterised once.
+   Layers are CSS; fish, motes and ripples are drawn on a canvas by RiverScene,
+   which also shifts each [data-depth] layer with the pointer and writes the
+   pointer onto --mx/--my so the fog parts around it.
    ------------------------------------------------------------------------- */
 
 @layer components {
@@ -769,11 +1007,12 @@ body {
 
   /* The scene is always night, whatever the site mode, so its text tokens are
      local. Derived tokens are restated because custom properties resolve where
-     they are declared, not where they are used. */
+     they are declared, not where they are used. --bg stays the page colour so
+     the scene fades into the next section. */
   .river {
     --fg: #efe7ff;
     --fg-soft: #cdb8f2;
-    --muted: #a491c9;
+    --muted: #a898c8;
     --elevated: rgba(239, 231, 255, 0.08);
     --line-strong: rgba(239, 231, 255, 0.24);
     background:
@@ -782,18 +1021,24 @@ body {
     color: var(--fg);
   }
 
-  /* --bg stays the page colour so the scene fades into the next section, so
-     the solid button needs its own text colour. */
   .river .btn-solid,
   .river .btn-solid:hover:not(:disabled) {
+    background: #efe7ff;
     color: #1c0d35;
+  }
+
+  .river-layer {
+    position: absolute;
+    inset: -60px;
+    will-change: transform;
   }
 
   .river-glow,
   .river-band,
   .river-cloud,
   .river-fog,
-  .river-vignette {
+  .river-vignette,
+  .river-lantern {
     position: absolute;
     pointer-events: none;
   }
@@ -829,22 +1074,35 @@ body {
     left: 0;
     height: 100%;
     width: calc(100% + 1400px);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='900'%3E%3Cfilter id='c' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0035 0.006' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.78 0 0 0 0 1 2.4 0 0 0 -1.05'/%3E%3C/filter%3E%3Crect width='1400' height='900' filter='url(%23c)'/%3E%3C/svg%3E");
+    background-image: var(--cloud-tex);
     background-size: 1400px 900px;
-    background-repeat: repeat;
     will-change: transform;
   }
 
   .river-cloud-far {
-    opacity: 0.13;
+    opacity: 0.14;
     animation: river-drift 160s linear infinite;
   }
 
   .river-cloud-near {
-    opacity: 0.09;
-    transform: scale(1.6);
+    opacity: 0.11;
     transform-origin: 0 0;
     animation: river-drift-near 90s linear infinite reverse;
+  }
+
+  /* The pointer parts the fog: everything in this layer thins out in a soft
+     circle around it. The 60px offsets the layer's own bleed. */
+  .river-fogs {
+    -webkit-mask-image: radial-gradient(
+      circle 220px at calc(var(--mx, -999px) + 60px) calc(var(--my, -999px) + 60px),
+      rgba(0, 0, 0, 0.12) 0%,
+      #000 100%
+    );
+    mask-image: radial-gradient(
+      circle 220px at calc(var(--mx, -999px) + 60px) calc(var(--my, -999px) + 60px),
+      rgba(0, 0, 0, 0.12) 0%,
+      #000 100%
+    );
   }
 
   /* Low fog banks hugging the water, drifting against each other. */
@@ -853,21 +1111,33 @@ body {
     width: 160%;
     height: 60%;
     background:
-      radial-gradient(35% 40% at 25% 60%, rgba(200, 175, 240, 0.16), transparent 70%),
-      radial-gradient(30% 35% at 60% 50%, rgba(185, 155, 230, 0.13), transparent 70%),
-      radial-gradient(28% 30% at 90% 65%, rgba(210, 190, 245, 0.12), transparent 70%);
+      radial-gradient(35% 40% at 25% 60%, rgba(200, 175, 240, 0.18), transparent 70%),
+      radial-gradient(30% 35% at 60% 50%, rgba(185, 155, 230, 0.15), transparent 70%),
+      radial-gradient(28% 30% at 90% 65%, rgba(210, 190, 245, 0.14), transparent 70%);
     will-change: transform;
   }
 
   .river-fog-a {
     bottom: -12%;
-    animation: river-fog-a 38s var(--ease-in-out) infinite alternate;
+    animation: river-fog-a 30s var(--ease-in-out) infinite alternate;
   }
 
   .river-fog-b {
     top: 5%;
-    opacity: 0.8;
-    animation: river-fog-b 52s var(--ease-in-out) infinite alternate;
+    opacity: 0.85;
+    animation: river-fog-b 42s var(--ease-in-out) infinite alternate;
+  }
+
+  /* Moonlight carried by the pointer. */
+  .river-lantern {
+    left: 0;
+    top: 0;
+    width: 460px;
+    height: 460px;
+    margin: -230px 0 0 -230px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(205, 175, 255, 0.16), transparent 65%);
+    transform: translate3d(var(--mx, -999px), var(--my, -999px), 0);
   }
 
   .river-vignette {
@@ -875,31 +1145,6 @@ body {
     background:
       radial-gradient(120% 90% at 45% 40%, transparent 55%, rgba(15, 6, 30, 0.7) 100%),
       linear-gradient(to bottom, transparent 86%, var(--bg) 100%);
-  }
-
-  .river-mote {
-    position: absolute;
-    border-radius: 999px;
-    background: #efe7ff;
-    box-shadow: 0 0 6px rgba(239, 231, 255, 0.7);
-    animation: river-mote ease-in-out infinite;
-  }
-
-  .river-fish {
-    position: absolute;
-  }
-
-  .river-fish-swim {
-    display: block;
-    animation: river-swim linear infinite;
-  }
-
-  .river-fish-body {
-    display: block;
-    fill: rgba(236, 226, 255, 0.82);
-    filter: drop-shadow(0 0 4px rgba(236, 226, 255, 0.35));
-    transform-origin: 60% 50%;
-    animation: river-wiggle 1.4s ease-in-out infinite alternate;
   }
 
   .river-scroll-line {
@@ -932,39 +1177,19 @@ body {
     to { opacity: 1; transform: rotate(-30deg) scale(1.08, 1.05); }
   }
 
-  @keyframes river-drift {
-    to { transform: translateX(-1400px); }
-  }
-
   @keyframes river-drift-near {
     from { transform: scale(1.6) translateX(-1400px); }
     to { transform: scale(1.6) translateX(0); }
   }
 
   @keyframes river-fog-a {
-    from { transform: translate3d(-6%, 0, 0); }
-    to { transform: translate3d(8%, -4%, 0); }
+    from { transform: translate3d(-8%, 0, 0); }
+    to { transform: translate3d(10%, -5%, 0); }
   }
 
   @keyframes river-fog-b {
-    from { transform: translate3d(7%, 2%, 0); }
-    to { transform: translate3d(-9%, -3%, 0); }
-  }
-
-  @keyframes river-mote {
-    0%, 100% { opacity: 0.15; transform: translate3d(0, 0, 0); }
-    50% { opacity: 0.95; transform: translate3d(10px, -26px, 0); }
-  }
-
-  @keyframes river-swim {
-    0% { opacity: 0; transform: translateX(-18vmin); }
-    15%, 80% { opacity: 1; }
-    100% { opacity: 0; transform: translateX(22vmin); }
-  }
-
-  @keyframes river-wiggle {
-    from { transform: rotate(-7deg); }
-    to { transform: rotate(7deg); }
+    from { transform: translate3d(9%, 2%, 0); }
+    to { transform: translate3d(-11%, -4%, 0); }
   }
 
   @keyframes river-drip {

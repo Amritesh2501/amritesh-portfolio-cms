@@ -111,7 +111,7 @@ export default async function HomePage() {
             className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-lg)] border border-[var(--line)] bg-[var(--line)] sm:grid-cols-3 lg:grid-cols-6"
           >
             {achievements.map((item) => (
-              <RevealItem key={item.id} className="bg-[var(--surface)] px-5 py-7">
+              <RevealItem key={item.id} className="spot bg-[var(--surface)] px-5 py-7">
                 <dd className="t-display text-[clamp(1.5rem,3vw,2.25rem)] text-[var(--accent)]">
                   {item.value}
                 </dd>
@@ -184,7 +184,7 @@ export default async function HomePage() {
           <ol className="grid gap-px overflow-hidden rounded-[var(--r-lg)] border border-[var(--line)] bg-[var(--line)]">
             {experience.map((role, i) => (
               <Reveal as="li" key={role.id} delay={i * 0.05}>
-                <article className="grid gap-6 bg-[var(--surface)] p-7 sm:p-9 md:grid-cols-[200px_1fr] md:gap-12">
+                <article className="spot grid gap-6 bg-[var(--surface)] p-7 sm:p-9 md:grid-cols-[200px_1fr] md:gap-12">
                   <div>
                     <p className="t-meta tabular-nums text-[0.5625rem]">
                       {dateRange(role.startDate, role.endDate, role.currentlyWorking)}
@@ -398,7 +398,7 @@ export default async function HomePage() {
                           href={social.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group flex items-center justify-between gap-4 rounded-[var(--r-xs)] py-2.5 text-[0.9375rem] tracking-[-0.012em] transition-colors hover:text-[var(--accent)]"
+                          className="group flex items-center justify-between gap-4 rounded-[var(--r-xs)] py-2.5 text-[0.9375rem] tracking-[-0.012em] transition-[color,padding] duration-300 hover:pl-2 hover:text-[var(--accent)]"
                         >
                           <span>{social.label}</span>
                           <span

@@ -793,11 +793,11 @@ async function seedSettings() {
     { key: "site.showIntro", value: "true", group: "site", label: "Boot sequence intro", type: "boolean", description: "The short terminal boot animation on first visit.", displayOrder: 9 },
 
     // --- theme ---
-    { key: "theme.accent", value: "#ff2a2a", group: "theme", label: "Accent color", type: "color", description: "The single accent used across the whole site.", displayOrder: 0 },
-    { key: "theme.background", value: "#060607", group: "theme", label: "Background", type: "color", displayOrder: 1 },
-    { key: "theme.surface", value: "#0e0e11", group: "theme", label: "Surface", type: "color", displayOrder: 2 },
-    { key: "theme.foreground", value: "#f5f5f7", group: "theme", label: "Foreground", type: "color", displayOrder: 3 },
-    { key: "theme.muted", value: "#86868b", group: "theme", label: "Muted text", type: "color", displayOrder: 4 },
+    { key: "theme.accent", value: "#b18cff", group: "theme", label: "Accent color", type: "color", description: "The single accent used across the whole site.", displayOrder: 0 },
+    { key: "theme.background", value: "#0d0718", group: "theme", label: "Background", type: "color", displayOrder: 1 },
+    { key: "theme.surface", value: "#170d2b", group: "theme", label: "Surface", type: "color", displayOrder: 2 },
+    { key: "theme.foreground", value: "#efe7ff", group: "theme", label: "Foreground", type: "color", displayOrder: 3 },
+    { key: "theme.muted", value: "#a898c8", group: "theme", label: "Muted text", type: "color", displayOrder: 4 },
     { key: "theme.mode", value: "dark", group: "theme", label: "Color mode", type: "select", options: "dark|light", description: "The design is built dark-first. Light mode inverts the substrate.", displayOrder: 5 },
     { key: "theme.scanlines", value: "false", group: "theme", label: "CRT scanlines", type: "boolean", displayOrder: 6 },
     { key: "theme.grain", value: "true", group: "theme", label: "Film grain", type: "boolean", displayOrder: 7 },

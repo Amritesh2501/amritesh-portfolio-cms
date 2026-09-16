@@ -39,10 +39,10 @@ export function ProjectCard({
   return (
     <Link
       href={`/projects/${project.slug}`}
-      className="mg-panel mg-panel-hover group flex h-full flex-col overflow-hidden"
+      className="card card-hover group flex h-full flex-col overflow-hidden"
     >
       <div
-        className={`mg-tone relative overflow-hidden ${
+        className={`relative overflow-hidden ${
           featured ? "aspect-[21/9]" : "aspect-[16/9]"
         }`}
       >
@@ -56,7 +56,7 @@ export function ProjectCard({
                 ? "(max-width: 1400px) 100vw, 1400px"
                 : "(max-width: 768px) 100vw, (max-width: 1400px) 50vw, 700px"
             }
-            className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
+            className="object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06] group-hover:brightness-110"
           />
         ) : (
           /* No image uploaded yet. A typographic plate rather than a stock photo
@@ -76,7 +76,7 @@ export function ProjectCard({
           </div>
         )}
 
-        <span className="mg-caption absolute left-0 top-0">{label}</span>
+        <span className="chip absolute left-4 top-4">{label}</span>
       </div>
 
       <div className="flex flex-1 flex-col p-6 sm:p-7">
@@ -122,7 +122,7 @@ export function ProjectCard({
           {project.technologies.slice(0, techLimit).map((tech) => (
             <span
               key={tech}
-              className="border-2 border-[var(--ink-soft)] px-2.5 py-1 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-[var(--muted)] transition-colors group-hover:border-[var(--ink)]"
+              className="tag"
             >
               {tech}
             </span>
@@ -134,7 +134,7 @@ export function ProjectCard({
           ) : null}
         </div>
 
-        <span className="mt-7 flex items-center gap-2 border-t-2 border-[var(--ink-soft)] pt-5 text-[0.875rem] font-medium tracking-[-0.01em] text-[var(--fg)]">
+        <span className="mt-7 flex items-center gap-2 border-t border-[var(--line)] pt-5 text-[0.875rem] font-medium tracking-[-0.01em] text-[var(--fg)]">
           Read the case study
           <span
             aria-hidden

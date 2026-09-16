@@ -115,7 +115,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className="flex shrink-0 items-center gap-2 rounded-[var(--r-full)] border px-4 py-2 text-[0.875rem] font-medium tracking-[-0.01em] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+      className="lift flex shrink-0 items-center gap-2 rounded-[var(--r-full)] border px-4 py-2 text-[0.875rem] font-medium tracking-[-0.01em]"
       style={{
         borderColor: active ? "transparent" : "var(--line-strong)",
         background: active ? "var(--fg)" : "transparent",

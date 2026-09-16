@@ -1,29 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 /**
- * Initial loading screen, drawn as a manga panel being inked.
+ * Initial loading screen: two koi circling on still water while the name
+ * surfaces through the fog, then the mist dissolves into the hero.
  *
- * Motivated, not decorative: it holds the first frame until fonts and the
- * first paint have settled, so the hero arrives composed instead of reflowing
- * a display-size headline in front of the visitor.
- *
- * Rules it follows:
- *  - once per browser session, never on every navigation
- *  - it can never trap anyone: a hard ceiling dismisses it regardless
- *  - the whole thing is behind the `site.showIntro` CMS toggle
- *  - prefers-reduced-motion keeps the panel and the crossfade, and drops the
- *    stroke draw, the scale and the wipe. It used to skip the screen outright,
- *    which meant those visitors got a bare flash of unstyled arrival instead
- *    of a calm one.
+ * Why it is shaped like this:
+ *  - It is in the server HTML. The old version mounted from an effect, so the
+ *    hero painted first and the loader popped in over it a moment later.
+ *  - An inline script runs before the first paint and hides it when this
+ *    session has already seen it, so repeat navigations never flash it either.
+ *  - The whole sequence, including the exit, is CSS-timed. That is also the
+ *    hard ceiling: nothing here can trap a visitor, with or without JavaScript.
+ *  - The component only has to record the visit and unmount when done.
+ *  - Still behind the `site.showIntro` CMS toggle.
  */
-// Versioned: the previous key would suppress the new intro for anyone who
-// had already seen the old one in this session.
-const SESSION_KEY = "intro-shown-v2";
-const MAX_VISIBLE_MS = 2000;
-const EASE = [0.16, 1, 0.3, 1] as const;
+const SESSION_KEY = "intro-shown-v3";
+const TOTAL_MS = 2900;
+
+const HIDE_IF_SEEN = `try{if(sessionStorage.getItem("${SESSION_KEY}")==="1")document.documentElement.dataset.intro="seen"}catch(e){document.documentElement.dataset.intro="seen"}`;
+
+function Koi() {
+  return (
+    <svg viewBox="0 0 24 10" width="30" height="12.5" aria-hidden>
+      <ellipse cx="15" cy="5" rx="8" ry="3.2" />
+      <path d="M8 5 L1 0.8 L3 5 L1 9.2 Z" />
+    </svg>
+  );
+}
 
 export function BootScreen({
   logoText,
@@ -32,116 +37,64 @@ export function BootScreen({
   logoText: string;
   name: string;
 }) {
-  const reduce = useReducedMotion();
-  const [visible, setVisible] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
-    // sessionStorage throws in some privacy modes. Failing to read it must
-    // mean "skip the intro", never "crash the page".
-    let alreadyShown = true;
-    try {
-      alreadyShown = sessionStorage.getItem(SESSION_KEY) === "1";
-    } catch {
-      alreadyShown = true;
+    if (document.documentElement.dataset.intro === "seen") {
+      setDone(true);
+      return;
     }
-    if (alreadyShown) return;
 
-    setVisible(true);
+    try {
+      sessionStorage.setItem(SESSION_KEY, "1");
+    } catch {
+      /* private mode: it simply shows again next session */
+    }
+
     document.body.style.overflow = "hidden";
-
-    const started = performance.now();
-    let frame = 0;
-
-    const tick = () => {
-      const elapsed = performance.now() - started;
-      // Ease toward 100 so it decelerates instead of running linearly.
-      setProgress(
-        Math.min(100, (1 - Math.pow(1 - elapsed / MAX_VISIBLE_MS, 3)) * 100),
-      );
-      if (elapsed < MAX_VISIBLE_MS) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-
-    const dismiss = () => {
-      setVisible(false);
+    const timer = window.setTimeout(() => {
       document.body.style.overflow = "";
-      try {
-        sessionStorage.setItem(SESSION_KEY, "1");
-      } catch {
-        /* private mode: it simply shows again next session */
-      }
-    };
-
-    const ceiling = window.setTimeout(dismiss, MAX_VISIBLE_MS);
+      setDone(true);
+    }, TOTAL_MS);
 
     return () => {
-      cancelAnimationFrame(frame);
-      window.clearTimeout(ceiling);
+      window.clearTimeout(timer);
       document.body.style.overflow = "";
     };
   }, []);
 
+  if (done) return null;
+
   return (
-    <AnimatePresence>
-      {visible ? (
-        <motion.div
-          // Not aria-hidden: a screen reader user should be told the page is
-          // loading rather than hearing nothing at all.
-          role="status"
-          aria-live="polite"
-          className="fixed inset-0 z-[var(--z-boot)] flex items-center justify-center overflow-hidden bg-[var(--bg)]"
-          initial={{ opacity: 1 }}
-          exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 1.03 }}
-          transition={{ duration: reduce ? 0.35 : 0.6, ease: EASE }}
-        >
-          {/* Screentone wash, so the empty page already reads as printed. */}
-          <div
-            aria-hidden
-            className="mg-tone pointer-events-none absolute inset-0 opacity-70"
-          />
-          <div
-            aria-hidden
-            className="mg-speed mg-speed-spin pointer-events-none absolute inset-0"
-          />
+    <>
+      <script dangerouslySetInnerHTML={{ __html: HIDE_IF_SEEN }} />
+      <div
+        // Not aria-hidden: a screen reader user should be told the page is
+        // loading rather than hearing nothing at all.
+        role="status"
+        aria-live="polite"
+        className="boot keep-motion"
+      >
+        <div aria-hidden className="boot-clouds" />
 
-          <motion.div
-            className="mg-panel relative flex flex-col items-center gap-6 px-12 py-10"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
-            animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1 }}
-            transition={{ duration: reduce ? 0.35 : 0.55, ease: EASE }}
-          >
-            <span className="mg-caption absolute left-0 top-0">Loading</span>
-
-            {/* The mark, drawn as an inked square rather than a rounded chip. */}
-            <span
-              aria-hidden
-              className="flex h-16 w-16 items-center justify-center border-2 border-[var(--ink)] bg-[var(--fg)] text-lg font-bold tracking-tight text-[var(--bg)]"
-            >
-              {logoText}
+        <div className="boot-stage">
+          <div aria-hidden className="boot-orbit">
+            <span className="boot-koi">
+              <Koi />
             </span>
+            <span className="boot-koi boot-koi-b">
+              <Koi />
+            </span>
+            <span className="boot-mark">{logoText}</span>
+          </div>
 
-            <span className="sr-only">Loading {name}</span>
-
-            {/* Ink bar. Width is driven by the rAF progress value, so it fills
-                honestly rather than animating on a fixed timer that finishes
-                before or after the page actually does. */}
-            <div
-              className="h-2 w-48 overflow-hidden border-2 border-[var(--ink)]"
-              aria-hidden
-            >
-              <div
-                className="h-full bg-[var(--accent)] transition-[width] duration-100 ease-linear"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-
-            <p className="t-meta text-[0.5625rem]" aria-hidden>
-              {name}
-            </p>
-          </motion.div>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+          <span className="sr-only">Loading {name}</span>
+          <p aria-hidden className="boot-name">
+            {name}
+          </p>
+          <div aria-hidden className="boot-line" />
+        </div>
+      </div>
+    </>
   );
 }

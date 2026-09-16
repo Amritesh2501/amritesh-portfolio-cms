@@ -58,7 +58,7 @@ export function SiteHeader({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoImage} alt="" className="h-7 w-auto" />
             ) : (
-              <span className="flex h-8 w-8 items-center justify-center rounded-[var(--r-xs)] bg-[var(--fg)] text-[0.8125rem] font-semibold tracking-tight text-[var(--bg)]">
+              <span className="t-serif flex h-9 w-9 items-center justify-center rounded-[var(--r-full)] border border-[var(--line-strong)] text-[1.125rem] text-[var(--fg)] shadow-[0_0_24px_-6px_var(--glow)] transition-shadow duration-500 hover:shadow-[0_0_30px_-2px_var(--glow)]">
                 {logoText}
               </span>
             )}
@@ -71,7 +71,7 @@ export function SiteHeader({
                 href={item.href}
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
-                className="rounded-[var(--r-full)] px-5 py-2 text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-[var(--muted)] transition-colors duration-200 hover:bg-[var(--elevated)] hover:text-[var(--fg)]"
+                className="u-link px-5 py-2 text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-[var(--muted)] transition-colors duration-300 [--u-inset:1.25rem] hover:text-[var(--fg)]"
               >
                 {item.label}
               </Link>

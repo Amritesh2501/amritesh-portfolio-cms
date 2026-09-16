@@ -4,6 +4,14 @@ import { motion, useReducedMotion } from "motion/react";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
+// useReducedMotion() is false on the server and true on a reduced-motion
+// client, so the server HTML carries the full-motion starting blur and offset
+// as inline styles, and hydration does not patch them. Animating only opacity
+// left that content blurred for good. So the reduced variant still sets y and
+// filter back to rest, instantly: no travel, and the residue is cleared.
+const SETTLE = { y: 0, filter: "blur(0px)" } as const;
+const INSTANT = { y: { duration: 0 }, filter: { duration: 0 } } as const;
+
 /**
  * Scroll reveal.
  *
@@ -41,11 +49,9 @@ export function Reveal({
           ? { opacity: 0 }
           : { opacity: 0, y, filter: blur ? "blur(6px)" : "blur(0px)" }
       }
-      whileInView={
-        reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)" }
-      }
+      whileInView={{ opacity: 1, ...SETTLE }}
       viewport={{ once: true, amount: 0.2, margin: "0px 0px -80px 0px" }}
-      transition={{ duration: reduce ? 0.4 : 0.75, delay, ease: EASE }}
+      transition={{ duration: reduce ? 0.4 : 0.75, delay, ease: EASE, ...(reduce ? INSTANT : {}) }}
     >
       {children}
     </Tag>
@@ -107,7 +113,11 @@ export function RevealItem({
         reduce
           ? {
               hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { duration: 0.4, ease: EASE } },
+              visible: {
+                opacity: 1,
+                ...SETTLE,
+                transition: { duration: 0.4, ease: EASE, ...INSTANT },
+              },
             }
           : {
               hidden: { opacity: 0, y, filter: "blur(5px)" },

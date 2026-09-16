@@ -108,9 +108,15 @@ export function HeroParallax({
   );
 }
 
-/** A thin accent bar pinned to the top of the viewport showing read progress. */
+/**
+ * A thin accent bar pinned to the top of the viewport showing read progress.
+ *
+ * Always rendered, hidden by CSS under reduced motion. It used to return null
+ * when useReducedMotion() was true, but that hook is false on the server and
+ * true on the client, so for anyone with the OS setting on hydration failed,
+ * React regenerated the whole tree, and the intro replayed over the painted page.
+ */
 export function ScrollProgress() {
-  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 200,
@@ -118,12 +124,10 @@ export function ScrollProgress() {
     restDelta: 0.001,
   });
 
-  if (reduce) return null;
-
   return (
     <motion.div
       aria-hidden
-      className="fixed left-0 right-0 top-0 z-[var(--z-nav)] h-[2px] origin-left bg-[var(--accent)]"
+      className="fixed left-0 right-0 top-0 z-[var(--z-nav)] h-[2px] origin-left bg-[var(--accent)] shadow-[0_0_12px_var(--glow)] motion-reduce:hidden"
       style={{ scaleX: scaleX as MotionValue<number> }}
     />
   );

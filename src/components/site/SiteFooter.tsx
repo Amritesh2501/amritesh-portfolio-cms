@@ -37,7 +37,7 @@ export async function SiteFooter() {
                       href={item.href}
                       target={item.external ? "_blank" : undefined}
                       rel={item.external ? "noopener noreferrer" : undefined}
-                      className="text-[0.9375rem] tracking-[-0.012em] text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
+                      className="u-link text-[0.9375rem] tracking-[-0.012em] text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
                     >
                       {item.label}
                     </Link>
@@ -57,7 +57,7 @@ export async function SiteFooter() {
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[0.9375rem] tracking-[-0.012em] text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
+                      className="u-link text-[0.9375rem] tracking-[-0.012em] text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
                     >
                       {social.label}
                     </a>

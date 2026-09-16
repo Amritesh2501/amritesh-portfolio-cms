@@ -103,16 +103,16 @@ export default async function RootLayout({
     // while mode is "light" would paint dark hexes over the light palette and
     // produce unreadable text. In light mode the CSS palette wins and only the
     // accent is injected. Documented in the README under Theme.
-    theme = { "--accent": settings.get("theme.accent", "#ff2a2a") };
+    theme = { "--accent": settings.get("theme.accent", "#b18cff") };
 
     if (mode !== "light") {
-      theme["--bg"] = settings.get("theme.background", "#060607");
-      theme["--surface"] = settings.get("theme.surface", "#0e0e11");
-      theme["--fg"] = settings.get("theme.foreground", "#f5f5f7");
-      theme["--muted"] = settings.get("theme.muted", "#86868b");
+      theme["--bg"] = settings.get("theme.background", "#0d0718");
+      theme["--surface"] = settings.get("theme.surface", "#170d2b");
+      theme["--fg"] = settings.get("theme.foreground", "#efe7ff");
+      theme["--muted"] = settings.get("theme.muted", "#a898c8");
     }
     effects = [
-      settings.get("theme.scanlines", "true") === "true" ? "fx-scanlines" : "",
+      settings.get("theme.scanlines", "false") === "true" ? "fx-scanlines" : "",
       settings.get("theme.grain", "true") === "true" ? "fx-grain" : "",
     ]
       .filter(Boolean)

@@ -3,8 +3,8 @@ import { Reveal } from "./Reveal";
 /**
  * The structural compartment used across the public site.
  *
- * Manga page rhythm: a numbered gutter marker, the section label as an inked
- * caption, then the headline carrying the weight. The label is the section's
+ * River rhythm: a serif index number, the section label in spaced capitals,
+ * then the headline carrying the weight. The label is the section's
  * own heading rendered once, not a decorative eyebrow stacked above another
  * heading, so the document outline stays correct.
  */
@@ -29,12 +29,10 @@ export function Section({
     <section
       id={id}
       aria-labelledby={`${id}-heading`}
-      className="relative scroll-mt-24 border-t-2 border-[var(--ink)]"
+      className="relative scroll-mt-24"
     >
-      <div
-        aria-hidden
-        className="mg-tone pointer-events-none absolute inset-0 opacity-40"
-      />
+      <div aria-hidden className="mist-rule" />
+      <div aria-hidden className="haze" />
       <div className="relative mx-auto w-full max-w-[1400px] px-6 py-20 sm:px-8 lg:px-12 lg:py-28">
         <Reveal>
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -42,14 +40,14 @@ export function Section({
               id={`${id}-heading`}
               className="flex items-center gap-3 text-[var(--fg)]"
             >
-              {index ? <span className="mg-num">{index}</span> : null}
+              {index ? <span className="num">{index}</span> : null}
               <span className="t-meta text-[var(--fg)]">{label}</span>
               <span
                 aria-hidden
-                className="hidden h-[2px] w-16 bg-[var(--ink)] sm:block"
+                className="hidden h-px w-16 bg-gradient-to-r from-[var(--accent)] to-transparent sm:block"
               />
             </h2>
-            {aside ? <span className="mg-caption">{aside}</span> : null}
+            {aside ? <span className="chip">{aside}</span> : null}
           </div>
         </Reveal>
 
@@ -77,7 +75,7 @@ export function Section({
 /** Consistent empty state. Every list on the site routes through this. */
 export function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mg-panel px-6 py-16 text-center">
+    <div className="card px-6 py-16 text-center">
       <p className="t-meta">{children}</p>
     </div>
   );
