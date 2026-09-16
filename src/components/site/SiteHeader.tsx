@@ -71,7 +71,7 @@ export function SiteHeader({
                 href={item.href}
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
-                className="rounded-[var(--r-full)] px-3.5 py-2 text-[0.875rem] font-medium tracking-[-0.01em] text-[var(--muted)] transition-colors duration-200 hover:bg-[var(--elevated)] hover:text-[var(--fg)]"
+                className="rounded-[var(--r-full)] px-5 py-2 text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-[var(--muted)] transition-colors duration-200 hover:bg-[var(--elevated)] hover:text-[var(--fg)]"
               >
                 {item.label}
               </Link>

@@ -747,3 +747,228 @@ body {
   }
 
 }
+
+/* ---------------------------------------------------------------------------
+   River hero
+
+   A foggy violet river at night: drifting cloud texture, two fog banks, a
+   shimmering band of light, motes and small fish. CSS and inline SVG only,
+   and every loop animates transform or opacity so it stays on the compositor.
+   The cloud texture is a static feTurbulence tile translated by exactly one
+   tile width, so the loop is seamless and the noise is rasterised once.
+   ------------------------------------------------------------------------- */
+
+@layer components {
+  .t-serif {
+    font-family: var(--font-serif), "Iowan Old Style", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  /* The scene is always night, whatever the site mode, so its text tokens are
+     local. Derived tokens are restated because custom properties resolve where
+     they are declared, not where they are used. */
+  .river {
+    --fg: #efe7ff;
+    --fg-soft: #cdb8f2;
+    --muted: #a491c9;
+    --elevated: rgba(239, 231, 255, 0.08);
+    --line-strong: rgba(239, 231, 255, 0.24);
+    background:
+      radial-gradient(70% 60% at 55% 40%, #4c2379 0%, transparent 70%),
+      linear-gradient(160deg, #2c1452 0%, #3a1a66 45%, #231043 80%, #140a26 100%);
+    color: var(--fg);
+  }
+
+  /* --bg stays the page colour so the scene fades into the next section, so
+     the solid button needs its own text colour. */
+  .river .btn-solid,
+  .river .btn-solid:hover:not(:disabled) {
+    color: #1c0d35;
+  }
+
+  .river-glow,
+  .river-band,
+  .river-cloud,
+  .river-fog,
+  .river-vignette {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .river-glow {
+    inset: -10%;
+    background:
+      radial-gradient(40% 35% at 62% 30%, rgba(122, 70, 180, 0.45), transparent 70%),
+      radial-gradient(30% 45% at 0% 30%, rgba(90, 50, 150, 0.4), transparent 70%);
+    animation: river-breathe 14s var(--ease-in-out) infinite alternate;
+  }
+
+  /* The river itself: a long diagonal sheet of light that swells and fades. */
+  .river-band {
+    left: 50%;
+    top: 20%;
+    width: 70%;
+    height: 42%;
+    border-radius: 50%;
+    background: radial-gradient(
+      50% 50% at 50% 50%,
+      rgba(160, 110, 210, 0.5) 0%,
+      rgba(120, 75, 180, 0.2) 45%,
+      transparent 72%
+    );
+    transform: rotate(-32deg);
+    filter: blur(8px);
+    animation: river-shimmer 11s var(--ease-in-out) infinite alternate;
+  }
+
+  .river-cloud {
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: calc(100% + 1400px);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='900'%3E%3Cfilter id='c' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0035 0.006' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.78 0 0 0 0 1 2.4 0 0 0 -1.05'/%3E%3C/filter%3E%3Crect width='1400' height='900' filter='url(%23c)'/%3E%3C/svg%3E");
+    background-size: 1400px 900px;
+    background-repeat: repeat;
+    will-change: transform;
+  }
+
+  .river-cloud-far {
+    opacity: 0.13;
+    animation: river-drift 160s linear infinite;
+  }
+
+  .river-cloud-near {
+    opacity: 0.09;
+    transform: scale(1.6);
+    transform-origin: 0 0;
+    animation: river-drift-near 90s linear infinite reverse;
+  }
+
+  /* Low fog banks hugging the water, drifting against each other. */
+  .river-fog {
+    left: -30%;
+    width: 160%;
+    height: 60%;
+    background:
+      radial-gradient(35% 40% at 25% 60%, rgba(200, 175, 240, 0.16), transparent 70%),
+      radial-gradient(30% 35% at 60% 50%, rgba(185, 155, 230, 0.13), transparent 70%),
+      radial-gradient(28% 30% at 90% 65%, rgba(210, 190, 245, 0.12), transparent 70%);
+    will-change: transform;
+  }
+
+  .river-fog-a {
+    bottom: -12%;
+    animation: river-fog-a 38s var(--ease-in-out) infinite alternate;
+  }
+
+  .river-fog-b {
+    top: 5%;
+    opacity: 0.8;
+    animation: river-fog-b 52s var(--ease-in-out) infinite alternate;
+  }
+
+  .river-vignette {
+    inset: 0;
+    background:
+      radial-gradient(120% 90% at 45% 40%, transparent 55%, rgba(15, 6, 30, 0.7) 100%),
+      linear-gradient(to bottom, transparent 86%, var(--bg) 100%);
+  }
+
+  .river-mote {
+    position: absolute;
+    border-radius: 999px;
+    background: #efe7ff;
+    box-shadow: 0 0 6px rgba(239, 231, 255, 0.7);
+    animation: river-mote ease-in-out infinite;
+  }
+
+  .river-fish {
+    position: absolute;
+  }
+
+  .river-fish-swim {
+    display: block;
+    animation: river-swim linear infinite;
+  }
+
+  .river-fish-body {
+    display: block;
+    fill: rgba(236, 226, 255, 0.82);
+    filter: drop-shadow(0 0 4px rgba(236, 226, 255, 0.35));
+    transform-origin: 60% 50%;
+    animation: river-wiggle 1.4s ease-in-out infinite alternate;
+  }
+
+  .river-scroll-line {
+    position: relative;
+    display: block;
+    width: 1px;
+    height: 44px;
+    overflow: hidden;
+    background: rgba(239, 231, 255, 0.14);
+  }
+
+  .river-scroll-line::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 40%;
+    background: #efe7ff;
+    animation: river-drip 2.4s var(--ease-in-out) infinite;
+  }
+
+  @keyframes river-breathe {
+    from { opacity: 0.7; transform: scale(1); }
+    to { opacity: 1; transform: scale(1.08); }
+  }
+
+  @keyframes river-shimmer {
+    from { opacity: 0.65; transform: rotate(-32deg) scale(0.94, 0.9); }
+    to { opacity: 1; transform: rotate(-30deg) scale(1.08, 1.05); }
+  }
+
+  @keyframes river-drift {
+    to { transform: translateX(-1400px); }
+  }
+
+  @keyframes river-drift-near {
+    from { transform: scale(1.6) translateX(-1400px); }
+    to { transform: scale(1.6) translateX(0); }
+  }
+
+  @keyframes river-fog-a {
+    from { transform: translate3d(-6%, 0, 0); }
+    to { transform: translate3d(8%, -4%, 0); }
+  }
+
+  @keyframes river-fog-b {
+    from { transform: translate3d(7%, 2%, 0); }
+    to { transform: translate3d(-9%, -3%, 0); }
+  }
+
+  @keyframes river-mote {
+    0%, 100% { opacity: 0.15; transform: translate3d(0, 0, 0); }
+    50% { opacity: 0.95; transform: translate3d(10px, -26px, 0); }
+  }
+
+  @keyframes river-swim {
+    0% { opacity: 0; transform: translateX(-18vmin); }
+    15%, 80% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(22vmin); }
+  }
+
+  @keyframes river-wiggle {
+    from { transform: rotate(-7deg); }
+    to { transform: rotate(7deg); }
+  }
+
+  @keyframes river-drip {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(250%); }
+  }
+}

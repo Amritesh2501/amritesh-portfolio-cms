@@ -63,35 +63,6 @@ export default async function HomePage() {
 
   const skillCount = skillGroups.reduce((n, g) => n + g.skills.length, 0);
 
-  // Real values only. Every readout is a count of published rows or a profile
-  // field, so nothing here is invented precision.
-  const readouts = [
-    { key: "projects", value: String(projects.length) },
-    { key: "stack items", value: String(skillCount) },
-    { key: "roles", value: String(experience.length) },
-    {
-      key: "status",
-      value:
-        profile.availabilityStatus === "OPEN"
-          ? "available"
-          : profile.availabilityStatus === "SELECTIVE"
-            ? "selective"
-            : "engaged",
-    },
-  ];
-
-  const bootLines = [
-    `identity ${profile.name.toLowerCase().replace(/\s+/g, "_")}`,
-    profile.currentlyWorkingAt
-      ? `engaged ${profile.currentlyWorkingRole ?? "engineer"} @ ${profile.currentlyWorkingAt}`
-      : "engaged independent",
-    `stack ${skillGroups
-      .slice(0, 3)
-      .map((g) => g.name.toLowerCase().split(" ")[0])
-      .join(" ")}`,
-    `content ${projects.length} projects served from postgres`,
-  ];
-
   return (
     <>
       <JsonLd
@@ -122,8 +93,6 @@ export default async function HomePage() {
         tagline={profile.heroTagline ?? ""}
         description={profile.heroDescription ?? ""}
         resumeUrl={profile.resumeUrl ?? ""}
-        readouts={readouts}
-        bootLines={bootLines}
         hasProjects={projects.length > 0}
         availability={
           profile.availabilityText

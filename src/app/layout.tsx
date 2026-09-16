@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import { getSettings } from "@/lib/content";
 import "./globals.css";
 
@@ -17,6 +17,15 @@ const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-jetbrains",
+  display: "swap",
+});
+
+// Italic serif for the hero lettering, the misty river voice.
+const serif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -116,7 +125,7 @@ export default async function RootLayout({
     <html
       lang="en"
       data-mode={mode}
-      className={`${inter.variable} ${jetbrains.variable}`}
+      className={`${inter.variable} ${jetbrains.variable} ${serif.variable}`}
       style={theme as React.CSSProperties}
       suppressHydrationWarning
     >
