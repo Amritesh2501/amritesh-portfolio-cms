@@ -10,11 +10,27 @@ type Fish = {
   base: number;
   size: number;
   phase: number;
-  turn: number;
+  /** Two slow sine frequencies and offsets that drive the wander. */
+  w1: number;
+  w2: number;
+  o1: number;
+  o2: number;
+  /** Heading to escape along after a tap, and how long the escape lasts. */
+  fleeA: number;
+  fleeT: number;
 };
 
 type Mote = { x: number; y: number; vx: number; vy: number; rise: number; s: number; tw: number };
 type Ripple = { x: number; y: number; r: number; max: number; life: number };
+type Layer = {
+  node: HTMLElement;
+  depth: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  last: string;
+};
 
 const TAU = Math.PI * 2;
 const FLEE_RADIUS = 170;
@@ -25,12 +41,25 @@ const MAX_DPR = 1.25;
 // Motes are batched into this many brightness steps, one fill per step,
 // instead of a fillStyle string and a fill call for every mote.
 const MOTE_STEPS = 4;
+// Largest turn a fish can make per 60Hz frame. Steering asks for a heading;
+// this is what keeps the turn a curve instead of a snap.
+const MAX_TURN = 0.045;
+// Light spring: how hard a layer is pulled back to rest, how much of its speed
+// it keeps each frame, and how far the pointer can push it.
+const FOG_PULL = 0.018;
+const FOG_KEEP = 0.9;
+const FOG_PUSH = 0.0012;
+const FOG_REACH = 80;
 
 const rnd = (min: number, max: number) => min + Math.random() * (max - min);
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
 /** Signed shortest turn from angle `from` to angle `to`. */
 const turnTo = (to: number, from: number) =>
   ((((to - from) % TAU) + TAU * 1.5) % TAU) - Math.PI;
+
+/** Frame-rate independent easing factor for a per-60Hz-frame rate. */
+const ease = (rate: number, dt: number) => 1 - Math.pow(1 - rate, dt);
 
 /** A soft glow drawn once, then stamped under each fish. */
 function makeGlow() {
@@ -51,10 +80,14 @@ function makeGlow() {
 /**
  * The hero's living layer.
  *
- * CSS draws the fog; this adds what has to react: fish that scatter from a
- * fast cursor and drift closer to a still one, motes pushed aside, ripples
- * where the pointer skims or taps the water, a lantern of light that follows
- * the pointer, and depth parallax on every [data-depth] fog layer.
+ * A clear pond, no fog: the intro's fog lifts to reveal it. Nothing here moves
+ * on its own except the life in the water. The pointer is the only wind:
+ * moving it sways the band of light on the water along the direction of
+ * travel, and a damped spring carries it back to rest. Fish swim on smooth
+ * curves, now and then breaking the surface with a small ring,
+ * scatter from a fast cursor or a tap and drift closer to a still one; motes
+ * are pushed aside; ripples spread where the pointer skims or taps; a lantern
+ * of light eases after it.
  *
  * Performance rules, each of which was a measured source of lag:
  *  - Pointer events only record coordinates; all work happens once per frame.
@@ -63,7 +96,7 @@ function makeGlow() {
  *    properties on a parent (that re-styles the whole subtree), and only when
  *    the value actually changed.
  *  - No canvas shadowBlur: the glow is a pre-rendered sprite.
- *  - Off screen, the loop stops and the CSS fog animations pause.
+ *  - Off screen, the loop stops.
  *
  * ponytail: runs under prefers-reduced-motion too, because the scene is the
  * point of the page and was explicitly asked to move. Scale `dt` down under
@@ -99,7 +132,7 @@ export function RiverScene() {
     const small = w < 640;
 
     const fish: Fish[] = Array.from({ length: small ? 7 : 12 }, () => {
-      const base = rnd(0.35, 0.85);
+      const base = rnd(0.4, 0.8);
       return {
         x: rnd(0, w),
         y: rnd(0, h),
@@ -108,7 +141,12 @@ export function RiverScene() {
         base,
         size: rnd(14, 30),
         phase: rnd(0, TAU),
-        turn: 0,
+        w1: rnd(0.004, 0.009),
+        w2: rnd(0.011, 0.019),
+        o1: rnd(0, TAU),
+        o2: rnd(0, TAU),
+        fleeA: 0,
+        fleeT: 0,
       };
     });
 
@@ -117,7 +155,7 @@ export function RiverScene() {
       y: rnd(0, h),
       vx: 0,
       vy: 0,
-      rise: rnd(0.04, 0.22),
+      rise: rnd(0.04, 0.2),
       s: rnd(0.5, 1.7),
       tw: rnd(0, TAU),
     }));
@@ -125,15 +163,19 @@ export function RiverScene() {
     const ripples: Ripple[] = [];
 
     // Raw input, written by event handlers and consumed by the frame loop.
-    const input = { clientX: 0, clientY: 0, moved: false, present: false, taps: [] as { clientX: number; clientY: number }[] };
-    const pointer = { x: -9999, y: -9999, inside: false, speed: 0, lastMove: 0, lastRipple: 0 };
-    const parallax = { x: 0, y: 0, tx: 0, ty: 0 };
+    const input = {
+      clientX: 0,
+      clientY: 0,
+      moved: false,
+      present: false,
+      taps: [] as { clientX: number; clientY: number }[],
+    };
+    const pointer = { x: -9999, y: -9999, inside: false, speed: 0, dx: 0, dy: 0, lastMove: 0, lastRipple: 0 };
+    const lanternPos = { x: 0, y: 0, shown: false, placed: false, last: "" };
 
-    const layers = Array.from(root.querySelectorAll<HTMLElement>("[data-depth]")).map(
-      (node) => ({ node, depth: Number(node.dataset.depth) || 0, last: "" }),
+    const layers: Layer[] = Array.from(root.querySelectorAll<HTMLElement>("[data-depth]")).map(
+      (node) => ({ node, depth: Number(node.dataset.depth) || 0, x: 0, y: 0, vx: 0, vy: 0, last: "" }),
     );
-    let lanternShown = false;
-    let lanternLast = "";
 
     const onMove = (e: PointerEvent) => {
       input.clientX = e.clientX;
@@ -190,6 +232,8 @@ export function RiverScene() {
     };
 
     const readInput = (now: number) => {
+      pointer.dx = 0;
+      pointer.dy = 0;
       if (!input.moved && input.taps.length === 0) return;
       const rect = root.getBoundingClientRect();
 
@@ -200,8 +244,10 @@ export function RiverScene() {
         const inside = input.present && x >= 0 && y >= 0 && x <= rect.width && y <= rect.height;
 
         if (inside && pointer.inside) {
+          pointer.dx = x - pointer.x;
+          pointer.dy = y - pointer.y;
           const elapsed = Math.max(8, now - pointer.lastMove);
-          pointer.speed = (Math.hypot(x - pointer.x, y - pointer.y) / elapsed) * 16.7;
+          pointer.speed = (Math.hypot(pointer.dx, pointer.dy) / elapsed) * 16.7;
         } else {
           pointer.speed = 0;
         }
@@ -210,17 +256,10 @@ export function RiverScene() {
         pointer.inside = inside;
         pointer.lastMove = now;
 
-        if (inside) {
-          parallax.tx = x / w - 0.5;
-          parallax.ty = y / h - 0.5;
-          // Skimming the surface leaves a wake.
-          if (pointer.speed > 4 && now - pointer.lastRipple > 110) {
-            ripples.push({ x, y, r: 2, max: 36 + Math.min(pointer.speed * 3, 60), life: 0.8 });
-            pointer.lastRipple = now;
-          }
-        } else {
-          parallax.tx = 0;
-          parallax.ty = 0;
+        // Skimming the surface leaves a wake.
+        if (inside && pointer.speed > 4 && now - pointer.lastRipple > 120) {
+          ripples.push({ x, y, r: 2, max: 36 + Math.min(pointer.speed * 3, 60), life: 0.7 });
+          pointer.lastRipple = now;
         }
       }
 
@@ -230,36 +269,66 @@ export function RiverScene() {
         if (x < 0 || y < 0 || x > rect.width || y > rect.height) continue;
         ripples.push({ x, y, r: 0, max: 240, life: 1 });
         ripples.push({ x, y, r: 0, max: 130, life: 1 });
+        // A tap is a gust: the light is thrown away from where it landed.
+        for (const layer of layers) {
+          layer.vx += ((w / 2 - x) / w) * layer.depth * 0.25;
+          layer.vy += ((h / 2 - y) / h) * layer.depth * 0.15;
+        }
         for (const f of fish) {
           const d = Math.hypot(f.x - x, f.y - y);
           if (d < 280) {
-            f.a = Math.atan2(f.y - y, f.x - x) + rnd(-0.4, 0.4);
-            f.v = f.base + 5 * (1 - d / 280);
+            f.fleeA = Math.atan2(f.y - y, f.x - x) + rnd(-0.3, 0.3);
+            f.fleeT = 40 + 30 * (1 - d / 280);
+            f.v = Math.max(f.v, f.base + 2.5 * (1 - d / 280));
           }
         }
       }
       input.taps.length = 0;
     };
 
-    const writeStyles = () => {
+    const moveFog = (dt: number) => {
+      // A gentle lean toward the pointer's side, on top of the push.
+      const leanX = pointer.inside ? pointer.x / w - 0.5 : 0;
+      const leanY = pointer.inside ? pointer.y / h - 0.5 : 0;
+      const keep = Math.pow(FOG_KEEP, dt);
+
       for (const layer of layers) {
-        const value = `translate(${(-parallax.x * layer.depth).toFixed(1)}px, ${(-parallax.y * layer.depth * 0.6).toFixed(1)}px)`;
+        const d = layer.depth;
+        layer.vx += pointer.dx * d * FOG_PUSH;
+        layer.vy += pointer.dy * d * FOG_PUSH * 0.6;
+        layer.vx += (-leanX * d * 0.5 - layer.x) * FOG_PULL * dt;
+        layer.vy += (-leanY * d * 0.3 - layer.y) * FOG_PULL * dt;
+        layer.vx *= keep;
+        layer.vy *= keep;
+        layer.x = clamp(layer.x + layer.vx * dt, -FOG_REACH, FOG_REACH);
+        layer.y = clamp(layer.y + layer.vy * dt, -FOG_REACH, FOG_REACH);
+
+        const value = `translate(${layer.x.toFixed(1)}px, ${layer.y.toFixed(1)}px)`;
         if (value !== layer.last) {
           layer.node.style.transform = value;
           layer.last = value;
         }
       }
+    };
 
-      if (pointer.inside !== lanternShown) {
-        lanternShown = pointer.inside;
-        lantern.style.opacity = lanternShown ? "1" : "0";
+    const moveLantern = (dt: number) => {
+      if (pointer.inside !== lanternPos.shown) {
+        lanternPos.shown = pointer.inside;
+        lantern.style.opacity = pointer.inside ? "1" : "0";
       }
-      if (pointer.inside) {
-        const value = `translate(${pointer.x.toFixed(0)}px, ${pointer.y.toFixed(0)}px)`;
-        if (value !== lanternLast) {
-          lantern.style.transform = value;
-          lanternLast = value;
-        }
+      if (!pointer.inside) return;
+      if (!lanternPos.placed) {
+        lanternPos.x = pointer.x;
+        lanternPos.y = pointer.y;
+        lanternPos.placed = true;
+      }
+      const k = ease(0.14, dt);
+      lanternPos.x += (pointer.x - lanternPos.x) * k;
+      lanternPos.y += (pointer.y - lanternPos.y) * k;
+      const value = `translate(${lanternPos.x.toFixed(1)}px, ${lanternPos.y.toFixed(1)}px)`;
+      if (value !== lanternPos.last) {
+        lantern.style.transform = value;
+        lanternPos.last = value;
       }
     };
 
@@ -267,37 +336,50 @@ export function RiverScene() {
 
     let raf = 0;
     let last = performance.now();
+    let t = 0;
+    // Frames until a fish next breaks the surface.
+    let nextRise = rnd(90, 200);
     let running = false;
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      const dt = Math.min(3, (now - last) / 16.667);
+      const dt = Math.min(2.5, (now - last) / 16.667);
       last = now;
+      t += dt;
 
       readInput(now);
 
-      const still = now - pointer.lastMove > 450;
-      if (still) pointer.speed *= Math.pow(0.8, dt);
+      nextRise -= dt;
+      if (nextRise <= 0 && fish.length) {
+        const f = fish[Math.floor(Math.random() * fish.length)];
+        if (f.x > 0 && f.x < w && f.y > 0 && f.y < h) {
+          ripples.push({ x: f.x, y: f.y, r: 0, max: 30 + f.size * 1.6, life: 0.75 });
+        }
+        nextRise = rnd(120, 300);
+      }
 
-      parallax.x += (parallax.tx - parallax.x) * 0.05 * dt;
-      parallax.y += (parallax.ty - parallax.y) * 0.05 * dt;
-      writeStyles();
+      const still = now - pointer.lastMove > 450;
+      if (still) pointer.speed *= Math.pow(0.85, dt);
+
+      moveFog(dt);
+      moveLantern(dt);
 
       ctx.clearRect(0, 0, w, h);
 
       if (ripples.length) {
         ctx.lineWidth = 1.1;
+        ctx.strokeStyle = "rgb(226, 210, 255)";
         for (let i = ripples.length - 1; i >= 0; i--) {
           const rp = ripples[i];
-          rp.r += (rp.max - rp.r) * 0.04 * dt + 0.25 * dt;
-          rp.life -= 0.011 * dt;
+          rp.r += (rp.max - rp.r) * ease(0.035, dt) + 0.2 * dt;
+          rp.life -= 0.01 * dt;
           if (rp.life <= 0) {
             ripples.splice(i, 1);
             continue;
           }
-          // Flattened: rings on a surface seen at a low angle.
-          ctx.globalAlpha = rp.life * 0.4;
-          ctx.strokeStyle = "rgb(226, 210, 255)";
+          // Flattened: rings on a surface seen at a low angle. Quadratic fade
+          // so they dissolve rather than blink out.
+          ctx.globalAlpha = rp.life * rp.life * 0.45;
           ctx.beginPath();
           ctx.ellipse(rp.x, rp.y, rp.r, rp.r * 0.42, 0, 0, TAU);
           ctx.stroke();
@@ -306,22 +388,22 @@ export function RiverScene() {
       }
 
       for (const bucket of moteBuckets) bucket.length = 0;
+      const drag = Math.pow(0.94, dt);
       for (const m of motes) {
         if (pointer.inside) {
           const dx = m.x - pointer.x;
           const dy = m.y - pointer.y;
           if (dx * dx + dy * dy < 16900) {
             const d = Math.sqrt(dx * dx + dy * dy) || 1;
-            const push = (1 - d / 130) * 0.5 * dt;
+            const push = (1 - d / 130) * 0.35 * dt;
             m.vx += (dx / d) * push;
             m.vy += (dy / d) * push;
           }
         }
-        const drag = Math.pow(0.93, dt);
         m.vx *= drag;
         m.vy *= drag;
-        m.tw += 0.018 * dt;
-        m.x += (m.vx + Math.sin(m.tw * 0.7) * 0.12) * dt;
+        m.tw += 0.016 * dt;
+        m.x += (m.vx + Math.sin(m.tw * 0.7) * 0.1) * dt;
         m.y += (m.vy - m.rise) * dt;
 
         if (m.y < -6) {
@@ -348,11 +430,18 @@ export function RiverScene() {
       ctx.globalAlpha = 1;
 
       for (const f of fish) {
-        // Wander: a slowly changing turn rate reads as intent, pure noise as jitter.
-        f.turn = Math.max(-1, Math.min(1, f.turn + rnd(-0.06, 0.06) * dt)) * Math.pow(0.985, dt);
-        let steer = f.turn * 0.014;
+        // Wander: two slow sines give a heading that curves and meanders
+        // without the jitter of per-frame random noise.
+        let desired = f.a + (Math.sin(t * f.w1 + f.o1) * 0.6 + Math.sin(t * f.w2 + f.o2) * 0.4) * 0.008;
+        let targetV = f.base;
+        let turnRate = MAX_TURN;
 
-        if (pointer.inside) {
+        if (f.fleeT > 0) {
+          f.fleeT -= dt;
+          desired = f.fleeA;
+          turnRate = MAX_TURN * 3;
+          targetV = f.base + 2;
+        } else if (pointer.inside) {
           const dx = f.x - pointer.x;
           const dy = f.y - pointer.y;
           const d = Math.hypot(dx, dy);
@@ -360,22 +449,25 @@ export function RiverScene() {
           if (d < CURIOUS_RADIUS) {
             const away = Math.atan2(dy, dx);
             if (d < FLEE_RADIUS && pointer.speed > 1.5) {
-              steer += turnTo(away, f.a) * 0.14;
-              f.v = Math.max(f.v, f.base + 3.4 * (1 - d / FLEE_RADIUS));
+              desired = away;
+              turnRate = MAX_TURN * 2.5;
+              targetV = f.base + 2.6 * (1 - d / FLEE_RADIUS);
             } else if (d < 110) {
               // Close to a resting cursor: circle it rather than touch it.
-              steer += turnTo(away + Math.PI / 2, f.a) * 0.04;
+              desired = away + Math.PI / 2;
             } else if (still) {
-              steer += turnTo(away + Math.PI, f.a) * 0.022;
+              desired = away + Math.PI;
+              turnRate = MAX_TURN * 0.6;
             }
           }
         }
 
-        f.a += steer * dt;
-        f.v += (f.base - f.v) * 0.025 * dt;
+        const turn = clamp(turnTo(desired, f.a), -turnRate * dt, turnRate * dt);
+        f.a += turn;
+        f.v += (targetV - f.v) * ease(targetV > f.v ? 0.08 : 0.025, dt);
         f.x += Math.cos(f.a) * f.v * dt;
         f.y += Math.sin(f.a) * f.v * dt;
-        f.phase += (0.1 + f.v * 0.09) * dt;
+        f.phase += (0.09 + f.v * 0.08) * dt;
 
         const margin = f.size;
         if (f.x < -margin) f.x = w + margin;
@@ -387,26 +479,23 @@ export function RiverScene() {
       }
     };
 
-    const section = root.parentElement;
-
     const start = () => {
       if (running) return;
       running = true;
-      section?.removeAttribute("data-paused");
       last = performance.now();
+      root.parentElement?.removeAttribute("data-paused");
       raf = requestAnimationFrame(frame);
     };
     const stop = () => {
       running = false;
-      section?.setAttribute("data-paused", "");
       cancelAnimationFrame(raf);
+      root.parentElement?.setAttribute("data-paused", "");
     };
 
     const ro = new ResizeObserver(resize);
     ro.observe(root);
 
-    // Off screen, nothing runs at all: no frame loop, no style writes, and
-    // the CSS fog animations are paused too.
+    // Off screen, nothing runs at all.
     const io = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()));
     io.observe(root);
 
@@ -430,15 +519,8 @@ export function RiverScene() {
       aria-hidden
       className="keep-motion pointer-events-none absolute inset-0 -z-10"
     >
-      <div data-depth="10" className="river-layer">
+      <div data-depth="30" className="river-layer">
         <div className="river-band" />
-      </div>
-      <div data-depth="26" className="river-layer">
-        <div className="river-cloud river-cloud-far" />
-      </div>
-      <div data-depth="48" className="river-layer">
-        <div className="river-cloud river-cloud-near" />
-        <div className="river-fog river-fog-a" />
       </div>
       <div ref={lanternRef} className="river-lantern" />
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />

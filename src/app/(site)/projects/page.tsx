@@ -30,6 +30,8 @@ export default async function ProjectsPage() {
     title: p.title,
     shortDescription: p.shortDescription,
     thumbnail: p.thumbnail,
+    preview: p.thumbnail ?? p.heroImage ?? p.gallery[0]?.url ?? null,
+    liveUrl: p.liveUrl,
     year: p.year,
     lifecycle: p.lifecycle,
     featured: p.featured,

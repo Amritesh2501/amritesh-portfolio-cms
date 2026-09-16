@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { contactSchema, type ContactInput } from "@/lib/resources";
@@ -65,14 +65,14 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-5">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-7">
       {/* Honeypot. Hidden from people and from screen readers, visible to bots. */}
       <div aria-hidden className="absolute h-0 w-0 overflow-hidden opacity-0">
         <label htmlFor="website">Website</label>
         <input id="website" tabIndex={-1} autoComplete="off" {...register("website")} />
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-7 sm:grid-cols-2">
         <Field
           id="name"
           label="Name"
@@ -96,13 +96,13 @@ export function ContactForm() {
       />
 
       <div className="grid gap-2">
-        <label htmlFor="message" className="t-label text-[var(--fg)]">
+        <label htmlFor="message" className="field-label">
           Message
         </label>
         <textarea
           id="message"
           rows={6}
-          className="field"
+          className="field field-line"
           aria-invalid={errors.message ? "true" : "false"}
           aria-describedby={errors.message ? "message-error" : undefined}
           {...register("message")}
@@ -124,7 +124,7 @@ export function ContactForm() {
       ) : null}
 
       <div>
-        <button type="submit" className="btn btn-accent" disabled={isSubmitting}>
+        <button type="submit" className="btn btn-accent w-full sm:w-auto" disabled={isSubmitting}>
           {isSubmitting ? "Sending" : "Send message"}
         </button>
       </div>
@@ -147,13 +147,13 @@ function Field({
 }) {
   return (
     <div className="grid gap-2">
-      <label htmlFor={id} className="t-label text-[var(--fg)]">
+      <label htmlFor={id} className="field-label">
         {label}
       </label>
       <input
         id={id}
         type={type}
-        className="field"
+        className="field field-line"
         aria-invalid={error ? "true" : "false"}
         aria-describedby={error ? `${id}-error` : undefined}
         {...props}
@@ -166,3 +166,32 @@ function Field({
     </div>
   );
 };
+
+/** Copies a value (the contact email) and says so, instead of opening a mail client. */
+export function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = window.setTimeout(() => setCopied(false), 1800);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
+
+  return (
+    <button
+      type="button"
+      className="btn btn-sm"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+          setCopied(true);
+        } catch {
+          // Clipboard blocked (insecure context or permissions): the mailto
+          // link beside it still works.
+        }
+      }}
+    >
+      <span aria-live="polite">{copied ? "Copied" : "Copy"}</span>
+    </button>
+  );
+}

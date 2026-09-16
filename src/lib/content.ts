@@ -106,6 +106,8 @@ export const getProjects = cache(async () => {
       category: true,
       technologies: { orderBy: { displayOrder: "asc" } },
       metrics: { orderBy: { displayOrder: "asc" } },
+      // First gallery shot only: the card's hover preview falls back to it.
+      gallery: { orderBy: { displayOrder: "asc" }, take: 1, select: { url: true } },
     },
   });
 });

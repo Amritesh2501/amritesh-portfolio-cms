@@ -37,7 +37,7 @@ export function Hero({
       <div className="relative mx-auto w-full max-w-[1400px] px-6 py-24 sm:px-8 lg:px-12">
         <HeroParallax depth={0.55} className="max-w-[46rem]">
           {availability?.text ? (
-            <Reveal y={16} blur={false}>
+            <Reveal afterIntro y={16}>
               <span className="chip">
                 {/* Real semantic state: whether he is open to work right now. */}
                 <span
@@ -55,7 +55,7 @@ export function Hero({
             </Reveal>
           ) : null}
 
-          <Reveal delay={0.1} y={40}>
+          <Reveal afterIntro delay={0.1} y={40}>
             <h1
               id="hero-heading"
               className="t-serif mt-6 text-[clamp(3.25rem,9vw,7.5rem)] text-[var(--fg)] [text-shadow:0_0_40px_rgba(190,150,255,0.35)]"
@@ -65,7 +65,7 @@ export function Hero({
           </Reveal>
 
           {positions.length > 0 ? (
-            <Reveal delay={0.22}>
+            <Reveal afterIntro delay={0.22}>
               <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] font-medium uppercase tracking-[0.24em] text-[var(--muted)]">
                 {positions.map((position, i) => (
                   <span key={position} className="flex items-center gap-4">
@@ -80,7 +80,7 @@ export function Hero({
           ) : null}
 
           {tagline ? (
-            <Reveal delay={0.34}>
+            <Reveal afterIntro delay={0.34}>
               <p className="t-serif mt-10 max-w-[30ch] text-[clamp(1.5rem,2.6vw,2.125rem)] text-[var(--fg-soft)]">
                 {tagline}
               </p>
@@ -88,14 +88,14 @@ export function Hero({
           ) : null}
 
           {description ? (
-            <Reveal delay={0.44}>
+            <Reveal afterIntro delay={0.44}>
               <p className="mt-5 max-w-[52ch] text-[1.0625rem] leading-relaxed tracking-[-0.014em] text-[var(--muted)]">
                 {description}
               </p>
             </Reveal>
           ) : null}
 
-          <Reveal delay={0.54} blur={false}>
+          <Reveal afterIntro delay={0.54}>
             <div className="mt-10 flex flex-wrap gap-3">
               {hasProjects ? (
                 <Link href="/#work" className="btn btn-solid">

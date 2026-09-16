@@ -69,27 +69,24 @@ export function ProjectGrid({
       {filtered.length === 0 ? (
         <Empty>Nothing published in this category yet.</Empty>
       ) : (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
           <AnimatePresence mode="popLayout" initial={false}>
             {filtered.map((project, index) => (
               <motion.article
                 key={project.id}
                 layout={!reduce}
-                initial={reduce ? false : { opacity: 0, y: 20, filter: "blur(6px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+                initial={reduce ? false : { opacity: 0, y: 18, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
                 transition={{
-                  duration: 0.5,
-                  delay: reduce ? 0 : Math.min(index, 4) * 0.05,
-                  ease: [0.16, 1, 0.3, 1],
+                  duration: 0.6,
+                  delay: reduce ? 0 : Math.min(index, 5) * 0.06,
+                  ease: [0.22, 1, 0.36, 1],
+                  layout: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
                 }}
-                className={project.featured ? "md:col-span-2" : ""}
+                className="h-full"
               >
-                <ProjectCard
-                  project={project}
-                  index={index}
-                  featured={project.featured}
-                />
+                <ProjectCard project={project} index={index} />
               </motion.article>
             ))}
           </AnimatePresence>

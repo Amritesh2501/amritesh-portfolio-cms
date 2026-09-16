@@ -1,4 +1,4 @@
-import { Reveal } from "./Reveal";
+import { DrawLine, Reveal } from "./Reveal";
 
 /**
  * The structural compartment used across the public site.
@@ -31,7 +31,7 @@ export function Section({
       aria-labelledby={`${id}-heading`}
       className="relative scroll-mt-24"
     >
-      <div aria-hidden className="mist-rule" />
+      <DrawLine className="mist-rule" origin={0.5} delay={0} />
       <div aria-hidden className="haze" />
       <div className="relative mx-auto w-full max-w-[1400px] px-6 py-20 sm:px-8 lg:px-12 lg:py-28">
         <Reveal>
@@ -42,10 +42,7 @@ export function Section({
             >
               {index ? <span className="num">{index}</span> : null}
               <span className="t-meta text-[var(--fg)]">{label}</span>
-              <span
-                aria-hidden
-                className="hidden h-px w-16 bg-gradient-to-r from-[var(--accent)] to-transparent sm:block"
-              />
+              <DrawLine className="hidden h-px w-16 bg-gradient-to-r from-[var(--accent)] to-transparent sm:block" />
             </h2>
             {aside ? <span className="chip">{aside}</span> : null}
           </div>

@@ -3,32 +3,27 @@
 import { useEffect, useState } from "react";
 
 /**
- * Initial loading screen: two koi circling on still water while the name
- * surfaces through the fog, then the mist dissolves into the hero.
+ * The intro, in two acts: a clean loader (a moon ring drawing itself over
+ * still water while the name spells out), then a bank of fog that covers the
+ * page and slowly parts to reveal the pond.
  *
  * Why it is shaped like this:
- *  - It is in the server HTML. The old version mounted from an effect, so the
- *    hero painted first and the loader popped in over it a moment later.
+ *  - It is in the server HTML, so it covers the very first paint. Mounting it
+ *    from an effect let the hero flash before the loader appeared.
  *  - An inline script runs before the first paint and hides it when this
  *    session has already seen it, so repeat navigations never flash it either.
- *  - The whole sequence, including the exit, is CSS-timed. That is also the
- *    hard ceiling: nothing here can trap a visitor, with or without JavaScript.
- *  - The component only has to record the visit and unmount when done.
+ *  - The whole sequence is CSS-timed, which is also the hard ceiling: nothing
+ *    here can trap a visitor, with or without JavaScript.
+ *  - This component only locks scroll while the loader is up, records the
+ *    visit, and unmounts once the fog has gone.
  *  - Still behind the `site.showIntro` CMS toggle.
  */
-const SESSION_KEY = "intro-shown-v3";
-const TOTAL_MS = 2900;
+const SESSION_KEY = "intro-shown-v4";
+// Keep in step with the timings in globals.css (Intro).
+const LOADER_MS = 2600;
+const TOTAL_MS = 5600;
 
 const HIDE_IF_SEEN = `try{if(sessionStorage.getItem("${SESSION_KEY}")==="1")document.documentElement.dataset.intro="seen"}catch(e){document.documentElement.dataset.intro="seen"}`;
-
-function Koi() {
-  return (
-    <svg viewBox="0 0 24 10" width="30" height="12.5" aria-hidden>
-      <ellipse cx="15" cy="5" rx="8" ry="3.2" />
-      <path d="M8 5 L1 0.8 L3 5 L1 9.2 Z" />
-    </svg>
-  );
-}
 
 export function BootScreen({
   logoText,
@@ -52,13 +47,14 @@ export function BootScreen({
     }
 
     document.body.style.overflow = "hidden";
-    const timer = window.setTimeout(() => {
+    const unlock = window.setTimeout(() => {
       document.body.style.overflow = "";
-      setDone(true);
-    }, TOTAL_MS);
+    }, LOADER_MS);
+    const finish = window.setTimeout(() => setDone(true), TOTAL_MS);
 
     return () => {
-      window.clearTimeout(timer);
+      window.clearTimeout(unlock);
+      window.clearTimeout(finish);
       document.body.style.overflow = "";
     };
   }, []);
@@ -68,31 +64,39 @@ export function BootScreen({
   return (
     <>
       <script dangerouslySetInnerHTML={{ __html: HIDE_IF_SEEN }} />
-      <div
-        // Not aria-hidden: a screen reader user should be told the page is
-        // loading rather than hearing nothing at all.
-        role="status"
-        aria-live="polite"
-        className="boot keep-motion"
-      >
-        <div aria-hidden className="boot-clouds" />
+      <div className="intro keep-motion">
+        <div aria-hidden className="intro-fog">
+          <div className="intro-fog-layer intro-fog-a" />
+          <div className="intro-fog-layer intro-fog-b" />
+        </div>
 
-        <div className="boot-stage">
-          <div aria-hidden className="boot-orbit">
-            <span className="boot-koi">
-              <Koi />
-            </span>
-            <span className="boot-koi boot-koi-b">
-              <Koi />
-            </span>
-            <span className="boot-mark">{logoText}</span>
+        <div
+          // Not aria-hidden: a screen reader user should be told the page is
+          // loading rather than hearing nothing at all.
+          role="status"
+          aria-live="polite"
+          className="boot"
+        >
+          <div className="boot-stage">
+            <div aria-hidden className="boot-moon">
+              <svg viewBox="0 0 120 120">
+                <circle className="boot-moon-track" cx="60" cy="60" r="56" />
+                <circle className="boot-moon-arc" cx="60" cy="60" r="56" pathLength={100} />
+              </svg>
+              <span className="boot-mark">{logoText}</span>
+            </div>
+
+            <div aria-hidden className="boot-horizon" />
+
+            <p aria-hidden className="boot-name">
+              {Array.from(name).map((char, i) => (
+                <span key={i} style={{ animationDelay: `${0.6 + i * 0.04}s` }}>
+                  {char}
+                </span>
+              ))}
+            </p>
+            <span className="sr-only">Loading {name}</span>
           </div>
-
-          <span className="sr-only">Loading {name}</span>
-          <p aria-hidden className="boot-name">
-            {name}
-          </p>
-          <div aria-hidden className="boot-line" />
         </div>
       </div>
     </>

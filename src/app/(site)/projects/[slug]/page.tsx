@@ -120,7 +120,7 @@ export default async function ProjectPage({
 
           <header className="grid gap-12 pb-16 pt-8 lg:grid-cols-[1.4fr_0.6fr] lg:gap-20 lg:pb-24 lg:pt-14">
             <div>
-              <Reveal y={16} blur={false}>
+              <Reveal y={16}>
                 <span className="inline-flex items-center gap-2.5 rounded-[var(--r-full)] border border-[var(--line-strong)] px-3.5 py-1.5">
                   <span className="t-meta text-[0.5625rem] text-[var(--fg)]">
                     {project.category?.name ?? "Project"}
@@ -146,7 +146,7 @@ export default async function ProjectPage({
               </Reveal>
 
               {(project.liveUrl || project.githubUrl || project.caseStudyUrl) && (
-                <Reveal delay={0.18} blur={false}>
+                <Reveal delay={0.18}>
                   <div className="mt-9 flex flex-wrap gap-3">
                     {project.liveUrl ? (
                       <a

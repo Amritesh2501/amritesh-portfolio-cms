@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { getHomeData } from "@/lib/content";
-import { dateRange } from "@/lib/utils";
 import { Hero } from "@/components/site/Hero";
-import { Section, Empty } from "@/components/site/Section";
+import { Section } from "@/components/site/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
-import { Parallax } from "@/components/site/Parallax";
-import { Markdown } from "@/components/site/Markdown";
 import { ProjectGrid } from "@/components/site/ProjectGrid";
-import { ContactForm } from "@/components/site/ContactForm";
+import { About } from "@/components/site/About";
+import { Experience } from "@/components/site/Experience";
+import { Stack } from "@/components/site/Stack";
+import { Contact } from "@/components/site/Contact";
 import type { CardProject } from "@/components/site/ProjectCard";
 import { JsonLd } from "@/components/site/JsonLd";
 import { getSiteUrl } from "@/lib/site-url";
@@ -52,6 +52,8 @@ export default async function HomePage() {
     title: p.title,
     shortDescription: p.shortDescription,
     thumbnail: p.thumbnail,
+    preview: p.thumbnail ?? p.heroImage ?? p.gallery[0]?.url ?? null,
+    liveUrl: p.liveUrl,
     year: p.year,
     lifecycle: p.lifecycle,
     featured: p.featured,
@@ -144,289 +146,30 @@ export default async function HomePage() {
       </Section>
 
       <Section id="about" label="About" index="02">
-        <div className="grid gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
-          <Reveal>
-            <Markdown content={profile.bio} />
-            {profile.longBio ? (
-              <div className="mt-12 border-t border-[var(--line)] pt-12">
-                <Markdown content={profile.longBio} />
-              </div>
-            ) : null}
-          </Reveal>
-
-          {/* Slight counter-drift so the two columns do not scroll as one slab. */}
-          <Parallax speed={0.035} className="grid content-start gap-5">
-            {[
-              { label: "How I work", body: profile.philosophy },
-              { label: "Technical interests", body: profile.technicalInterests },
-              { label: "Current focus", body: profile.currentFocus },
-            ]
-              .filter((block) => block.body?.trim())
-              .map((block, i) => (
-                <Reveal key={block.label} delay={i * 0.06}>
-                  <div className="card p-6 sm:p-7">
-                    <p className="t-meta text-[0.5625rem]">{block.label}</p>
-                    <Markdown
-                      content={block.body}
-                      className="mt-4 text-[0.9375rem]"
-                    />
-                  </div>
-                </Reveal>
-              ))}
-          </Parallax>
-        </div>
+        <About profile={profile} />
       </Section>
 
       <Section id="experience" label="Experience" index="03">
-        {experience.length === 0 ? (
-          <Empty>No published roles yet.</Empty>
-        ) : (
-          <ol className="grid gap-px overflow-hidden rounded-[var(--r-lg)] border border-[var(--line)] bg-[var(--line)]">
-            {experience.map((role, i) => (
-              <Reveal as="li" key={role.id} delay={i * 0.05}>
-                <article className="spot grid gap-6 bg-[var(--surface)] p-7 sm:p-9 md:grid-cols-[200px_1fr] md:gap-12">
-                  <div>
-                    <p className="t-meta tabular-nums text-[0.5625rem]">
-                      {dateRange(role.startDate, role.endDate, role.currentlyWorking)}
-                    </p>
-                    {role.location || role.employmentType ? (
-                      <p className="t-meta mt-2 text-[0.5625rem] normal-case tracking-normal">
-                        {[role.employmentType, role.location]
-                          .filter(Boolean)
-                          .join(" / ")}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <div>
-                    <h3 className="t-display text-[clamp(1.25rem,2.4vw,1.75rem)]">
-                      {role.role}
-                    </h3>
-                    <p className="mt-2 text-[0.9375rem] font-medium text-[var(--accent)]">
-                      {role.companyUrl ? (
-                        <a
-                          href={role.companyUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:underline"
-                        >
-                          {role.company}
-                        </a>
-                      ) : (
-                        role.company
-                      )}
-                    </p>
-
-                    <Markdown
-                      content={role.description}
-                      className="mt-5 text-[0.9375rem]"
-                    />
-
-                    {role.achievements.length > 0 ? (
-                      <ul className="mt-6 grid gap-2.5">
-                        {role.achievements.map((item) => (
-                          <li
-                            key={item}
-                            className="relative pl-6 text-[0.9375rem] leading-relaxed tracking-[-0.012em] text-[var(--muted)]"
-                          >
-                            <span
-                              aria-hidden
-                              className="absolute left-1 top-[0.65em] h-1 w-1 rounded-[var(--r-full)] bg-[var(--accent)]"
-                            />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-
-                    {role.technologies.length > 0 ? (
-                      <div className="mt-6 flex flex-wrap gap-2">
-                        {role.technologies.map((tech) => (
-                          <span
-                            key={tech.id}
-                            className="rounded-[var(--r-full)] border border-[var(--line)] px-2.5 py-1 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-[var(--muted)]"
-                          >
-                            {tech.name}
-                          </span>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </article>
-              </Reveal>
-            ))}
-          </ol>
-        )}
-
-        {education.length > 0 ? (
-          <div className="mt-16">
-            <Reveal>
-              <p className="t-meta">Education</p>
-            </Reveal>
-            <RevealGroup as="ul" className="mt-6 grid gap-5 sm:grid-cols-2">
-              {education.map((entry) => (
-                <RevealItem as="li" key={entry.id} className="card p-6 sm:p-7">
-                  <p className="t-display text-[1.25rem]">{entry.degree}</p>
-                  <p className="mt-2 text-[0.9375rem] text-[var(--muted)]">
-                    {[entry.field, entry.institution].filter(Boolean).join(", ")}
-                  </p>
-                  <p className="t-meta mt-3 tabular-nums text-[0.5625rem]">
-                    {dateRange(entry.startDate, entry.endDate, false)}
-                    {entry.location ? ` / ${entry.location}` : ""}
-                  </p>
-                </RevealItem>
-              ))}
-            </RevealGroup>
-          </div>
-        ) : null}
+        <Experience experience={experience} education={education} />
       </Section>
 
       <Section id="stack" label="Stack" index="04" aside={`${skillCount} entries`}>
-        {skillGroups.length === 0 ? (
-          <Empty>No published skills yet.</Empty>
-        ) : (
-          <RevealGroup
-            className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-            stagger={0.05}
-          >
-            {skillGroups.map((group) => (
-              <RevealItem key={group.id} className="card p-6 sm:p-7">
-                <p className="t-meta text-[0.5625rem] text-[var(--fg)]">
-                  {group.name}
-                </p>
-                <ul className="mt-5 grid gap-3.5">
-                  {group.skills.map((skill) => (
-                    <li key={skill.id} className="grid gap-2">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span className="text-[0.9375rem] tracking-[-0.012em] text-[var(--fg)]">
-                          {skill.name}
-                        </span>
-                        {skill.proficiency != null ? (
-                          <span className="t-meta text-[0.5625rem] tabular-nums">
-                            {skill.proficiency}
-                          </span>
-                        ) : null}
-                      </div>
-                      {skill.proficiency != null ? (
-                        <span
-                          aria-hidden
-                          className="block h-[3px] w-full overflow-hidden rounded-[var(--r-full)] bg-[var(--line)]"
-                        >
-                          <span
-                            className="block h-full rounded-[var(--r-full)] bg-[var(--accent)]"
-                            style={{ width: `${skill.proficiency}%` }}
-                          />
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </RevealItem>
-            ))}
-          </RevealGroup>
-        )}
-
-        {certifications.length > 0 ? (
-          <div className="mt-16">
-            <Reveal>
-              <p className="t-meta">Certifications</p>
-            </Reveal>
-            <RevealGroup
-              as="ul"
-              className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-              stagger={0.04}
-            >
-              {certifications.map((cert) => (
-                <RevealItem as="li" key={cert.id} className="card p-6">
-                  <p className="text-[0.9375rem] font-medium leading-snug tracking-[-0.012em] text-[var(--fg)]">
-                    {cert.credentialUrl ? (
-                      <a
-                        href={cert.credentialUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-[var(--accent)]"
-                      >
-                        {cert.name}
-                      </a>
-                    ) : (
-                      cert.name
-                    )}
-                  </p>
-                  <p className="t-meta mt-3 text-[0.5625rem]">{cert.issuer}</p>
-                </RevealItem>
-              ))}
-            </RevealGroup>
-          </div>
-        ) : null}
+        <Stack skillGroups={skillGroups} certifications={certifications} />
       </Section>
 
-      <Section
-        id="contact"
-        label="Contact"
-        index="05"
-        title={settings.get("site.contactHeading", "Let's work together")}
-        intro={settings.get("site.contactBlurb")}
-      >
-        <div className="grid gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
-          <Reveal>
-            <ContactForm />
-          </Reveal>
-
-          <Parallax speed={0.03} className="grid content-start gap-5">
-            {settings.get("site.contactEmail") ? (
-              <Reveal>
-                <div className="card p-6 sm:p-7">
-                  <p className="t-meta text-[0.5625rem]">Direct</p>
-                  <a
-                    href={`mailto:${settings.get("site.contactEmail")}`}
-                    className="t-display mt-3 block break-all text-[clamp(1.125rem,2.2vw,1.5rem)] text-[var(--fg)] transition-colors hover:text-[var(--accent)]"
-                  >
-                    {settings.get("site.contactEmail")}
-                  </a>
-                </div>
-              </Reveal>
-            ) : null}
-
-            {socials.length > 0 ? (
-              <Reveal delay={0.06}>
-                <div className="card p-6 sm:p-7">
-                  <p className="t-meta text-[0.5625rem]">Elsewhere</p>
-                  <ul className="mt-4 grid gap-1">
-                    {socials.map((social) => (
-                      <li key={social.id}>
-                        <a
-                          href={social.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group flex items-center justify-between gap-4 rounded-[var(--r-xs)] py-2.5 text-[0.9375rem] tracking-[-0.012em] transition-[color,padding] duration-300 hover:pl-2 hover:text-[var(--accent)]"
-                        >
-                          <span>{social.label}</span>
-                          <span
-                            aria-hidden
-                            className="text-[var(--muted)] transition-transform duration-300 group-hover:translate-x-1"
-                          >
-                            &rarr;
-                          </span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Reveal>
-            ) : null}
-
-            {profile.location ? (
-              <Reveal delay={0.12}>
-                <div className="card p-6 sm:p-7">
-                  <p className="t-meta text-[0.5625rem]">Based in</p>
-                  <p className="mt-3 text-[0.9375rem] text-[var(--fg)]">
-                    {profile.location}
-                  </p>
-                </div>
-              </Reveal>
-            ) : null}
-          </Parallax>
-        </div>
+      <Section id="contact" label="Contact" index="05">
+        <Contact
+          heading={settings.get("site.contactHeading", "Let's work together")}
+          blurb={settings.get("site.contactBlurb")}
+          email={settings.get("site.contactEmail")}
+          socials={socials}
+          location={profile.location}
+          availability={
+            profile.availabilityText
+              ? { status: profile.availabilityStatus ?? "CLOSED", text: profile.availabilityText }
+              : null
+          }
+        />
       </Section>
     </>
   );
