@@ -9,6 +9,7 @@ import { CommandPalette } from "@/components/site/CommandPalette";
 import { BootScreen } from "@/components/site/BootScreen";
 import { ScrollProgress } from "@/components/site/Parallax";
 import { HoverFx } from "@/components/site/HoverFx";
+import { SmoothScroll } from "@/components/site/SmoothScroll";
 
 // Runs before first paint. When a page is framed (the project card previews
 // load case study pages into a window), it drops the site chrome and skips the
@@ -49,6 +50,7 @@ export default async function SiteLayout({
       <script dangerouslySetInnerHTML={{ __html: MARK_EMBED }} />
       <div aria-hidden className="site-mist keep-motion" />
       <HoverFx />
+      <SmoothScroll />
 
       {settings.get("site.showIntro", "true") === "true" ? (
         <BootScreen

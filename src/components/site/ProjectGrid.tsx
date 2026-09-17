@@ -69,7 +69,7 @@ export function ProjectGrid({
       {filtered.length === 0 ? (
         <Empty>Nothing published in this category yet.</Empty>
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-7">
+        <div className="grid gap-24 lg:gap-36">
           <AnimatePresence mode="popLayout" initial={false}>
             {filtered.map((project, index) => (
               <motion.article
@@ -84,7 +84,6 @@ export function ProjectGrid({
                   ease: [0.22, 1, 0.36, 1],
                   layout: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
                 }}
-                className="h-full"
               >
                 <ProjectCard project={project} index={index} />
               </motion.article>

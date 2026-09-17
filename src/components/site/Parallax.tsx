@@ -3,7 +3,6 @@
 import { useRef } from "react";
 import {
   motion,
-  useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
@@ -18,7 +17,11 @@ import {
  * also no scroll listener anywhere here, useScroll batches against the
  * browser's own scroll timeline.
  *
- * Under prefers-reduced-motion every layer renders flat and static.
+ * Scroll-linked, so it runs both ways: scrolling back up plays it in reverse.
+ *
+ * Under prefers-reduced-motion the .parallax class pins it flat in CSS. It used
+ * to render a plain div instead, but useReducedMotion() is false on the server,
+ * so hydration kept the server's offset on the element and it stayed shifted.
  */
 export function Parallax({
   children,
@@ -35,7 +38,6 @@ export function Parallax({
   scale?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -52,14 +54,10 @@ export function Parallax({
   const opacity = useTransform(smooth, [0, 0.25, 0.75, 1], [0.4, 1, 1, 0.4]);
   const scaleValue = useTransform(smooth, [0, 0.5, 1], [0.96, 1, 0.96]);
 
-  if (reduce) {
-    return <div className={className}>{children}</div>;
-  }
-
   return (
     <motion.div
       ref={ref}
-      className={className}
+      className={`parallax ${className ?? ""}`}
       style={{
         y,
         ...(fade ? { opacity } : {}),
@@ -67,6 +65,32 @@ export function Parallax({
         willChange: "transform",
       }}
     >
+      {children}
+    </motion.div>
+  );
+}
+
+/**
+ * Slides its content sideways as the page scrolls past, in step with the
+ * scroll in either direction. Used to give the marquee rows momentum.
+ */
+export function ScrollDrift({
+  children,
+  distance = 160,
+  className,
+}: {
+  children: React.ReactNode;
+  /** Pixels travelled across the element's pass through the viewport. */
+  distance?: number;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const smooth = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
+  const x = useTransform(smooth, [0, 1], [distance / 2, -distance / 2]);
+
+  return (
+    <motion.div ref={ref} className={`parallax ${className ?? ""}`} style={{ x }}>
       {children}
     </motion.div>
   );
@@ -87,19 +111,14 @@ export function HeroParallax({
   depth?: number;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
   const { scrollY } = useScroll();
 
   const y = useTransform(scrollY, [0, 800], [0, 120 * depth]);
   const opacity = useTransform(scrollY, [0, 420], [1, 0]);
 
-  if (reduce) {
-    return <div className={className}>{children}</div>;
-  }
-
   return (
     <motion.div
-      className={className}
+      className={`parallax ${className ?? ""}`}
       // No scroll-linked blur: a filter on the hero copy re-rasterised it on
       // every scroll frame, on top of the animated scene below.
       style={{ y, opacity, willChange: "transform, opacity" }}

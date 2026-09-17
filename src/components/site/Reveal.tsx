@@ -20,14 +20,14 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const REST = { y: 0, scale: 1 } as const;
 const INSTANT = { y: { duration: 0 }, scale: { duration: 0 } } as const;
 
-// When the intro's fog starts to thin. Hero copy waits for it, so it rises out
-// of the clearing fog instead of finishing unseen behind the loader.
-const INTRO_HANDOFF = 3;
+// When the intro's curtain starts to lift. Hero copy waits for it, so it rises
+// as the page is uncovered instead of finishing unseen behind the loader.
+const INTRO_HANDOFF = 1.4;
 
 function introDelay() {
   if (typeof document === "undefined") return 0;
   const showing =
-    document.documentElement.dataset.intro !== "seen" && document.querySelector(".boot");
+    document.documentElement.dataset.intro !== "seen" && document.querySelector(".intro");
   return showing ? INTRO_HANDOFF : 0;
 }
 
@@ -40,6 +40,9 @@ function introDelay() {
  * Transform and opacity only. The earlier version also animated a blur
  * filter, which re-rasterised every block as it arrived and was the main
  * source of stutter while scrolling into a new section.
+ *
+ * Not once: a block hides again after it leaves the viewport, so it rises back
+ * in whether the page is scrolled down or up.
  *
  * Under prefers-reduced-motion it keeps the opacity fade and drops the travel.
  */
@@ -68,7 +71,7 @@ export function Reveal({
       className={className}
       initial={reduce ? { opacity: 0 } : { opacity: 0, y, scale: 0.985 }}
       whileInView={{ opacity: 1, ...REST }}
-      viewport={{ once: true, amount: 0.15, margin: "0px 0px -60px 0px" }}
+      viewport={{ once: false, amount: 0.15, margin: "0px 0px -60px 0px" }}
       transition={
         reduce
           ? { duration: 0.5, delay: wait, ease: EASE, ...INSTANT }
@@ -102,7 +105,7 @@ export function RevealGroup({
       className={className}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.1, margin: "0px 0px -60px 0px" }}
+      viewport={{ once: false, amount: 0.1, margin: "0px 0px -60px 0px" }}
       variants={{
         hidden: {},
         visible: { transition: { staggerChildren: stagger, delayChildren: 0.05 } },
@@ -246,31 +249,34 @@ function LitWord({
   );
 }
 
-/** A skill as a pill whose background fills to its level when it scrolls in. */
-export function LevelPill({ name, value }: { name: string; value: number | null }) {
+/** A skill as a row with a hairline meter that fills to its level in view. */
+export function SkillMeter({ name, value }: { name: string; value: number | null }) {
   const reduce = useReducedMotion();
   const level = value == null ? null : Math.max(0, Math.min(100, value));
 
   return (
-    <span className="level-pill">
+    <div className="skill-meter">
+      <div className="flex items-baseline justify-between gap-4">
+        <span className="text-[0.9375rem] tracking-[-0.01em] text-[var(--fg)]">{name}</span>
+        {level != null ? (
+          <span className="font-mono text-[0.625rem] tracking-[0.06em] text-[var(--accent)]">
+            {level}
+            <span className="sr-only"> out of 100</span>
+          </span>
+        ) : null}
+      </div>
       {level != null ? (
-        <motion.span
-          aria-hidden
-          className="level-pill-fill"
-          style={{ originX: 0 }}
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: level / 100 }}
-          viewport={{ once: true, margin: "0px 0px -40px 0px" }}
-          transition={reduce ? { duration: 0 } : { duration: 1.2, delay: 0.15, ease: EASE }}
-        />
-      ) : null}
-      <span className="relative">{name}</span>
-      {level != null ? (
-        <span className="level-pill-value relative">
-          {level}
-          <span className="sr-only"> out of 100</span>
+        <span aria-hidden className="skill-track">
+          <motion.span
+            className="skill-fill"
+            style={{ originX: 0 }}
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: level / 100 }}
+            viewport={{ once: false, margin: "0px 0px -40px 0px" }}
+            transition={reduce ? { duration: 0 } : { duration: 1.2, delay: 0.15, ease: EASE }}
+          />
         </span>
       ) : null}
-    </span>
+    </div>
   );
 }

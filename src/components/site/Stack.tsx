@@ -1,11 +1,13 @@
 import type { HomeData } from "@/lib/content";
-import { LevelPill, Reveal, RevealGroup, RevealItem } from "./Reveal";
+import { Certifications } from "./Certifications";
+import { ScrollDrift } from "./Parallax";
+import { RevealGroup, RevealItem, SkillMeter } from "./Reveal";
 import { Empty } from "./Section";
 
 /**
- * Stack as an atlas: a slow marquee of every skill name as the section's
- * banner, then one row per area, each skill a pill that fills to its level.
- * Everything is visible at once; nothing is hidden behind tabs.
+ * Stack: two marquee rows of every skill name running in opposite directions
+ * (and drifting with the scroll), then one card per area with a meter for
+ * each skill, then the certifications.
  */
 export function Stack({
   skillGroups,
@@ -20,99 +22,44 @@ export function Stack({
   return (
     <>
       {names.length > 0 ? (
-        <div aria-hidden className="-mx-6 grid gap-3 sm:-mx-8 lg:-mx-12">
-          <Marquee items={names.slice(0, half)} />
-          <Marquee items={names.slice(half)} reverse />
+        <div aria-hidden className="-mx-6 grid gap-3 overflow-hidden sm:-mx-8 lg:-mx-12">
+          <ScrollDrift distance={220} className="-mx-32">
+            <Marquee items={names.slice(0, half)} />
+          </ScrollDrift>
+          <ScrollDrift distance={-220} className="-mx-32">
+            <Marquee items={names.slice(half)} reverse />
+          </ScrollDrift>
         </div>
       ) : null}
 
       {skillGroups.length === 0 ? (
         <Empty>No published skills yet.</Empty>
       ) : (
-        <ol className="mt-16">
+        <RevealGroup as="ul" className="mt-16 grid gap-5 md:grid-cols-2 xl:grid-cols-3" stagger={0.07}>
           {skillGroups.map((group, i) => (
-            <Reveal
-              as="li"
-              key={group.id}
-              delay={Math.min(i, 4) * 0.03}
-              className="grid gap-5 border-t border-[var(--line)] py-8 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-12"
-            >
-              <div className="flex items-baseline gap-4">
-                <span className="t-serif text-[1.75rem] leading-none text-[var(--accent)]">
-                  {String(i + 1).padStart(2, "0")}
+            <RevealItem as="li" key={group.id} className="card stack-card p-7 sm:p-8">
+              <span aria-hidden className="stack-card-num t-serif">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div className="relative flex items-start justify-between gap-4">
+                <h3 className="t-display text-[1.375rem] text-[var(--fg)]">{group.name}</h3>
+                <span className="chip shrink-0">
+                  {group.skills.length} {group.skills.length === 1 ? "skill" : "skills"}
                 </span>
-                <div>
-                  <h3 className="t-display text-[1.25rem] text-[var(--fg)]">{group.name}</h3>
-                  <p className="t-meta mt-1.5 text-[0.5625rem]">
-                    {group.skills.length} {group.skills.length === 1 ? "skill" : "skills"}
-                  </p>
-                </div>
               </div>
-              <ul className="flex flex-wrap content-start gap-2.5">
+              <ul className="relative mt-8 grid gap-5">
                 {group.skills.map((skill) => (
                   <li key={skill.id}>
-                    <LevelPill name={skill.name} value={skill.proficiency} />
+                    <SkillMeter name={skill.name} value={skill.proficiency} />
                   </li>
                 ))}
               </ul>
-            </Reveal>
+            </RevealItem>
           ))}
-        </ol>
+        </RevealGroup>
       )}
 
-      {certifications.length > 0 ? (
-        <div className="mt-16">
-          <Reveal>
-            <p className="text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--fg)]">
-              Certifications
-            </p>
-          </Reveal>
-          <RevealGroup
-            as="ul"
-            className="mt-6 grid border-t border-[var(--line)] sm:grid-cols-2 sm:gap-x-12"
-            stagger={0.05}
-          >
-            {certifications.map((cert) => {
-              const body = (
-                <>
-                  <span className="min-w-0">
-                    <span className="block text-[0.9375rem] font-medium leading-snug tracking-[-0.012em] text-[var(--fg)] transition-colors duration-300 group-hover:text-[var(--accent)]">
-                      {cert.name}
-                    </span>
-                    <span className="t-meta mt-1.5 block text-[0.5625rem]">{cert.issuer}</span>
-                  </span>
-                  {cert.credentialUrl ? (
-                    <span
-                      aria-hidden
-                      className="text-[var(--accent)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                    >
-                      &#8599;
-                    </span>
-                  ) : null}
-                </>
-              );
-              const row =
-                "group flex items-center justify-between gap-6 border-b border-[var(--line)] py-5 transition-[padding] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]";
-              return (
-                <RevealItem as="li" key={cert.id}>
-                  {cert.credentialUrl ? (
-                    <a
-                      href={cert.credentialUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`${row} hover:pl-2`}
-                    >
-                      {body}
-                    </a>
-                  ) : (
-                    <div className={row}>{body}</div>
-                  )}
-                </RevealItem>
-              );
-            })}
-          </RevealGroup>
-        </div>
-      ) : null}
+      {certifications.length > 0 ? <Certifications certifications={certifications} /> : null}
     </>
   );
 }
@@ -120,7 +67,8 @@ export function Stack({
 function Marquee({ items, reverse = false }: { items: string[]; reverse?: boolean }) {
   if (items.length === 0) return null;
   // Two copies side by side; the track slides by exactly one copy, so it loops
-  // without a seam.
+  // without a seam. keep-motion: the marquee was asked to move, so it runs even
+  // under the reduced-motion loop freeze (see globals.css).
   const copy = (key: string) => (
     <span key={key} className="marquee-copy">
       {items.map((item, i) => (
@@ -132,7 +80,7 @@ function Marquee({ items, reverse = false }: { items: string[]; reverse?: boolea
     </span>
   );
   return (
-    <div className={`marquee ${reverse ? "marquee-reverse" : ""}`}>
+    <div className={`marquee keep-motion ${reverse ? "marquee-reverse" : ""}`}>
       <div className="marquee-track">{[copy("a"), copy("b")]}</div>
     </div>
   );

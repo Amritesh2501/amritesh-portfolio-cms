@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 
 /**
- * The intro, in two acts: a clean loader (a moon ring drawing itself over
- * still water while the name spells out), then a bank of fog that covers the
- * page and slowly parts to reveal the pond.
+ * The intro: the name rises letter by letter over a thin progress line, then
+ * two curtains lift away to reveal the page.
  *
  * Why it is shaped like this:
  *  - It is in the server HTML, so it covers the very first paint. Mounting it
@@ -14,14 +13,15 @@ import { useEffect, useState } from "react";
  *    session has already seen it, so repeat navigations never flash it either.
  *  - The whole sequence is CSS-timed, which is also the hard ceiling: nothing
  *    here can trap a visitor, with or without JavaScript.
- *  - This component only locks scroll while the loader is up, records the
- *    visit, and unmounts once the fog has gone.
+ *  - Transform and opacity only. The previous fog intro scaled two
+ *    viewport-and-a-half noise textures, blurred a glowing ring with a
+ *    drop-shadow and mirrored it with box-reflect, all while the page hydrated
+ *    underneath. That was the lag.
  *  - Still behind the `site.showIntro` CMS toggle.
  */
-const SESSION_KEY = "intro-shown-v4";
+const SESSION_KEY = "intro-shown-v5";
 // Keep in step with the timings in globals.css (Intro).
-const LOADER_MS = 2600;
-const TOTAL_MS = 5600;
+const TOTAL_MS = 2300;
 
 const HIDE_IF_SEEN = `try{if(sessionStorage.getItem("${SESSION_KEY}")==="1")document.documentElement.dataset.intro="seen"}catch(e){document.documentElement.dataset.intro="seen"}`;
 
@@ -46,16 +46,15 @@ export function BootScreen({
       /* private mode: it simply shows again next session */
     }
 
-    document.body.style.overflow = "hidden";
-    const unlock = window.setTimeout(() => {
-      document.body.style.overflow = "";
-    }, LOADER_MS);
+    // On <html>, not <body>: the smooth scroller watches the root's overflow
+    // and pauses itself while it is hidden.
+    const root = document.documentElement;
+    root.style.overflow = "hidden";
     const finish = window.setTimeout(() => setDone(true), TOTAL_MS);
 
     return () => {
-      window.clearTimeout(unlock);
       window.clearTimeout(finish);
-      document.body.style.overflow = "";
+      root.style.overflow = "";
     };
   }, []);
 
@@ -65,36 +64,20 @@ export function BootScreen({
     <>
       <script dangerouslySetInnerHTML={{ __html: HIDE_IF_SEEN }} />
       <div className="intro keep-motion">
-        <div aria-hidden className="intro-fog">
-          <div className="intro-fog-layer intro-fog-a" />
-          <div className="intro-fog-layer intro-fog-b" />
-        </div>
-
-        <div
-          // Not aria-hidden: a screen reader user should be told the page is
-          // loading rather than hearing nothing at all.
-          role="status"
-          aria-live="polite"
-          className="boot"
-        >
-          <div className="boot-stage">
-            <div aria-hidden className="boot-moon">
-              <svg viewBox="0 0 120 120">
-                <circle className="boot-moon-track" cx="60" cy="60" r="56" />
-                <circle className="boot-moon-arc" cx="60" cy="60" r="56" pathLength={100} />
-              </svg>
-              <span className="boot-mark">{logoText}</span>
-            </div>
-
-            <div aria-hidden className="boot-horizon" />
-
-            <p aria-hidden className="boot-name">
+        <div aria-hidden className="intro-curtain intro-curtain-back" />
+        <div role="status" aria-live="polite" className="intro-curtain intro-curtain-front">
+          <div className="intro-stage">
+            <span aria-hidden className="intro-mark t-serif">
+              {logoText}
+            </span>
+            <p aria-hidden className="intro-name">
               {Array.from(name).map((char, i) => (
-                <span key={i} style={{ animationDelay: `${0.6 + i * 0.04}s` }}>
+                <span key={i} style={{ animationDelay: `${0.15 + i * 0.03}s` }}>
                   {char}
                 </span>
               ))}
             </p>
+            <span aria-hidden className="intro-bar" />
             <span className="sr-only">Loading {name}</span>
           </div>
         </div>
