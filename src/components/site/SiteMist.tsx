@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { isLowPower } from "@/lib/perf";
 
 // How far each bank can travel, in px. The second is the near one and moves
 // further, so the two shear apart rather than sliding as a single sheet.
@@ -31,6 +32,9 @@ export function SiteMist() {
     const root = rootRef.current;
     if (!root) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // The banks still render; they just stop tracking the pointer, which is
+    // the part that costs a frame.
+    if (isLowPower()) return;
 
     const banks = Array.from(
       root.querySelectorAll<HTMLElement>(".site-mist-bank"),

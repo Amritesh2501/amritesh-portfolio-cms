@@ -202,6 +202,231 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+   Experiments
+
+   A terminal, pinned black in both palettes. See the page component for why
+   this one screen ignores the theme lock the rest of the site keeps.
+   ------------------------------------------------------------------------- */
+
+.xp {
+  --xp-fg: #cbf7d4;
+  /* 5.03:1 on the terminal black. The obvious dimmer green measured 4.24 and
+     this text is the move counter and the instructions, not decoration. */
+  --xp-dim: #568a65;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-boot);
+  overflow-y: auto;
+  background: #05060a;
+  color: var(--xp-fg);
+  font-family: var(--font-mono);
+}
+
+.xp-inner {
+  min-height: 100%;
+  max-width: 72ch;
+  margin: 0 auto;
+  padding: clamp(2rem, 8vh, 5rem) clamp(1.25rem, 5vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.xp-text {
+  margin: 0;
+  font-size: clamp(0.8125rem, 2.6vw, 0.9375rem);
+  line-height: 1.85;
+  /* pre-wrap, not pre: the lines are authored short, but a narrow screen still
+     has to be allowed to break them rather than scroll sideways. */
+  white-space: pre-wrap;
+  /* Reserves the full block from the first frame, so the button below does not
+     walk down the screen as the text types. */
+  min-height: 17em;
+}
+
+.xp-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 0.1em;
+  vertical-align: text-bottom;
+  background: var(--xp-fg);
+  animation: blink 1.05s steps(1) infinite;
+}
+
+.xp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* The terminal has no lavender in it, so the buttons borrow the screen colour
+   rather than the site accent. */
+.xp .btn {
+  border-color: color-mix(in srgb, var(--xp-fg) 40%, transparent);
+  color: var(--xp-fg);
+}
+
+.xp .btn:hover:not(:disabled) {
+  border-color: var(--xp-fg);
+  background: color-mix(in srgb, var(--xp-fg) 12%, transparent);
+  color: var(--xp-fg);
+}
+
+.xp .btn-solid {
+  background: var(--xp-fg);
+  border-color: var(--xp-fg);
+  color: #05060a;
+}
+
+.xp .btn-solid:hover:not(:disabled) {
+  background: #fff;
+  border-color: #fff;
+  color: #05060a;
+}
+
+.xp-game:focus {
+  outline: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Untangle
+   ------------------------------------------------------------------------- */
+
+.untangle {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.untangle-hud {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  color: var(--xp-dim);
+}
+
+.untangle-hud .t-meta {
+  color: inherit;
+}
+
+.untangle-board {
+  width: 100%;
+  /* Square, so the unit coordinates are not distorted by the viewport and a
+     board never becomes a letterbox on a phone. */
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  border-radius: var(--r-md);
+  background: #070a10;
+  touch-action: none;
+  transition: border-color 0.5s var(--ease-out);
+}
+
+.untangle-board.is-solved {
+  border-color: var(--xp-fg);
+}
+
+.untangle-wire {
+  stroke: color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  transition: stroke 0.35s var(--ease-out);
+}
+
+.untangle-board.is-solved .untangle-wire {
+  stroke: var(--xp-fg);
+}
+
+.untangle-node {
+  fill: #05060a;
+  stroke: var(--xp-fg);
+  stroke-width: 1.5;
+  cursor: grab;
+  transition: fill 0.2s var(--ease-out);
+}
+
+.untangle-node:hover,
+.untangle-node:focus-visible {
+  fill: color-mix(in srgb, var(--xp-fg) 35%, transparent);
+  outline: none;
+}
+
+.untangle-node.is-held {
+  fill: var(--xp-fg);
+  cursor: grabbing;
+}
+
+.untangle-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Low-power mode
+
+   Set by the pre-paint grader in the root layout. Everything switched off here
+   is an ambient effect: a full-screen layer that repaints, blends or
+   composites on every frame and carries no information. The page keeps its
+   type, its colour, its layout and every transition the visitor triggers
+   themselves; what it loses is weather.
+
+   Ordered by what each one actually costs, worst first:
+     - blend modes force the compositor to read back what is underneath before
+       it can draw, which is the single most expensive thing on this page and
+       the first to go;
+     - backdrop-filter is a blur of live content, re-run whenever anything
+       behind it moves, which on a sticky header is every frame of every
+       scroll;
+     - the drifting noise banks are two viewport-sized textures in motion;
+     - grain is a fixed full-screen overlay above everything else, so it is in
+       the paint path for the whole page.
+   ------------------------------------------------------------------------- */
+
+:root[data-perf="low"] .river-liquid {
+  display: none;
+}
+
+:root[data-perf="low"] .glass,
+:root[data-perf="low"] .to-top {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--bg);
+}
+
+:root[data-perf="low"] .site-mist::before,
+:root[data-perf="low"] .site-mist::after {
+  animation: none;
+  display: none;
+}
+
+:root[data-perf="low"] .fx-grain::before,
+:root[data-perf="low"] .fx-scanlines::after {
+  display: none;
+}
+
+/* The fog banks stay, because they are two static gradients and the pointer
+   uses them, but they stop being permanent compositor layers. */
+:root[data-perf="low"] .site-mist-bank {
+  will-change: auto;
+}
+
+/* The poster keeps its wipe; what goes is the scale, which repaints the image
+   underneath it for the whole 750ms. */
+:root[data-perf="low"] .browser:hover .poster,
+:root[data-perf="low"] .browser.is-open .poster {
+  transform: none;
+}
+
+:root[data-perf="low"] .browser:hover {
+  transform: none;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---------------------------------------------------------------------------
    Scrollbar
 
    Unlayered and outside @layer components on purpose: these are element and
@@ -867,7 +1092,6 @@ html {
 
   .heading-word > span {
     display: inline-block;
-    will-change: transform;
   }
 
   /* ---------------------------------------------------------------------------
@@ -2046,13 +2270,25 @@ html {
     position: relative;
   }
 
+  /* Below the desktop breakpoint this is an ordinary column of cards.
+
+     A phone cannot fit a title, a 16:10 window, a description, tags, metrics
+     and a link inside 100dvh, and a sticky element taller than the viewport
+     does not stick, it just scrolls with its bottom cut off. Stacking is a
+     device for screens with room to spare. */
   .work-panel {
-    position: sticky;
-    top: 0;
-    display: grid;
-    align-items: center;
-    min-height: 100dvh;
-    padding: 5rem 0;
+    padding: 0 0 3rem;
+  }
+
+  @media (min-width: 1024px) {
+    .work-panel {
+      position: sticky;
+      top: 0;
+      display: grid;
+      align-items: center;
+      min-height: 100dvh;
+      padding: 4rem 0;
+    }
   }
 
   .work-panel-inner {
@@ -2078,9 +2314,10 @@ html {
 
   .work-card-head {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: 1.5rem;
+    gap: 0.5rem 1.5rem;
   }
 
   .work-card-window {

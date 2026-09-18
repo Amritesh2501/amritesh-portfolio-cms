@@ -37,8 +37,15 @@ export function WorkStack({ projects }: { projects: CardProject[] }) {
     const root = rootRef.current;
     if (!root || reduce || projects.length < 2) return;
 
-    const ctx = gsap.context(() => {
-      const cards = gsap.utils.toArray<HTMLElement>(".work-panel");
+    // Matched to the breakpoint where the panels actually stick. Below it they
+    // are a plain column, and receding a card that nothing is covering just
+    // shrinks it for no reason. gsap.matchMedia also reverts on its own when
+    // the viewport crosses back, so a rotated phone does not keep the
+    // transforms from the layout it has left.
+    const mm = gsap.matchMedia();
+
+    mm.add("(min-width: 1024px)", () => {
+      const cards = gsap.utils.toArray<HTMLElement>(".work-panel", root);
 
       cards.forEach((card, i) => {
         const next = cards[i + 1];
@@ -58,9 +65,9 @@ export function WorkStack({ projects }: { projects: CardProject[] }) {
           },
         });
       });
-    }, root);
+    });
 
-    return () => ctx.revert();
+    return () => mm.revert();
   }, [reduce, projects.length]);
 
   return (
