@@ -99,7 +99,7 @@
   --river-core: #4c2379;
   --river-band-a: rgba(160, 110, 210, 0.5);
   --river-band-b: rgba(120, 75, 180, 0.2);
-  --river-lantern: rgba(205, 175, 255, 0.18);
+  --river-fog: rgba(188, 160, 236, 0.16);
   --river-vignette: rgba(15, 6, 30, 0.7);
   /* Bare rgb triplets: RiverScene reads these and builds rgba() per layer. */
   --river-ink: 240, 232, 255;
@@ -108,7 +108,6 @@
   --intro-bg: #0d0718;
   --intro-core: #24123f;
   --intro-fg: #efe7ff;
-  --intro-curtain: linear-gradient(180deg, #3a2266, #b18cff);
 
   /* The long wash falling out of the hero, and the fog sitting in it. */
   --wash-top: color-mix(in srgb, #3a1a66 70%, transparent);
@@ -147,21 +146,23 @@
   --river-fg: #1b1030;
   --river-fg-soft: #3f2d61;
   --river-muted: #5d4e7b;
-  --river-sky: linear-gradient(160deg, #dbe4fb 0%, #e6dcfa 45%, #efe6fc 80%, #f6f2fd 100%);
+  --river-sky: linear-gradient(160deg, #ddd9fb 0%, #e6dcfa 40%, #eee4fc 75%, #f6f1fe 100%);
   --river-haze-a: rgba(255, 255, 255, 0.72);
-  --river-haze-b: rgba(188, 208, 246, 0.5);
-  --river-core: #d2e1fb;
-  --river-band-a: rgba(255, 255, 255, 0.8);
-  --river-band-b: rgba(198, 188, 238, 0.28);
-  --river-lantern: rgba(255, 244, 206, 0.55);
-  --river-vignette: rgba(255, 255, 255, 0.5);
+  --river-haze-b: rgba(198, 182, 244, 0.52);
+  /* Lavender rather than a plain white morning: it is the same brand hue as
+     the dark palette's water, just carried at the top of its range, so light
+     mode reads as the same river rather than as a different site. */
+  --river-core: #ddd4fa;
+  --river-band-a: rgba(248, 244, 255, 0.85);
+  --river-band-b: rgba(196, 178, 245, 0.34);
+  --river-fog: rgba(214, 198, 250, 0.5);
+  --river-vignette: rgba(250, 247, 255, 0.55);
   --river-ink: 52, 36, 92;
   --river-spark: 150, 120, 205;
 
   --intro-bg: #efe9fa;
   --intro-core: #fdfbff;
   --intro-fg: #1d1430;
-  --intro-curtain: linear-gradient(180deg, #d9c9f7, #8f63f0);
 
   --wash-top: color-mix(in srgb, #cdbcf5 65%, transparent);
   --wash-mid: color-mix(in srgb, #e2d9f8 50%, transparent);
@@ -778,9 +779,60 @@ body {
     background: linear-gradient(90deg, transparent, var(--line-strong) 20%, var(--glow) 50%, var(--line-strong) 80%, transparent);
   }
 
-  /* Theme toggle. Same 36px round frame as the logo mark at the other end of
-     the header, so the two bookend the bar. */
-  .theme-toggle {
+  /* ---------------------------------------------------------------------------
+     Arrow
+
+     One mark, used for every "go there" on the site. Sized in em so it tracks
+     whatever type it sits beside, and animated by lengthening the stem from
+     the tail rather than translating the whole glyph: the head stays put and
+     the arrow reads as reaching toward the target.
+     ------------------------------------------------------------------------- */
+
+  .arrow {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    overflow: visible;
+  }
+
+  .arrow-stem {
+    transform-origin: 19px 12px;
+    transform: scaleX(0.62);
+    transition: transform 0.45s var(--ease-out);
+  }
+
+  .group:hover .arrow-stem,
+  a:hover > .arrow,
+  button:hover > .arrow {
+    transform: scaleX(1);
+  }
+
+  /* A round frame for an arrow that stands on its own rather than beside text.
+     Same 1px hairline as every other bordered control. */
+  .arrow-ring {
+    display: grid;
+    place-items: center;
+    flex: none;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-full);
+    color: var(--accent-ink);
+    transition:
+      color 0.45s var(--ease-out),
+      border-color 0.45s var(--ease-out),
+      background-color 0.45s var(--ease-out),
+      transform 0.45s var(--ease-out);
+  }
+
+  .group:hover .arrow-ring {
+    transform: translateX(0.35rem);
+    border-color: transparent;
+    background: var(--accent);
+    color: #150a26;
+  }
+
+  /* The round 36px frame shared by the header's icon buttons, matching the
+     logo mark at the other end of the bar so the two bookend it. */
+  .icon-btn {
     display: grid;
     place-items: center;
     height: 2.25rem;
@@ -797,23 +849,26 @@ body {
       background-color 0.3s var(--ease-out);
   }
 
-  .theme-toggle:hover {
+  .icon-btn:hover {
     color: var(--fg);
     border-color: var(--accent);
     background: var(--accent-soft);
   }
 
-  .theme-toggle:active {
+  .icon-btn:active {
     transform: scale(0.94);
   }
 
-  .theme-toggle svg {
+  .icon-btn svg {
     height: 1.0625rem;
     width: 1.0625rem;
     transition: transform 0.5s var(--ease-out);
   }
 
-  .theme-toggle:hover svg {
+  /* Only the theme button turns: it is a sun and a moon, and the rotation
+     reads as light moving. The menu button is a static mark, and spinning it
+     would just look like a bug. */
+  .icon-btn[aria-pressed]:hover svg {
     transform: rotate(35deg);
   }
 
@@ -1050,92 +1105,119 @@ body {
     display: none;
   }
 
+  /* -------------------------------------------------------------------------
+     Intro
+
+     The name settles, then the ground splits and the page is underneath.
+
+     Everything here animates transform or opacity and nothing else, and the
+     two halves are promoted to their own compositor layers up front, because
+     the whole sequence runs while React is hydrating the page below it: any
+     frame that costs layout or paint is a frame the main thread does not have
+     to give. The previous version lifted two full-viewport gradient curtains
+     in sequence, which is the same idea at twice the overdraw.
+
+     The CSS timing is also the hard ceiling. With JavaScript disabled the
+     overlay still leaves on its own and can never trap anyone.
+     ------------------------------------------------------------------------- */
+
   .intro {
     position: fixed;
     inset: 0;
     z-index: var(--z-boot);
     overflow: hidden;
     pointer-events: none;
-    animation: intro-gone 0.01s linear 2.25s forwards;
+    animation: intro-gone 0.01s linear 1.95s forwards;
   }
 
-  .intro-curtain {
+  .intro-half {
     position: absolute;
-    inset: 0;
-    animation: intro-lift 0.85s cubic-bezier(0.76, 0, 0.24, 1) forwards;
-  }
-
-  .intro-curtain-back {
-    background: var(--intro-curtain);
-    animation-delay: 1.45s;
-  }
-
-  .intro-curtain-front {
-    display: grid;
-    place-items: center;
+    left: 0;
+    right: 0;
+    height: 50.2%;
     pointer-events: auto;
-    color: var(--intro-fg);
-    background:
-      radial-gradient(50% 45% at 50% 50%, var(--intro-core) 0%, transparent 70%),
-      var(--intro-bg);
-    animation-delay: 1.35s;
+    /* One gradient spanning both halves, so the seam is invisible until the
+       moment it opens. Each half shows its own end of the same image. */
+    background-image:
+      radial-gradient(60% 45% at 50% 50%, var(--intro-core) 0%, transparent 70%),
+      linear-gradient(var(--intro-bg), var(--intro-bg));
+    background-size: 100% 200%;
+    will-change: transform;
+    animation: intro-part 0.72s cubic-bezier(0.76, 0, 0.24, 1) 1.28s forwards;
+  }
+
+  .intro-half-top {
+    top: 0;
+    background-position: 50% 0%;
+  }
+
+  .intro-half-bottom {
+    bottom: 0;
+    background-position: 50% 100%;
+    --intro-part-to: 100%;
   }
 
   .intro-stage {
+    position: absolute;
+    inset: 0;
     display: grid;
+    align-content: center;
     justify-items: center;
-    gap: 1.5rem;
-    animation: intro-stage-out 0.6s cubic-bezier(0.76, 0, 0.24, 1) 1.3s forwards;
+    gap: 1.35rem;
+    will-change: transform, opacity;
+    animation: intro-stage-out 0.5s cubic-bezier(0.76, 0, 0.24, 1) 1.1s forwards;
   }
 
   .intro-mark {
-    font-size: 3.25rem;
+    font-size: clamp(2.75rem, 7vw, 4rem);
+    line-height: 1;
     color: var(--accent-ink);
-    animation: intro-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: intro-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Drawn from the centre outward, under the mark. */
+  .intro-rule {
+    width: clamp(7rem, 22vw, 12rem);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    transform: scaleX(0);
+    animation: intro-draw 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.14s forwards;
   }
 
   .intro-name {
     display: flex;
     overflow: hidden;
-    font-size: clamp(0.75rem, 1.6vw, 0.9375rem);
+    font-size: clamp(0.6875rem, 1.5vw, 0.875rem);
     font-weight: 500;
     letter-spacing: 0.38em;
     text-transform: uppercase;
+    color: var(--intro-fg);
     white-space: pre;
   }
 
   .intro-name span {
     display: inline-block;
-    animation: intro-letter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  .intro-bar {
-    width: 11rem;
-    height: 1px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: 0 50%;
-    animation: intro-fill 1.1s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards;
+    animation: intro-letter 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   @keyframes intro-rise {
-    from { opacity: 0; transform: translateY(14px); }
+    from { opacity: 0; transform: translateY(16px); }
+  }
+
+  @keyframes intro-draw {
+    to { transform: scaleX(1); }
   }
 
   @keyframes intro-letter {
     from { transform: translateY(110%); }
   }
 
-  @keyframes intro-fill {
-    to { transform: scaleX(1); }
-  }
-
   @keyframes intro-stage-out {
-    to { opacity: 0; transform: translateY(-24px); }
+    to { opacity: 0; transform: translateY(-20px); }
   }
 
-  @keyframes intro-lift {
-    to { transform: translateY(-100%); }
+  @keyframes intro-part {
+    to { transform: translateY(var(--intro-part-to, -100%)); }
   }
 
   @keyframes intro-gone {
@@ -1208,8 +1290,43 @@ body {
   }
 
   .river-band,
-  .river-vignette,
-  .river-lantern {
+  .river-fog,
+  /* Fog banks. Three soft ellipses at different depths, moved by the pointer
+     through the [data-depth] machinery in RiverScene. No filter: blur() on a
+     layer this size costs a full re-rasterise every frame it moves, and a
+     wide-enough radial gradient is already a soft edge. */
+  .river-fog {
+    border-radius: 50%;
+    background: radial-gradient(50% 50% at 50% 50%, var(--river-fog) 0%, transparent 70%);
+  }
+
+  .river-fog-a {
+    left: -12%;
+    top: 34%;
+    width: 78%;
+    height: 44%;
+    transform: rotate(-14deg);
+  }
+
+  .river-fog-b {
+    right: -18%;
+    top: 12%;
+    width: 68%;
+    height: 38%;
+    opacity: 0.8;
+    transform: rotate(9deg);
+  }
+
+  .river-fog-c {
+    left: 14%;
+    bottom: -14%;
+    width: 86%;
+    height: 40%;
+    opacity: 0.65;
+    transform: rotate(-5deg);
+  }
+
+  .river-vignette {
     position: absolute;
     pointer-events: none;
   }
@@ -1231,18 +1348,6 @@ body {
   }
 
   /* Moonlight carried by the pointer. */
-  .river-lantern {
-    left: 0;
-    top: 0;
-    width: 460px;
-    height: 460px;
-    margin: -230px 0 0 -230px;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--river-lantern), transparent 65%);
-    opacity: 0;
-    transition: opacity 0.6s var(--ease-out);
-    will-change: transform;
-  }
 
   .river-vignette {
     inset: 0;
@@ -1301,6 +1406,35 @@ body {
 
   .peek-frame.is-loaded {
     opacity: 1;
+  }
+
+  /* The pan down the page.
+
+     Paused by default and run only while the row is hovered or focused, so it
+     costs nothing on the cards nobody is looking at and picks up where it left
+     off rather than snapping back. It holds on the last frame, so the bottom
+     of the page stays put until the pointer leaves. */
+  .peek-frame {
+    animation: peek-pan 11s cubic-bezier(0.37, 0, 0.63, 1) 0.45s forwards;
+    animation-play-state: paused;
+  }
+
+  .work-row:hover .peek-frame,
+  .work-row:focus-within .peek-frame {
+    animation-play-state: running;
+  }
+
+  @keyframes peek-pan {
+    to { transform: translateY(var(--peek-pan, 0)); }
+  }
+
+  /* Reduced motion gets the top of the page and nothing moving. The global
+     rule would otherwise collapse this to its first frame in 0.001ms, which
+     here means jumping straight to the bottom of the site. */
+  @media (prefers-reduced-motion: reduce) {
+    .peek-frame {
+      animation: none;
+    }
   }
 
   /* About: a tall pinned portrait and numbered note rows. */
@@ -1513,6 +1647,77 @@ body {
    ------------------------------------------------------------------------- */
 
 @layer components {
+  /* ---------------------------------------------------------------------------
+     Index plates
+
+     The /projects grid. A plate is the image on its own, with none of the
+     browser chrome the home page rows carry: at half the width that chrome
+     would be most of the cell, and the index is for scanning rather than for
+     looking through a window.
+
+     The three tinted grounds are its own rather than .poster's, which is an
+     absolutely positioned layer with a clip-path wipe built for the hover
+     reveal and brings none of that usefully here.
+     ------------------------------------------------------------------------- */
+
+  .plate {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    transition:
+      border-color 0.5s var(--ease-out),
+      box-shadow 0.5s var(--ease-out),
+      transform 0.5s var(--ease-out);
+  }
+
+  .group:hover .plate {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+  }
+
+  .plate-img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    object-position: 50% 0%;
+    transition: transform 0.9s var(--ease-out);
+  }
+
+  .group:hover .plate-img {
+    transform: scale(1.04);
+  }
+
+  /* Three grounds, cycled, so an entry with no thumbnail still has a face and
+     a column of them does not repeat. */
+  .plate-a {
+    background:
+      radial-gradient(70% 90% at 90% 0%, var(--scene-wash-a), transparent 65%),
+      linear-gradient(160deg, color-mix(in srgb, var(--scene-ink) 82%, var(--accent)), var(--scene-ink));
+  }
+
+  .plate-b {
+    background:
+      radial-gradient(70% 90% at 10% 0%, var(--scene-wash-a), transparent 65%),
+      linear-gradient(200deg, color-mix(in srgb, var(--scene-ink) 84%, var(--accent)), var(--scene-ink));
+  }
+
+  .plate-c {
+    background:
+      radial-gradient(80% 80% at 50% 0%, var(--scene-wash-a), transparent 65%),
+      linear-gradient(180deg, color-mix(in srgb, var(--scene-ink) 80%, var(--accent)), var(--scene-ink));
+  }
+
+  .plate-letter {
+    font-size: clamp(4rem, 9vw, 7rem);
+    line-height: 1;
+    color: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
   /* A browser window around each project. */
   .browser {
     overflow: hidden;
@@ -1764,16 +1969,6 @@ body {
   .cert-row:hover .cert-name {
     color: var(--accent-ink);
     transform: translateX(10px);
-  }
-
-  .cert-arrow {
-    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.4s ease, color 0.4s ease;
-  }
-
-  .cert-row:hover .cert-arrow {
-    transform: rotate(45deg);
-    background: var(--accent);
-    color: #150a26;
   }
 
   .cert-thumb {

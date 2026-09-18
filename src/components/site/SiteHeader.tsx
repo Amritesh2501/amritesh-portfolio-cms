@@ -3,23 +3,33 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { ListIcon, XIcon } from "@phosphor-icons/react";
 import { ThemeToggle } from "./ThemeToggle";
 
 export type NavItem = { id: string; label: string; href: string; external: boolean };
 
+/**
+ * Three things across one 64px line: the mark, the links, the theme.
+ *
+ * The availability pill is gone from here. It is a sentence, and a sentence
+ * sitting in a navigation bar is the thing that stops a bar reading as
+ * navigation; it still appears in Contact, where someone is actually deciding
+ * whether to write. What is left is quieter: the bar carries no border and no
+ * fill until you leave the hero, so the top of the page is uninterrupted, and
+ * the links sit on a moving pill rather than lighting up one at a time.
+ */
 export function SiteHeader({
   logoText,
   logoImage,
   navItems,
-  availability,
 }: {
   logoText: string;
   logoImage: string;
   navItems: NavItem[];
-  availability: { status: string; text: string } | null;
 }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hovered, setHovered] = useState<string | null>(null);
   const reduce = useReducedMotion();
 
   useEffect(() => {
@@ -65,48 +75,54 @@ export function SiteHeader({
             )}
           </Link>
 
-          <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
+          {/* One pill moves between the links instead of each link growing its
+              own background. Sentence case at 13px, not 11px capitals: spaced
+              capitals are a label style, and a row of them reads as a legend
+              rather than as somewhere to go. */}
+          <nav
+            aria-label="Primary"
+            className="hidden items-center lg:flex"
+            onMouseLeave={() => setHovered(null)}
+          >
             {navItems.map((item) => (
               <Link
                 key={item.id}
                 href={item.href}
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
-                className="u-link px-5 py-2 text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-[var(--muted)] transition-colors duration-300 [--u-inset:1.25rem] hover:text-[var(--fg)]"
+                onMouseEnter={() => setHovered(item.id)}
+                onFocus={() => setHovered(item.id)}
+                className="relative px-4 py-2 text-[0.8125rem] font-medium tracking-[-0.01em] text-[var(--muted)] transition-colors duration-300 hover:text-[var(--fg)]"
               >
-                {item.label}
+                {hovered === item.id ? (
+                  <motion.span
+                    aria-hidden
+                    layoutId="nav-pill"
+                    className="absolute inset-0 rounded-[var(--r-full)] bg-[var(--elevated)]"
+                    transition={
+                      reduce
+                        ? { duration: 0 }
+                        : { type: "spring", stiffness: 420, damping: 36 }
+                    }
+                  />
+                ) : null}
+                <span className="relative">{item.label}</span>
               </Link>
             ))}
           </nav>
 
           <div className="flex items-center gap-3">
-            {availability?.text ? (
-              <span className="hidden items-center gap-2 rounded-[var(--r-full)] border border-[var(--line-strong)] px-3 py-1.5 md:inline-flex">
-                {/* Real semantic state: whether he is open to work right now. */}
-                <span
-                  aria-hidden
-                  className="h-1.5 w-1.5 rounded-[var(--r-full)]"
-                  style={{
-                    background:
-                      availability.status === "OPEN" ? "var(--ok)" : "var(--muted)",
-                  }}
-                />
-                <span className="text-[0.8125rem] font-medium tracking-[-0.01em] text-[var(--fg)]">
-                  {availability.text}
-                </span>
-              </span>
-            ) : null}
-
             <ThemeToggle />
 
             <button
               type="button"
-              className="btn btn-sm lg:hidden"
+              className="icon-btn lg:hidden"
               aria-expanded={open}
               aria-controls="mobile-nav"
+              aria-label={open ? "Close menu" : "Open menu"}
               onClick={() => setOpen((v) => !v)}
             >
-              {open ? "Close" : "Menu"}
+              {open ? <XIcon aria-hidden /> : <ListIcon aria-hidden />}
             </button>
           </div>
         </div>

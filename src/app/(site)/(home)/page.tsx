@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Arrow } from "@/components/site/Arrow";
 import { getHomeData } from "@/lib/content";
 import { Hero } from "@/components/site/Hero";
 import { Section } from "@/components/site/Section";
@@ -191,11 +192,8 @@ function AllProjectsRow({ rest }: { rest: number }) {
               : "The full index, filterable by category"}
           </p>
         </div>
-        <span
-          aria-hidden
-          className="grid h-14 w-14 shrink-0 place-items-center rounded-[var(--r-full)] border border-[var(--line-strong)] text-[1.5rem] text-[var(--accent-ink)] transition-[transform,background-color,color,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-2 group-hover:border-transparent group-hover:bg-[var(--accent)] group-hover:text-[#150a26]"
-        >
-          &#8594;
+        <span aria-hidden className="arrow-ring h-14 w-14 text-[1.5rem]">
+          <Arrow />
         </span>
       </Link>
     </Reveal>

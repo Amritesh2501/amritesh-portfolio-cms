@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Arrow } from "./Arrow";
 import { useEffect, useRef, useState } from "react";
 import { Parallax } from "./Parallax";
 
@@ -32,10 +33,19 @@ const LIFECYCLE_LABEL: Record<string, string> = {
 
 const TECH_LIMIT = 5;
 // Sites render at a real laptop viewport, then scale down into the window,
-// which has the same 16:10 shape. A taller frame would let the page scroll,
-// but sites sized in vh units stretch their hero to fill it and show nothing.
+// which has the same 16:10 shape.
 const FRAME_WIDTH = 1440;
 const FRAME_HEIGHT = 900;
+// How much of the page below the fold the frame renders, so hovering can pan
+// down through it. A cross-origin document cannot be scrolled from here at
+// all, by design, so the only way to see past the fold is to render more of it
+// and move the whole frame.
+//
+// ponytail: the cost of that is a hero sized in vh units, which stretches to
+// whatever height it is given. 3x is the most that still leaves such a hero
+// recognisable while reaching a useful way down an ordinary page. If a live
+// site previews badly, this is the number to change.
+const FRAME_PAGE = FRAME_HEIGHT * 3;
 // How long a preview stays loaded after the pointer leaves: long enough for
 // the thumbnail to close back over it, short enough that no hidden site keeps
 // running.
@@ -233,11 +243,8 @@ export function ProjectCard({
 
         <span className="mt-8 inline-flex items-center gap-3 text-[0.9375rem] font-medium tracking-[-0.01em] text-[var(--fg)]">
           <span className="work-cta">Read the case study</span>
-          <span
-            aria-hidden
-            className="grid h-9 w-9 place-items-center rounded-full border border-[var(--line-strong)] text-[var(--accent-ink)] transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1.5 group-hover:bg-[var(--accent)] group-hover:text-[#150a26]"
-          >
-            &rarr;
+          <span aria-hidden className="arrow-ring h-9 w-9 text-[0.9375rem]">
+            <Arrow />
           </span>
         </span>
       </div>
@@ -248,6 +255,14 @@ export function ProjectCard({
 /**
  * A site rendered at a laptop viewport and scaled into the window. The scale
  * is measured once per size change and handed to CSS.
+ */
+/**
+ * The site itself, rendered at laptop width and scaled into the window.
+ *
+ * The pan down the page is a CSS animation that is paused until the row is
+ * hovered or focused, which means it costs nothing while the card sits there,
+ * resumes from where it stopped rather than restarting, and needs no rAF loop
+ * or scroll handler of its own.
  */
 function LiveFrame({ url, title, external }: { url: string; title: string; external: boolean }) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -287,7 +302,12 @@ function LiveFrame({ url, title, external }: { url: string; title: string; exter
           sandbox={external ? "allow-scripts allow-same-origin" : undefined}
           onLoad={() => setLoaded(true)}
           className={`peek-frame ${loaded ? "is-loaded" : ""}`}
-          style={{ width: FRAME_WIDTH, height: FRAME_HEIGHT }}
+          style={{
+            width: FRAME_WIDTH,
+            height: FRAME_PAGE,
+            // What the pan has to travel: everything below the first screen.
+            "--peek-pan": `${FRAME_HEIGHT - FRAME_PAGE}px`,
+          } as React.CSSProperties}
         />
       </div>
     </div>

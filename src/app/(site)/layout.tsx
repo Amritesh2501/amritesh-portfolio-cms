@@ -1,10 +1,5 @@
-import {
-  getNavigationSafe,
-  getProfileSafe,
-  getSettingsSafe,
-} from "@/lib/content";
+import { getNavigationSafe, getSettingsSafe } from "@/lib/content";
 import { SiteHeader } from "@/components/site/SiteHeader";
-import { SiteFooter } from "@/components/site/SiteFooter";
 import { CommandPalette } from "@/components/site/CommandPalette";
 import { BootScreen } from "@/components/site/BootScreen";
 import { ScrollProgress } from "@/components/site/Parallax";
@@ -25,10 +20,9 @@ export default async function SiteLayout({
   // error boundary, so a database blip here would replace the whole site with
   // a bare 500. The shell degrades instead, and the page below still surfaces
   // the failure through error.tsx.
-  const [settings, nav, profile] = await Promise.all([
+  const [settings, nav] = await Promise.all([
     getSettingsSafe(),
     getNavigationSafe("HEADER"),
-    getProfileSafe(),
   ]);
 
   const navItems = nav.map((item) => ({
@@ -37,13 +31,6 @@ export default async function SiteLayout({
     href: item.href,
     external: item.external,
   }));
-
-  const availability = profile?.availabilityText
-    ? {
-        status: profile.availabilityStatus ?? "CLOSED",
-        text: profile.availabilityText,
-      }
-    : null;
 
   return (
     <div className="fx relative flex min-h-[100dvh] flex-col">
@@ -73,14 +60,12 @@ export default async function SiteLayout({
         logoText={settings.get("site.logoText", "AT")}
         logoImage={settings.get("site.logoImage")}
         navItems={navItems}
-        availability={availability}
       />
 
       <main id="main" className="flex-1">
         {children}
       </main>
 
-      <SiteFooter />
       <CommandPalette navItems={navItems} />
     </div>
   );

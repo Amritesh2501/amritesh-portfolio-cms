@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getProjectCategories, getProjects, getSettings } from "@/lib/content";
-import { ProjectGrid } from "@/components/site/ProjectGrid";
+import { ProjectIndex } from "@/components/site/ProjectIndex";
 import { Reveal } from "@/components/site/Reveal";
 import type { CardProject } from "@/components/site/ProjectCard";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
@@ -55,18 +55,17 @@ export default async function ProjectsPage() {
           items={[{ name: "Home", path: "/" }, { name: "Projects" }]}
         />
         <Reveal>
-          <p className="t-meta">Index</p>
-          <h1 className="t-display-lg mt-5 text-[clamp(2.5rem,7.5vw,5rem)]">
+          <h1 className="t-display-lg text-[clamp(2.5rem,7.5vw,5rem)]">
             All projects
           </h1>
-          <p className="t-lead mt-7 max-w-[54ch]">
-            Everything currently published, newest ordering first. Filters come
-            from the categories attached to each project.
+          <p className="t-lead mt-6 max-w-[54ch]">
+            Everything currently published. Narrow it by category, or open one
+            for the full case study.
           </p>
         </Reveal>
 
-        <div className="mt-16">
-          <ProjectGrid
+        <div className="mt-20">
+          <ProjectIndex
             projects={cards}
             categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
           />

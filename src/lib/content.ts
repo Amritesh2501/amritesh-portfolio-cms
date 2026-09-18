@@ -9,8 +9,8 @@ import { prisma } from "@/lib/db";
  * onto the public site by a page forgetting a where-clause. Admin screens use
  * Prisma directly and see everything.
  *
- * `cache()` dedupes within a single render pass: the header, hero and footer
- * all ask for settings and only one query goes out.
+ * `cache()` dedupes within a single render pass: the header, the hero and the
+ * page all ask for settings and only one query goes out.
  */
 
 const PUBLISHED = { status: "PUBLISHED" } as const;
@@ -38,8 +38,8 @@ export const getSettings = cache(async () => {
 /**
  * Chrome-safe reads.
  *
- * The header and footer are rendered by a layout, and an error thrown inside a
- * layout bubbles PAST that segment error boundary. Left unguarded, a database
+ * The header is rendered by a layout, and an error thrown inside a layout
+ * bubbles PAST that segment error boundary. Left unguarded, a database
  * blip therefore replaces the whole site with a bare 500 instead of showing the
  * shell plus an explanation. These variants degrade to empty rather than throw;
  * page-level reads still throw, so a genuine failure is never silently hidden.
@@ -70,14 +70,6 @@ export async function getProfileSafe() {
     return await getProfile();
   } catch {
     return null;
-  }
-}
-
-export async function getSocialLinksSafe() {
-  try {
-    return await getSocialLinks();
-  } catch {
-    return [];
   }
 }
 
