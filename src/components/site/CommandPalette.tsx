@@ -121,7 +121,7 @@ export function CommandPalette({
             aria-label="Search commands"
             className="w-full bg-transparent py-3.5 text-[0.9375rem] tracking-[-0.012em] text-[var(--fg)] outline-none placeholder:text-[var(--muted)]"
           />
-          <kbd className="t-meta rounded-[var(--r-xs)] border border-[var(--line)] px-2 py-1 text-[0.5625rem]">esc</kbd>
+          <kbd className="t-meta rounded-[var(--r-xs)] border border-[var(--line)] px-2 py-1 text-[0.6875rem]">esc</kbd>
         </div>
 
         {results.length === 0 ? (

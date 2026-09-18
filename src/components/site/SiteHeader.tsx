@@ -58,7 +58,7 @@ export function SiteHeader({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoImage} alt="" className="h-7 w-auto" />
             ) : (
-              <span className="t-serif flex h-9 w-9 items-center justify-center rounded-[var(--r-full)] border border-[var(--line-strong)] text-[1.125rem] text-[var(--fg)] shadow-[0_0_24px_-6px_var(--glow)] transition-shadow duration-500 hover:shadow-[0_0_30px_-2px_var(--glow)]">
+              <span className="t-serif flex h-9 w-9 items-center justify-center rounded-[var(--r-full)] border border-[var(--line-strong)] text-[1.125rem] text-[var(--fg)] transition-colors duration-500 hover:border-[var(--accent)]">
                 {logoText}
               </span>
             )}
@@ -138,7 +138,7 @@ export function SiteHeader({
                     onClick={() => setOpen(false)}
                     className="flex items-baseline gap-4 border-b border-[var(--line)] py-5"
                   >
-                    <span className="t-meta text-[0.5625rem] text-[var(--accent)]">
+                    <span className="t-meta text-[0.6875rem] text-[var(--accent)]">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="t-display text-[1.75rem] text-[var(--fg)]">

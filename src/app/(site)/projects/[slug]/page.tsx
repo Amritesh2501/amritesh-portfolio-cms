@@ -122,14 +122,14 @@ export default async function ProjectPage({
             <div>
               <Reveal y={16}>
                 <span className="inline-flex items-center gap-2.5 rounded-[var(--r-full)] border border-[var(--line-strong)] px-3.5 py-1.5">
-                  <span className="t-meta text-[0.5625rem] text-[var(--fg)]">
+                  <span className="t-meta text-[0.6875rem] text-[var(--fg)]">
                     {project.category?.name ?? "Project"}
                   </span>
                   <span
                     aria-hidden
                     className="h-1 w-1 rounded-[var(--r-full)] bg-[var(--accent)]"
                   />
-                  <span className="t-meta text-[0.5625rem]">
+                  <span className="t-meta text-[0.6875rem]">
                     {LIFECYCLE_LABEL[project.lifecycle] ?? project.lifecycle}
                   </span>
                 </span>
@@ -188,7 +188,7 @@ export default async function ProjectPage({
                 <dl className="card h-fit divide-y divide-[var(--line)] overflow-hidden">
                   {facts.map((fact) => (
                     <div key={fact.label} className="px-6 py-4">
-                      <dt className="t-meta text-[0.5625rem]">{fact.label}</dt>
+                      <dt className="t-meta text-[0.6875rem]">{fact.label}</dt>
                       <dd className="mt-2 text-[0.9375rem] leading-snug tracking-[-0.012em] text-[var(--fg)]">
                         {fact.value}
                       </dd>
@@ -229,7 +229,7 @@ export default async function ProjectPage({
                 <dd className="t-display text-[clamp(1.75rem,4vw,2.75rem)] text-[var(--accent)]">
                   {metric.value}
                 </dd>
-                <dt className="t-meta mt-3 text-[0.5625rem] leading-relaxed">
+                <dt className="t-meta mt-3 text-[0.6875rem] leading-relaxed">
                   {metric.label}
                 </dt>
               </RevealItem>
@@ -266,7 +266,7 @@ export default async function ProjectPage({
             <aside className="h-fit lg:sticky lg:top-24">
               <Reveal>
                 <div className="card p-6">
-                  <p className="t-meta text-[0.5625rem]">Built with</p>
+                  <p className="t-meta text-[0.6875rem]">Built with</p>
                   <ul className="mt-4 flex flex-wrap gap-2">
                     {project.technologies.map((tech) => (
                       <li
@@ -302,7 +302,7 @@ export default async function ProjectPage({
                       />
                     </div>
                     {image.caption ? (
-                      <figcaption className="t-meta border-t border-[var(--line)] px-5 py-3.5 text-[0.5625rem]">
+                      <figcaption className="t-meta border-t border-[var(--line)] px-5 py-3.5 text-[0.6875rem]">
                         {image.caption}
                       </figcaption>
                     ) : null}
@@ -321,7 +321,7 @@ export default async function ProjectPage({
             className="group mx-auto flex w-full max-w-[1400px] items-baseline justify-between gap-6 px-6 py-16 transition-colors hover:bg-[var(--surface)] sm:px-8 lg:px-12 lg:py-20"
           >
             <span>
-              <span className="t-meta text-[0.5625rem]">Next</span>
+              <span className="t-meta text-[0.6875rem]">Next</span>
               <span className="t-display mt-4 block text-[clamp(1.75rem,5vw,3.25rem)]">
                 {next.title}
               </span>

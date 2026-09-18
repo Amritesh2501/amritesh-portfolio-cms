@@ -93,31 +93,24 @@ export default async function HomePage() {
         name={profile.name}
         headline={profile.headline}
         tagline={profile.heroTagline ?? ""}
-        description={profile.heroDescription ?? ""}
         resumeUrl={profile.resumeUrl ?? ""}
         hasProjects={projects.length > 0}
-        availability={
-          profile.availabilityText
-            ? {
-                status: profile.availabilityStatus ?? "CLOSED",
-                text: profile.availabilityText,
-              }
-            : null
-        }
       />
 
       {achievements.length > 0 ? (
-        <div className="mx-auto w-full max-w-[1400px] px-6 pb-8 sm:px-8 lg:px-12">
+        // Numbers set in the open, on one hairline, instead of six boxed tiles.
+        // Six equal cards read as a dashboard widget; this reads as a figure.
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-16 sm:px-8 lg:px-12 lg:py-20">
           <RevealGroup
             as="dl"
-            className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-lg)] border border-[var(--line)] bg-[var(--line)] sm:grid-cols-3 lg:grid-cols-6"
+            className="grid grid-cols-2 gap-x-8 gap-y-10 border-t border-[var(--line)] pt-10 sm:grid-cols-3 lg:grid-cols-6"
           >
             {achievements.map((item) => (
-              <RevealItem key={item.id} className="spot bg-[var(--surface)] px-5 py-7">
-                <dd className="t-display text-[clamp(1.5rem,3vw,2.25rem)] text-[var(--accent)]">
+              <RevealItem key={item.id}>
+                <dd className="t-serif text-[clamp(2.25rem,4vw,3.25rem)] text-[var(--accent)]">
                   {item.value}
                 </dd>
-                <dt className="t-meta mt-2.5 text-[0.5625rem] leading-relaxed">
+                <dt className="mt-2 text-[0.8125rem] leading-snug tracking-[-0.01em] text-[var(--muted)]">
                   {item.label}
                 </dt>
               </RevealItem>
@@ -129,7 +122,6 @@ export default async function HomePage() {
       <Section
         id="work"
         label="Selected work"
-        index="01"
         aside={`${projects.length} published`}
       >
         <ProjectGrid
@@ -145,19 +137,19 @@ export default async function HomePage() {
         ) : null}
       </Section>
 
-      <Section id="about" label="About" index="02">
+      <Section id="about" label="About" intro={profile.heroDescription ?? undefined}>
         <About profile={profile} />
       </Section>
 
-      <Section id="experience" label="Experience" index="03">
+      <Section id="experience" label="Experience">
         <Experience experience={experience} education={education} />
       </Section>
 
-      <Section id="stack" label="Stack" index="04" aside={`${skillCount} entries`}>
+      <Section id="stack" label="Stack" aside={`${skillCount} entries`}>
         <Stack skillGroups={skillGroups} certifications={certifications} />
       </Section>
 
-      <Section id="contact" label="Contact" index="05">
+      <Section id="contact" label="Contact">
         <Contact
           heading={settings.get("site.contactHeading", "Let's work together")}
           blurb={settings.get("site.contactBlurb")}

@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
+import { EB_Garamond, Geist, JetBrains_Mono } from "next/font/google";
 import { getSettings } from "@/lib/content";
 import "./globals.css";
 
-// Inter is the closest freely licensed analogue to SF Pro, which is what the
-// Apple-clean direction needs. The taste rules discourage Inter as a lazy
-// default; here it is the deliberate choice for the requested look.
-const inter = Inter({
+// Geist, not Inter: the same neutral-grotesque clarity with a little more
+// character in the numerals and a tighter display cut, which the big headings
+// on this page live off.
+const sans = Geist({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-inter",
+  variable: "--font-sans",
   display: "swap",
 });
 
@@ -20,10 +19,12 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
-// Italic serif for the hero lettering, the misty river voice.
-const serif = Instrument_Serif({
+// The italic serif voice, at every size from the hero name down to a timeline
+// year. EB Garamond keeps its stroke on the dark substrate, where a
+// high-contrast display serif drops its hairlines and goes patchy.
+const serif = EB_Garamond({
   subsets: ["latin"],
-  weight: "400",
+  weight: ["400", "500"],
   style: ["normal", "italic"],
   variable: "--font-serif",
   display: "swap",
@@ -125,7 +126,7 @@ export default async function RootLayout({
     <html
       lang="en"
       data-mode={mode}
-      className={`${inter.variable} ${jetbrains.variable} ${serif.variable}`}
+      className={`${sans.variable} ${jetbrains.variable} ${serif.variable}`}
       style={theme as React.CSSProperties}
       suppressHydrationWarning
     >

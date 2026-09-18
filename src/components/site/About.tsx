@@ -64,11 +64,11 @@ export function About({ profile }: { profile: Profile }) {
             )}
             <span aria-hidden className="about-tint" />
             <figcaption className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
-              <p className="t-serif text-[clamp(2.25rem,4vw,3.25rem)] leading-[0.95] text-[#efe7ff]">
+              <p className="t-serif pb-1 text-[clamp(2.25rem,4vw,3.25rem)] leading-[1.1] text-[#efe7ff]">
                 {profile.name}
               </p>
               {profile.headline ? (
-                <p className="mt-3 text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-[#cdb8f2]">
+                <p className="mt-3 text-[0.9375rem] tracking-[-0.012em] text-[#cdb8f2]">
                   {profile.headline}
                 </p>
               ) : null}
@@ -81,7 +81,7 @@ export function About({ profile }: { profile: Profile }) {
             <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--line)]">
               {facts.map((fact) => (
                 <div key={fact.label} className="bg-[var(--bg)] p-5 last:odd:col-span-2">
-                  <dt className="t-meta text-[0.5625rem]">{fact.label}</dt>
+                  <dt className="t-meta text-[0.6875rem]">{fact.label}</dt>
                   <dd className="mt-2 text-[0.9375rem] leading-snug text-[var(--fg)]">{fact.value}</dd>
                 </div>
               ))}
@@ -119,7 +119,7 @@ export function About({ profile }: { profile: Profile }) {
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <p className="text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--fg)]">
+                  <p className="t-display text-[1.125rem] text-[var(--fg)]">
                     {note.label}
                   </p>
                   <Markdown content={note.body} className="mt-3 text-[0.9375rem]" />

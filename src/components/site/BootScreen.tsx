@@ -50,7 +50,12 @@ export function BootScreen({
     // and pauses itself while it is hidden.
     const root = document.documentElement;
     root.style.overflow = "hidden";
-    const finish = window.setTimeout(() => setDone(true), TOTAL_MS);
+    // Released here, not only in the cleanup: `done` renders null but does not
+    // unmount this component, so the cleanup never ran and the lock stuck.
+    const finish = window.setTimeout(() => {
+      root.style.overflow = "";
+      setDone(true);
+    }, TOTAL_MS);
 
     return () => {
       window.clearTimeout(finish);

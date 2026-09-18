@@ -147,7 +147,7 @@ export function ScrollProgress() {
   return (
     <motion.div
       aria-hidden
-      className="fixed left-0 right-0 top-0 z-[var(--z-nav)] h-[2px] origin-left bg-[var(--accent)] shadow-[0_0_12px_var(--glow)] motion-reduce:hidden"
+      className="fixed left-0 right-0 top-0 z-[var(--z-nav)] h-[2px] origin-left bg-[var(--accent)] motion-reduce:hidden"
       style={{ scaleX: scaleX as MotionValue<number> }}
     />
   );
