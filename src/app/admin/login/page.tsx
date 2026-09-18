@@ -30,7 +30,7 @@ export default async function LoginPage({
         <div className="card overflow-hidden shadow-[var(--shadow-lg)]">
           <div className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
             <span className="t-meta text-[var(--fg)]">authenticate</span>
-            <span className="t-meta text-[var(--accent)]">restricted</span>
+            <span className="t-meta text-[var(--accent-ink)]">restricted</span>
           </div>
 
           <div className="p-6 sm:p-8">

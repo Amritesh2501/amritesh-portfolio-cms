@@ -108,7 +108,7 @@ export function Certifications({ certifications }: { certifications: Cert[] }) {
                 ) : null}
                 <span
                   aria-hidden
-                  className={`cert-arrow grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] text-[var(--accent)] ${cert.credentialUrl ? "" : "invisible"}`}
+                  className={`cert-arrow grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] text-[var(--accent-ink)] ${cert.credentialUrl ? "" : "invisible"}`}
                 >
                   &#8599;
                 </span>

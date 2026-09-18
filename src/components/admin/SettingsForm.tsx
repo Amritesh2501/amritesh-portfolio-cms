@@ -52,7 +52,7 @@ export function SettingsForm({
     <form onSubmit={submit}>
       <div className="sticky top-0 z-[var(--z-nav)] -mx-4 mb-8 flex items-center justify-between gap-3 border-b border-[var(--line)] bg-[var(--bg)] px-4 py-3 sm:-mx-6 sm:px-6">
         {dirty ? (
-          <span className="t-meta text-[var(--accent)]">Unsaved changes</span>
+          <span className="t-meta text-[var(--accent-ink)]">Unsaved changes</span>
         ) : (
           <span className="t-meta">All saved</span>
         )}

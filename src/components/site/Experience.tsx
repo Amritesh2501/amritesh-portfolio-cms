@@ -66,7 +66,7 @@ export function Experience({
                     <h3 className="t-display mt-4 text-[clamp(1.25rem,2.2vw,1.625rem)] text-[var(--fg)]">
                       {role.role}
                     </h3>
-                    <p className="t-serif mt-1.5 text-[1.25rem] text-[var(--accent)]">
+                    <p className="t-serif mt-1.5 text-[1.25rem] text-[var(--accent-ink)]">
                       {role.companyUrl ? (
                         <a
                           href={role.companyUrl}

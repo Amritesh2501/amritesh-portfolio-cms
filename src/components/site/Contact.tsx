@@ -73,7 +73,7 @@ export function Contact({
                       {social.label}
                       <span
                         aria-hidden
-                        className="text-[var(--accent)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                        className="text-[var(--accent-ink)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                       >
                         &#8599;
                       </span>

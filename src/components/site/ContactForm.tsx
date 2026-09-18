@@ -108,7 +108,7 @@ export function ContactForm() {
           {...register("message")}
         />
         {errors.message ? (
-          <p id="message-error" role="alert" className="text-[0.8125rem] text-[var(--accent)]">
+          <p id="message-error" role="alert" className="text-[0.8125rem] text-[var(--accent-ink)]">
             {errors.message.message}
           </p>
         ) : null}
@@ -117,7 +117,7 @@ export function ContactForm() {
       {serverError ? (
         <p
           role="alert"
-          className="rounded-[var(--r-sm)] border border-[var(--accent)] bg-[var(--accent-soft)] px-4 py-3 text-[0.875rem] text-[var(--accent)]"
+          className="rounded-[var(--r-sm)] border border-[var(--accent)] bg-[var(--accent-soft)] px-4 py-3 text-[0.875rem] text-[var(--accent-ink)]"
         >
           {serverError}
         </p>
@@ -159,7 +159,7 @@ function Field({
         {...props}
       />
       {error ? (
-        <p id={`${id}-error`} role="alert" className="text-[0.8125rem] text-[var(--accent)]">
+        <p id={`${id}-error`} role="alert" className="text-[0.8125rem] text-[var(--accent-ink)]">
           {error}
         </p>
       ) : null}

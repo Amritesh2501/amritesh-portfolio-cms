@@ -226,7 +226,7 @@ export default async function ProjectPage({
           >
             {project.metrics.map((metric) => (
               <RevealItem key={metric.id} className="bg-[var(--surface)] px-6 py-8">
-                <dd className="t-display text-[clamp(1.75rem,4vw,2.75rem)] text-[var(--accent)]">
+                <dd className="t-display text-[clamp(1.75rem,4vw,2.75rem)] text-[var(--accent-ink)]">
                   {metric.value}
                 </dd>
                 <dt className="t-meta mt-3 text-[0.6875rem] leading-relaxed">
@@ -251,7 +251,7 @@ export default async function ProjectPage({
               <Reveal key={block.label} delay={0.04}>
                 <section className="mt-16 border-t border-[var(--line)] pt-10">
                   <h2 className="t-meta text-[var(--fg)]">
-                    <span className="text-[var(--accent)]">
+                    <span className="text-[var(--accent-ink)]">
                       {String(i + 1).padStart(2, "0")}{" "}
                     </span>
                     {block.label}
@@ -328,7 +328,7 @@ export default async function ProjectPage({
             </span>
             <span
               aria-hidden
-              className="shrink-0 text-[1.75rem] text-[var(--accent)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-2"
+              className="shrink-0 text-[1.75rem] text-[var(--accent-ink)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-2"
             >
               &rarr;
             </span>

@@ -26,7 +26,7 @@ export default function SiteError({
     <main className="relative isolate flex min-h-[70dvh] items-center overflow-hidden px-6">
       <div className="hero-wash" aria-hidden />
       <div className="relative mx-auto w-full max-w-2xl">
-        <p className="t-meta text-[var(--accent)]">Service interrupted</p>
+        <p className="t-meta text-[var(--accent-ink)]">Service interrupted</p>
         <h1 className="t-display-lg mt-5 text-[clamp(2rem,7vw,4rem)]">
           This section could not load
         </h1>

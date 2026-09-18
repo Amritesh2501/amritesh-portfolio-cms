@@ -259,7 +259,7 @@ export function SkillMeter({ name, value }: { name: string; value: number | null
       <div className="flex items-baseline justify-between gap-4">
         <span className="text-[0.9375rem] tracking-[-0.01em] text-[var(--fg)]">{name}</span>
         {level != null ? (
-          <span className="font-mono text-[0.625rem] tracking-[0.06em] text-[var(--accent)]">
+          <span className="font-mono text-[0.625rem] tracking-[0.06em] text-[var(--accent-ink)]">
             {level}
             <span className="sr-only"> out of 100</span>
           </span>

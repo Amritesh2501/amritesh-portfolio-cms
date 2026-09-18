@@ -20,7 +20,6 @@ export default async function HomePage() {
     profile,
     settings,
     projects,
-    categories,
     experience,
     education,
     skillGroups,
@@ -65,6 +64,17 @@ export default async function HomePage() {
 
   const skillCount = skillGroups.reduce((n, g) => n + g.skills.length, 0);
 
+  // "Selected work" means selected. The home page carries the projects flagged
+  // featured in the CMS and nothing else; everything published lives one click
+  // away on /projects, which already has the category filters.
+  //
+  // Capped, because a home page that lists twenty things has selected nothing.
+  // If no project is flagged, the top of the display order stands in, so the
+  // section is never empty just because someone has not ticked a box yet.
+  const featured = cards.filter((p) => p.featured);
+  const shown = (featured.length ? featured : cards).slice(0, 4);
+  const rest = cards.length - shown.length;
+
   return (
     <>
       <JsonLd
@@ -107,7 +117,7 @@ export default async function HomePage() {
           >
             {achievements.map((item) => (
               <RevealItem key={item.id}>
-                <dd className="t-serif text-[clamp(2.25rem,4vw,3.25rem)] text-[var(--accent)]">
+                <dd className="t-serif text-[clamp(2.25rem,4vw,3.25rem)] text-[var(--accent-ink)]">
                   {item.value}
                 </dd>
                 <dt className="mt-2 text-[0.8125rem] leading-snug tracking-[-0.01em] text-[var(--muted)]">
@@ -119,22 +129,11 @@ export default async function HomePage() {
         </div>
       ) : null}
 
-      <Section
-        id="work"
-        label="Selected work"
-        aside={`${projects.length} published`}
-      >
-        <ProjectGrid
-          projects={cards}
-          categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
-        />
-        {projects.length > 4 ? (
-          <Reveal className="mt-10">
-            <Link href="/projects" className="btn">
-              Browse the full index
-            </Link>
-          </Reveal>
-        ) : null}
+      <Section id="work" label="Selected work">
+        {/* No category chips here: with a handful of curated rows there is
+            nothing to filter. They live on /projects, over the full set. */}
+        <ProjectGrid projects={shown} categories={[]} />
+        {cards.length > 0 ? <AllProjectsRow rest={rest} /> : null}
       </Section>
 
       <Section id="about" label="About" intro={profile.heroDescription ?? undefined}>
@@ -164,5 +163,41 @@ export default async function HomePage() {
         />
       </Section>
     </>
+  );
+}
+
+/**
+ * The way out of the curated selection and into the full index.
+ *
+ * Built at the scale of a section heading rather than as a button, because it
+ * is the end of the work section and the only route to the rest of it. The
+ * hairline above it continues the rhythm of the project rows, so it reads as
+ * the last entry in the list rather than a control bolted underneath.
+ */
+function AllProjectsRow({ rest }: { rest: number }) {
+  return (
+    <Reveal className="mt-24 lg:mt-36">
+      <Link
+        href="/projects"
+        className="group flex items-center justify-between gap-8 border-t border-[var(--line)] pt-10 transition-colors duration-500 hover:border-[var(--line-strong)]"
+      >
+        <div>
+          <p className="t-display text-[clamp(1.75rem,4vw,3rem)] text-[var(--fg)] transition-colors duration-500 group-hover:text-[var(--accent-ink)]">
+            All projects
+          </p>
+          <p className="mt-3 text-[0.9375rem] tracking-[-0.012em] text-[var(--muted)]">
+            {rest > 0
+              ? `${rest} more, filterable by category`
+              : "The full index, filterable by category"}
+          </p>
+        </div>
+        <span
+          aria-hidden
+          className="grid h-14 w-14 shrink-0 place-items-center rounded-[var(--r-full)] border border-[var(--line-strong)] text-[1.5rem] text-[var(--accent-ink)] transition-[transform,background-color,color,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-2 group-hover:border-transparent group-hover:bg-[var(--accent)] group-hover:text-[#150a26]"
+        >
+          &#8594;
+        </span>
+      </Link>
+    </Reveal>
   );
 }

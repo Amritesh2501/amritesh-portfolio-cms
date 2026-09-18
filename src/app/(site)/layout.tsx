@@ -48,6 +48,7 @@ export default async function SiteLayout({
   return (
     <div className="fx relative flex min-h-[100dvh] flex-col">
       <script dangerouslySetInnerHTML={{ __html: MARK_EMBED }} />
+      <div aria-hidden className="page-wash" />
       <div aria-hidden className="site-mist keep-motion" />
       <HoverFx />
       <SmoothScroll />

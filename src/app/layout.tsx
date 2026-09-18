@@ -86,32 +86,41 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/**
+ * Resolves the mode before the first paint, so the page never flashes the
+ * wrong palette. Order: the visitor's own choice, then the CMS default, then
+ * the operating system. Kept in sync with ThemeToggle, which writes the same
+ * storage key.
+ */
+function themeInit(defaultMode: string) {
+  return `try{var d=document.documentElement,c=localStorage.getItem("theme"),m=(c==="light"||c==="dark")?c:"${defaultMode}";if(m!=="light"&&m!=="dark")m=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";d.dataset.mode=m}catch(e){document.documentElement.dataset.mode="dark"}`;
+}
+
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  let theme: Record<string, string> = {};
-  let mode = "dark";
+  let accent = "#b18cff";
+  let defaultMode = "dark";
+  let darkPalette = "";
   let effects = "";
 
   try {
     const settings = await getSettings();
-    mode = settings.get("theme.mode", "dark");
-    // The accent is the brand and applies to both modes.
-    //
-    // The substrate tokens are a DARK-palette customisation: injecting them
-    // while mode is "light" would paint dark hexes over the light palette and
-    // produce unreadable text. In light mode the CSS palette wins and only the
-    // accent is injected. Documented in the README under Theme.
-    theme = { "--accent": settings.get("theme.accent", "#b18cff") };
+    // "system" is allowed here as well as "dark" and "light": it hands the
+    // choice to the operating system.
+    defaultMode = settings.get("theme.mode", "dark");
+    // The accent is the brand and applies to both modes, so it is the one
+    // token that stays inline.
+    accent = settings.get("theme.accent", "#b18cff");
 
-    if (mode !== "light") {
-      theme["--bg"] = settings.get("theme.background", "#0d0718");
-      theme["--surface"] = settings.get("theme.surface", "#170d2b");
-      theme["--fg"] = settings.get("theme.foreground", "#efe7ff");
-      theme["--muted"] = settings.get("theme.muted", "#a898c8");
-    }
+    // The substrate tokens are a DARK-palette customisation, so they are
+    // scoped to the dark mode rather than written inline on <html>. Inline
+    // styles beat every stylesheet rule, so injecting them flat used to paint
+    // dark hexes straight over the light palette the moment anyone switched.
+    darkPalette = `:root[data-mode="dark"]{--bg:${settings.get("theme.background", "#0d0718")};--surface:${settings.get("theme.surface", "#170d2b")};--fg:${settings.get("theme.foreground", "#efe7ff")};--muted:${settings.get("theme.muted", "#a898c8")}}`;
+
     effects = [
       settings.get("theme.scanlines", "false") === "true" ? "fx-scanlines" : "",
       settings.get("theme.grain", "true") === "true" ? "fx-grain" : "",
@@ -122,14 +131,25 @@ export default async function RootLayout({
     // Theme falls back to the CSS defaults in globals.css.
   }
 
+  // The server cannot know the visitor's stored choice, so it renders the CMS
+  // default and the script above corrects it before paint. That is a
+  // deliberate mismatch, hence suppressHydrationWarning.
+  const ssrMode = defaultMode === "light" ? "light" : "dark";
+
   return (
     <html
       lang="en"
-      data-mode={mode}
+      data-mode={ssrMode}
       className={`${sans.variable} ${jetbrains.variable} ${serif.variable}`}
-      style={theme as React.CSSProperties}
+      style={{ "--accent": accent } as React.CSSProperties}
       suppressHydrationWarning
     >
+      <head>
+        {darkPalette ? (
+          <style dangerouslySetInnerHTML={{ __html: darkPalette }} />
+        ) : null}
+        <script dangerouslySetInnerHTML={{ __html: themeInit(defaultMode) }} />
+      </head>
       <body className={effects}>{children}</body>
     </html>
   );

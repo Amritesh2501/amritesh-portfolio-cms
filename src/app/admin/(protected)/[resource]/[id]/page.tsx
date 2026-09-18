@@ -36,7 +36,7 @@ export default async function ResourceEditPage({
           {resource.label}
           {record?.status ? (
             <>
-              <span className="text-[var(--accent)]"> / </span>
+              <span className="text-[var(--accent-ink)]"> / </span>
               {String(record.status).toLowerCase()}
             </>
           ) : null}

@@ -54,7 +54,7 @@ export function ConfirmAction({
         >
           <div className="w-full max-w-md overflow-hidden rounded-[var(--r-md)] border border-[var(--accent)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
             <div className="border-b border-[var(--line)] px-5 py-3.5">
-              <p id="confirm-title" className="t-label text-[var(--accent)]">
+              <p id="confirm-title" className="t-label text-[var(--accent-ink)]">
                 {title}
               </p>
             </div>

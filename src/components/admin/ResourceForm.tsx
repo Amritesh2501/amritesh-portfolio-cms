@@ -112,7 +112,7 @@ export function ResourceForm({
             <span aria-hidden>{"<<"}</span> Back
           </Link>
           {isDirty ? (
-            <span className="t-meta text-[var(--accent)]">Unsaved changes</span>
+            <span className="t-meta text-[var(--accent-ink)]">Unsaved changes</span>
           ) : null}
         </div>
 
@@ -155,7 +155,7 @@ export function ResourceForm({
       {serverError ? (
         <p
           role="alert"
-          className="mb-6 rounded-[var(--r-sm)] border border-[var(--accent)] bg-[var(--accent-soft)] px-4 py-3 text-[0.875rem] text-[var(--accent)]"
+          className="mb-6 rounded-[var(--r-sm)] border border-[var(--accent)] bg-[var(--accent-soft)] px-4 py-3 text-[0.875rem] text-[var(--accent-ink)]"
         >
           {serverError}
         </p>
@@ -221,7 +221,7 @@ function FieldRenderer({
   const labelEl = (
     <label htmlFor={id} className="t-label text-[var(--fg)]">
       {field.label}
-      {field.required ? <span className="text-[var(--accent)]"> *</span> : null}
+      {field.required ? <span className="text-[var(--accent-ink)]"> *</span> : null}
     </label>
   );
 
@@ -232,7 +232,7 @@ function FieldRenderer({
   ) : null;
 
   const errorEl = error ? (
-    <p id={`${id}-error`} role="alert" className="t-meta text-[var(--accent)]">
+    <p id={`${id}-error`} role="alert" className="t-meta text-[var(--accent-ink)]">
       {error}
     </p>
   ) : null;
