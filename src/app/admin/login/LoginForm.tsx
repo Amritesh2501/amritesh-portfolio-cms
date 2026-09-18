@@ -62,7 +62,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
       </div>
 
       {error ? (
-        <p role="alert" className="t-meta text-[var(--accent)]">
+        <p role="alert" className="t-meta text-[var(--accent-ink)]">
           {error}
         </p>
       ) : null}

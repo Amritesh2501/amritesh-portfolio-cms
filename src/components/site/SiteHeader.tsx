@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { ThemeToggle } from "./ThemeToggle";
 
 export type NavItem = { id: string; label: string; href: string; external: boolean };
 
@@ -87,7 +88,7 @@ export function SiteHeader({
                   className="h-1.5 w-1.5 rounded-[var(--r-full)]"
                   style={{
                     background:
-                      availability.status === "OPEN" ? "#30d158" : "var(--muted)",
+                      availability.status === "OPEN" ? "var(--ok)" : "var(--muted)",
                   }}
                 />
                 <span className="text-[0.8125rem] font-medium tracking-[-0.01em] text-[var(--fg)]">
@@ -95,6 +96,8 @@ export function SiteHeader({
                 </span>
               </span>
             ) : null}
+
+            <ThemeToggle />
 
             <button
               type="button"
@@ -138,7 +141,7 @@ export function SiteHeader({
                     onClick={() => setOpen(false)}
                     className="flex items-baseline gap-4 border-b border-[var(--line)] py-5"
                   >
-                    <span className="t-meta text-[0.6875rem] text-[var(--accent)]">
+                    <span className="t-meta text-[0.6875rem] text-[var(--accent-ink)]">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="t-display text-[1.75rem] text-[var(--fg)]">

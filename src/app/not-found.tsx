@@ -5,7 +5,7 @@ export default function NotFound() {
     <main className="relative isolate flex min-h-[100dvh] items-center overflow-hidden px-6">
       <div className="hero-wash" aria-hidden />
       <div className="relative mx-auto w-full max-w-2xl">
-        <p className="t-meta text-[var(--accent)]">404</p>
+        <p className="t-meta text-[var(--accent-ink)]">404</p>
         <h1 className="t-display-lg mt-5 text-[clamp(2.5rem,9vw,5.5rem)]">
           No route here
         </h1>

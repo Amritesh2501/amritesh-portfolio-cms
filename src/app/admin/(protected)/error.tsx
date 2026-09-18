@@ -18,7 +18,7 @@ export default function AdminError({
   return (
     <div className="flex min-h-[60dvh] items-center">
       <div className="w-full max-w-xl">
-        <p className="t-meta text-[var(--accent)]">Error</p>
+        <p className="t-meta text-[var(--accent-ink)]">Error</p>
         <h1 className="t-display mt-4 text-[clamp(1.75rem,5vw,2.5rem)]">
           This screen could not load
         </h1>

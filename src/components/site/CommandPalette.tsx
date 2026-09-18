@@ -96,7 +96,7 @@ export function CommandPalette({
     >
       <div className="w-full max-w-lg overflow-hidden rounded-[var(--r-md)] border border-[var(--line-strong)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
         <div className="flex items-center gap-2.5 border-b border-[var(--line)] px-4">
-          <span aria-hidden className="t-meta text-[var(--accent)]">
+          <span aria-hidden className="t-meta text-[var(--accent-ink)]">
             {">"}
           </span>
           <input

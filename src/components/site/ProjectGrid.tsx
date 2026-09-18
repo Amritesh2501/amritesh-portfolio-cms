@@ -19,6 +19,11 @@ export function ProjectGrid({
   const [active, setActive] = useState("all");
   const reduce = useReducedMotion();
 
+  // A "Featured" chip on every row of a list that is entirely featured is
+  // noise. Derived rather than passed, so both call sites stay honest without
+  // having to remember which one they are.
+  const allFeatured = projects.length > 0 && projects.every((p) => p.featured);
+
   const counts = useMemo(() => {
     const map = new Map<string, number>();
     for (const project of projects) {
@@ -85,7 +90,11 @@ export function ProjectGrid({
                   layout: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
                 }}
               >
-                <ProjectCard project={project} index={index} />
+                <ProjectCard
+                  project={project}
+                  index={index}
+                  showFeatured={!allFeatured}
+                />
               </motion.article>
             ))}
           </AnimatePresence>

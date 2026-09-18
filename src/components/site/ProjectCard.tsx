@@ -70,9 +70,12 @@ function hostOf(url: string) {
 export function ProjectCard({
   project,
   index,
+  showFeatured = true,
 }: {
   project: CardProject;
   index: number;
+  /** Off when every row in the list is featured, where the chip says nothing. */
+  showFeatured?: boolean;
 }) {
   const label = LIFECYCLE_LABEL[project.lifecycle] ?? project.lifecycle;
   const [armed, setArmed] = useState(false);
@@ -129,7 +132,7 @@ export function ProjectCard({
             <span className="browser-kind">
               {project.liveUrl ? (
                 <>
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#30d158]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--ok)]" />
                   Live
                 </>
               ) : (
@@ -187,13 +190,15 @@ export function ProjectCard({
           <span aria-hidden className="work-rule h-px flex-1 bg-[var(--line-strong)]" />
         </div>
 
-        <h3 className="t-display mt-6 text-[clamp(2rem,3.6vw,3rem)] text-[var(--fg)] transition-colors duration-500 group-hover:text-[var(--accent)]">
+        <h3 className="t-display mt-6 text-[clamp(2rem,3.6vw,3rem)] text-[var(--fg)] transition-colors duration-500 group-hover:text-[var(--accent-ink)]">
           {project.title}
         </h3>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="chip">{label}</span>
-          {project.featured ? <span className="chip">Featured</span> : null}
+          {showFeatured && project.featured ? (
+            <span className="chip">Featured</span>
+          ) : null}
         </div>
 
         <p className="mt-5 max-w-[52ch] text-[1rem] leading-relaxed tracking-[-0.012em] text-[var(--muted)]">
@@ -230,7 +235,7 @@ export function ProjectCard({
           <span className="work-cta">Read the case study</span>
           <span
             aria-hidden
-            className="grid h-9 w-9 place-items-center rounded-full border border-[var(--line-strong)] text-[var(--accent)] transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1.5 group-hover:bg-[var(--accent)] group-hover:text-[#150a26]"
+            className="grid h-9 w-9 place-items-center rounded-full border border-[var(--line-strong)] text-[var(--accent-ink)] transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1.5 group-hover:bg-[var(--accent)] group-hover:text-[#150a26]"
           >
             &rarr;
           </span>

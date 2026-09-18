@@ -62,19 +62,38 @@ const turnTo = (to: number, from: number) =>
 const ease = (rate: number, dt: number) => 1 - Math.pow(1 - rate, dt);
 
 /** A soft glow drawn once, then stamped under each fish. */
-function makeGlow() {
+function makeGlow(spark: string) {
   const size = 64;
   const c = document.createElement("canvas");
   c.width = c.height = size;
   const g = c.getContext("2d");
   if (g) {
     const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-    grad.addColorStop(0, "rgba(205, 175, 255, 0.55)");
-    grad.addColorStop(1, "rgba(205, 175, 255, 0)");
+    grad.addColorStop(0, `rgba(${spark}, 0.55)`);
+    grad.addColorStop(1, `rgba(${spark}, 0)`);
     g.fillStyle = grad;
     g.fillRect(0, 0, size, size);
   }
   return c;
+}
+
+/**
+ * The scene's two colours, read off the CSS tokens so the canvas follows the
+ * theme. They are bare "r, g, b" triplets rather than full colours precisely
+ * so each call site can pick its own alpha.
+ *
+ * At night the water is dark and the fish are light; at first light the water
+ * is pale and the same fish read as dark shapes under the surface. Inverting
+ * the ink is the whole difference.
+ */
+function readPalette(el: HTMLElement) {
+  const cs = getComputedStyle(el);
+  const pick = (name: string, fallback: string) =>
+    cs.getPropertyValue(name).trim() || fallback;
+  return {
+    ink: pick("--river-ink", "240, 232, 255"),
+    spark: pick("--river-spark", "205, 175, 255"),
+  };
 }
 
 /**
@@ -128,8 +147,21 @@ export function RiverScene() {
     };
     resize();
 
-    const glow = makeGlow();
+    let palette = readPalette(root);
+    let glow = makeGlow(palette.spark);
     const small = w < 640;
+
+    // The theme can flip mid-scene. Re-reading the tokens and re-stamping the
+    // glow sprite is enough; the pond keeps swimming rather than being torn
+    // down and re-seeded, which would scatter every fish on a colour change.
+    const themeWatch = new MutationObserver(() => {
+      palette = readPalette(root);
+      glow = makeGlow(palette.spark);
+    });
+    themeWatch.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-mode"],
+    });
 
     const fish: Fish[] = Array.from({ length: small ? 7 : 12 }, () => {
       const base = rnd(0.4, 0.8);
@@ -207,7 +239,7 @@ export function RiverScene() {
       // Body, head toward +x, the tail end swaying.
       const tailX = -s * 0.42;
       const tailY = sway * s * 0.07;
-      ctx.fillStyle = "rgba(240, 232, 255, 0.92)";
+      ctx.fillStyle = `rgba(${palette.ink}, 0.92)`;
       ctx.beginPath();
       ctx.moveTo(s * 0.5, 0);
       ctx.bezierCurveTo(s * 0.42, -s * 0.17, -s * 0.08, -s * 0.16, tailX, tailY);
@@ -220,7 +252,7 @@ export function RiverScene() {
       ctx.fill();
 
       // Pectoral fins.
-      ctx.fillStyle = "rgba(240, 232, 255, 0.45)";
+      ctx.fillStyle = `rgba(${palette.ink}, 0.45)`;
       ctx.beginPath();
       ctx.ellipse(s * 0.14, s * 0.13, s * 0.13, s * 0.04, 0.8 + sway * 0.25, 0, TAU);
       ctx.fill();
@@ -368,7 +400,7 @@ export function RiverScene() {
 
       if (ripples.length) {
         ctx.lineWidth = 1.1;
-        ctx.strokeStyle = "rgb(226, 210, 255)";
+        ctx.strokeStyle = `rgb(${palette.ink})`;
         for (let i = ripples.length - 1; i >= 0; i--) {
           const rp = ripples[i];
           rp.r += (rp.max - rp.r) * ease(0.035, dt) + 0.2 * dt;
@@ -416,7 +448,7 @@ export function RiverScene() {
         const level = 0.5 + 0.5 * Math.sin(m.tw * 2.2);
         moteBuckets[Math.min(MOTE_STEPS - 1, Math.floor(level * MOTE_STEPS))].push(m);
       }
-      ctx.fillStyle = "rgb(239, 231, 255)";
+      ctx.fillStyle = `rgb(${palette.ink})`;
       moteBuckets.forEach((bucket, i) => {
         if (!bucket.length) return;
         ctx.globalAlpha = 0.2 + (0.6 * (i + 0.5)) / MOTE_STEPS;
@@ -505,6 +537,7 @@ export function RiverScene() {
 
     return () => {
       stop();
+      themeWatch.disconnect();
       ro.disconnect();
       io.disconnect();
       window.removeEventListener("pointermove", onMove);

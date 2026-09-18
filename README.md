@@ -165,12 +165,43 @@ single accent, and monospace reserved for anything technical.
 
 ### Theme: how colours and mode interact
 
-`theme.mode` picks the base palette. The accent applies to both modes.
+The site ships both palettes and a toggle in the header. Which one a visitor
+lands on is decided before the first paint, by a small script in
+`src/app/layout.tsx`, in this order:
 
-The four substrate colours (background, surface, foreground, muted) are a
-**dark-palette customisation**. In light mode they are deliberately not
-injected, because painting dark hex values over the light palette produces
-unreadable text. Light mode uses the built-in light palette plus your accent.
+1. the visitor's own choice, stored in `localStorage.theme`
+2. `theme.mode` from the CMS: `dark`, `light`, or `system`
+3. the operating system, when the CMS setting is `system`
+
+Once a visitor picks a side, their choice outranks both of the others until
+they clear site data.
+
+The accent applies to both modes and is the one token injected inline on
+`<html>`. The four substrate colours (background, surface, foreground, muted)
+are a **dark-palette customisation** and are emitted as a
+`:root[data-mode="dark"]` rule rather than inline, because an inline style
+beats every stylesheet rule and would otherwise paint dark hex values straight
+over the light palette the moment anyone switched.
+
+Because the accent cannot be overridden in CSS, anything that sets `color:`
+uses `--accent-ink` instead: the same brand hue, pushed dark enough in light
+mode to hold WCAG AA against a pale substrate. Fills, borders and glows keep
+using `--accent`.
+
+The hero canvas, the intro curtains and the project windows are whole surfaces
+rather than page chrome, so they carry their own `--scene-*` and `--river-*`
+tokens. Dark is a river at night; light is the same river at first light, with
+the fish reading dark against pale water. `RiverScene` reads those tokens off
+the computed style and repaints when `data-mode` changes, so the canvas
+follows without the pond being re-seeded.
+
+Two things stay dark in **both** modes on purpose: the portrait scrim and the
+initials panel behind it, because the name set over them is light type on a
+photograph rather than text on the page.
+
+Run `node scripts/check-contrast.mjs` after touching any palette token. It
+resolves the real values out of `globals.css`, including `color-mix()`, and
+fails on any text pair under AA.
 
 If you want to hand-tune light-mode colours, add `theme.light.*` rows to
 `SiteSetting` and read them in `src/app/layout.tsx`; the settings table needs no

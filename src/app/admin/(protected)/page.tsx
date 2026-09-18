@@ -109,7 +109,7 @@ export default async function AdminOverview() {
                         {message.subject}
                       </span>
                       {!message.read ? (
-                        <span className="t-meta shrink-0 text-[var(--accent)]">new</span>
+                        <span className="t-meta shrink-0 text-[var(--accent-ink)]">new</span>
                       ) : null}
                     </div>
                     <p className="t-meta mt-1 truncate text-[0.5625rem]">

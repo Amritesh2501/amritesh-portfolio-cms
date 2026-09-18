@@ -64,20 +64,110 @@
   --z-toast: 80;
   --z-boot: 100;
 
+  /* The accent is injected inline on <html> from the CMS, and an inline style
+     beats every stylesheet rule, so light mode cannot simply redefine it.
+     --accent-ink is the same brand hue pushed dark enough to read as TEXT on
+     a pale substrate. Fills, borders and glows keep using --accent; anything
+     that sets `color:` uses this. */
+  --accent-ink: var(--accent);
+
+  /* The one non-brand colour on the site: real availability state. */
+  --ok: #30d158;
+
+  /* ---------------------------------------------------------------------
+     Scene tokens.
+
+     The hero canvas, the intro curtains, the project windows and the poster
+     fallbacks are whole surfaces rather than chrome, so they carry their own
+     palette instead of deriving from --bg. Light mode repaints these and
+     every rule below follows, which is why none of them hardcode a hex any
+     more. Dark is a river at night; light is the same river at first light.
+     --------------------------------------------------------------------- */
+  --scene-ink: #0d0718;
+  --scene-wash-a: rgba(177, 140, 255, 0.28);
+  --scene-wash-b: rgba(90, 50, 150, 0.35);
+  --scene-grid: rgba(239, 231, 255, 0.06);
+
+  --river-fg: #efe7ff;
+  --river-fg-soft: #cdb8f2;
+  /* A shade lighter than the page --muted it used to copy: over the bright
+     centre of the water that value measured 4.38:1, just under AA. */
+  --river-muted: #b0a2ce;
+  --river-sky: linear-gradient(160deg, #2c1452 0%, #3a1a66 45%, #231043 80%, #140a26 100%);
+  --river-haze-a: rgba(122, 70, 180, 0.45);
+  --river-haze-b: rgba(90, 50, 150, 0.4);
+  --river-core: #4c2379;
+  --river-band-a: rgba(160, 110, 210, 0.5);
+  --river-band-b: rgba(120, 75, 180, 0.2);
+  --river-lantern: rgba(205, 175, 255, 0.18);
+  --river-vignette: rgba(15, 6, 30, 0.7);
+  /* Bare rgb triplets: RiverScene reads these and builds rgba() per layer. */
+  --river-ink: 240, 232, 255;
+  --river-spark: 205, 175, 255;
+
+  --intro-bg: #0d0718;
+  --intro-core: #24123f;
+  --intro-fg: #efe7ff;
+  --intro-curtain: linear-gradient(180deg, #3a2266, #b18cff);
+
+  /* The long wash falling out of the hero, and the fog sitting in it. */
+  --wash-top: color-mix(in srgb, #3a1a66 70%, transparent);
+  --wash-mid: color-mix(in srgb, #241046 45%, transparent);
+  --fog-tint: rgba(196, 170, 255, 0.5);
+  --fog-opacity: 0.06;
+
   color-scheme: dark;
 }
 
 :root[data-mode="light"] {
-  --bg: #f5f0fc;
-  --surface: #ffffff;
-  --elevated: #ede4fa;
-  --fg: #221338;
+  /* Off-white, never #fff: pure white flattens the card edges against the
+     page and kills the sense of depth the dark palette has. */
+  --bg: #f4f1fa;
+  --surface: #fbf9fe;
+  --elevated: #ece5f8;
+  --fg: #1d1430;
   --fg-soft: color-mix(in srgb, var(--fg) 78%, var(--muted));
-  --muted: #6b5a8a;
-  --line: color-mix(in srgb, var(--fg) 10%, transparent);
-  --line-strong: color-mix(in srgb, var(--fg) 18%, transparent);
-  --shadow-md: 0 4px 24px -6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 24px 70px -20px rgba(0, 0, 0, 0.16);
+  --muted: #61537c;
+  --line: color-mix(in srgb, var(--fg) 12%, transparent);
+  --line-strong: color-mix(in srgb, var(--fg) 22%, transparent);
+  --shadow-sm: 0 1px 2px rgba(40, 22, 70, 0.06);
+  --shadow-md: 0 4px 24px -6px rgba(40, 22, 70, 0.14);
+  --shadow-lg: 0 24px 70px -20px rgba(40, 22, 70, 0.26);
+
+  --accent-ink: color-mix(in srgb, var(--accent) 55%, #2b1152);
+  --ok: #1a8f3c;
+
+  --scene-ink: #e6e0f3;
+  --scene-wash-a: rgba(177, 140, 255, 0.34);
+  --scene-wash-b: rgba(120, 90, 190, 0.16);
+  --scene-grid: rgba(29, 20, 48, 0.07);
+
+  /* First light on the water: pale sky, white mist, the sun where the
+     lantern was. The fish read dark against it, so --river-ink inverts. */
+  --river-fg: #1b1030;
+  --river-fg-soft: #3f2d61;
+  --river-muted: #5d4e7b;
+  --river-sky: linear-gradient(160deg, #dbe4fb 0%, #e6dcfa 45%, #efe6fc 80%, #f6f2fd 100%);
+  --river-haze-a: rgba(255, 255, 255, 0.72);
+  --river-haze-b: rgba(188, 208, 246, 0.5);
+  --river-core: #d2e1fb;
+  --river-band-a: rgba(255, 255, 255, 0.8);
+  --river-band-b: rgba(198, 188, 238, 0.28);
+  --river-lantern: rgba(255, 244, 206, 0.55);
+  --river-vignette: rgba(255, 255, 255, 0.5);
+  --river-ink: 52, 36, 92;
+  --river-spark: 150, 120, 205;
+
+  --intro-bg: #efe9fa;
+  --intro-core: #fdfbff;
+  --intro-fg: #1d1430;
+  --intro-curtain: linear-gradient(180deg, #d9c9f7, #8f63f0);
+
+  --wash-top: color-mix(in srgb, #cdbcf5 65%, transparent);
+  --wash-mid: color-mix(in srgb, #e2d9f8 50%, transparent);
+  --fog-tint: rgba(255, 255, 255, 0.85);
+  --fog-opacity: 0.045;
+
   color-scheme: light;
 }
 
@@ -416,7 +506,7 @@ body {
   }
 
   .prose-tech a {
-    color: var(--accent);
+    color: var(--accent-ink);
     text-decoration: none;
     border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
     transition: border-color 0.2s var(--ease-out);
@@ -497,6 +587,12 @@ body {
     pointer-events: none;
     opacity: 0.022;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Film grain belongs to the dark substrate. Over paper the same noise reads
+     as a dirty screen, so it is dialled most of the way back. */
+  :root[data-mode="light"] .fx-grain::before {
+    opacity: 0.008;
   }
 
   /* Violet haze at the top of inner pages: the river light seen from afar. */
@@ -581,9 +677,38 @@ body {
     --glow: color-mix(in srgb, var(--accent) 50%, transparent);
   }
 
+  /* The wash that falls out of the hero.
+
+     Anchored to the top of the document rather than the viewport, so it is
+     one continuous descent from the river into the page instead of a tint
+     that follows the scroll. The first viewport sits behind the hero, which
+     paints over it; what reads is the next screen and a half, where the
+     hero's violet drains away into --bg. */
+  .page-wash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 240vh;
+    /* Never taller than the page itself. On a short route (404, an error
+       screen) a fixed 240vh would have invented a viewport and a half of
+       empty scroll below the footer. Resolves against .fx, which is the
+       full document column. */
+    max-height: 100%;
+    z-index: -2;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      var(--wash-top) 0%,
+      var(--wash-top) 34%,
+      var(--wash-mid) 62%,
+      transparent 100%
+    );
+  }
+
   /* Ambient fog fixed behind every page, so sections below the hero still
-     read as the same night rather than a flat fill. Deliberately static: see
-     the performance note on RiverScene. */
+     read as the same weather rather than a flat fill. Two banks at different
+     scales, because a single one reads as a gradient rather than as fog. */
   .site-mist {
     position: fixed;
     inset: 0;
@@ -595,7 +720,11 @@ body {
       radial-gradient(50% 45% at 0% 100%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%);
   }
 
-  .site-mist::before {
+  /* The noise tile, drifting. One composited layer moving on transform alone,
+     which is why it can move at all: see the performance note on RiverScene
+     for why nothing else in the ambient layers does. */
+  .site-mist::before,
+  .site-mist::after {
     content: "";
     position: absolute;
     top: 0;
@@ -604,7 +733,29 @@ body {
     width: calc(100% + 1400px);
     background-image: var(--cloud-tex);
     background-size: 1400px 900px;
-    opacity: 0.06;
+    opacity: var(--fog-opacity);
+    will-change: transform;
+  }
+
+  /* The lower bank: larger, slower, and offset, so the two never line up. */
+  .site-mist::after {
+    left: -380px;
+    background-size: 2200px 1400px;
+    opacity: calc(var(--fog-opacity) * 0.7);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .site-mist::before {
+      animation: fog-drift 150s linear infinite;
+    }
+    .site-mist::after {
+      animation: fog-drift 240s linear infinite reverse;
+    }
+  }
+
+  @keyframes fog-drift {
+    from { transform: translate3d(0, 0, 0); }
+    to { transform: translate3d(-1400px, 0, 0); }
   }
 
   /* Soft haze wash for section backgrounds. */
@@ -627,6 +778,45 @@ body {
     background: linear-gradient(90deg, transparent, var(--line-strong) 20%, var(--glow) 50%, var(--line-strong) 80%, transparent);
   }
 
+  /* Theme toggle. Same 36px round frame as the logo mark at the other end of
+     the header, so the two bookend the bar. */
+  .theme-toggle {
+    display: grid;
+    place-items: center;
+    height: 2.25rem;
+    width: 2.25rem;
+    flex: none;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-full);
+    color: var(--muted);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      color 0.3s var(--ease-out),
+      border-color 0.3s var(--ease-out),
+      background-color 0.3s var(--ease-out);
+  }
+
+  .theme-toggle:hover {
+    color: var(--fg);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .theme-toggle:active {
+    transform: scale(0.94);
+  }
+
+  .theme-toggle svg {
+    height: 1.0625rem;
+    width: 1.0625rem;
+    transition: transform 0.5s var(--ease-out);
+  }
+
+  .theme-toggle:hover svg {
+    transform: rotate(35deg);
+  }
+
   /* Pill label: lifecycle, counts, section asides. */
   .chip {
     display: inline-flex;
@@ -635,7 +825,7 @@ body {
     border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
     border-radius: var(--r-full);
     background: color-mix(in srgb, var(--bg) 88%, transparent);
-    color: color-mix(in srgb, var(--accent) 70%, var(--fg));
+    color: color-mix(in srgb, var(--accent-ink) 70%, var(--fg));
     padding: 0.3rem 0.75rem;
     font-size: 0.625rem;
     font-weight: 500;
@@ -876,7 +1066,7 @@ body {
   }
 
   .intro-curtain-back {
-    background: linear-gradient(180deg, #3a2266, #b18cff);
+    background: var(--intro-curtain);
     animation-delay: 1.45s;
   }
 
@@ -884,10 +1074,10 @@ body {
     display: grid;
     place-items: center;
     pointer-events: auto;
-    color: #efe7ff;
+    color: var(--intro-fg);
     background:
-      radial-gradient(50% 45% at 50% 50%, #24123f 0%, transparent 70%),
-      #0d0718;
+      radial-gradient(50% 45% at 50% 50%, var(--intro-core) 0%, transparent 70%),
+      var(--intro-bg);
     animation-delay: 1.35s;
   }
 
@@ -900,7 +1090,7 @@ body {
 
   .intro-mark {
     font-size: 3.25rem;
-    color: #b18cff;
+    color: var(--accent-ink);
     animation: intro-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
@@ -922,7 +1112,7 @@ body {
   .intro-bar {
     width: 11rem;
     height: 1px;
-    background: #b18cff;
+    background: var(--accent);
     transform: scaleX(0);
     transform-origin: 0 50%;
     animation: intro-fill 1.1s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards;
@@ -974,24 +1164,25 @@ body {
     line-height: 1.08;
   }
 
-  /* The scene is always night, whatever the site mode, so its text tokens are
-     local. Derived tokens are restated because custom properties resolve where
-     they are declared, not where they are used. --bg stays the page colour so
-     the scene fades into the next section. */
+  /* The scene carries its own palette, so its text tokens are local: the
+     water is its own surface and the page tokens are the wrong contrast
+     against it in either mode. Derived tokens are restated because custom
+     properties resolve where they are declared, not where they are used.
+     --bg stays the page colour so the scene fades into the next section. */
   .river {
-    --fg: #efe7ff;
-    --fg-soft: #cdb8f2;
-    --muted: #a898c8;
-    --elevated: rgba(239, 231, 255, 0.08);
-    --line-strong: rgba(239, 231, 255, 0.24);
+    --fg: var(--river-fg);
+    --fg-soft: var(--river-fg-soft);
+    --muted: var(--river-muted);
+    --elevated: color-mix(in srgb, var(--river-fg) 8%, transparent);
+    --line-strong: color-mix(in srgb, var(--river-fg) 24%, transparent);
     /* The ambient glow is painted here, once, rather than as its own animated
        full-screen layer: every translucent layer over the canvas is blended
        again on every frame, and that fill cost is what lagged on laptop GPUs. */
     background:
-      radial-gradient(28% 32% at 64% 30%, rgba(122, 70, 180, 0.45), transparent 70%),
-      radial-gradient(24% 40% at 0% 32%, rgba(90, 50, 150, 0.4), transparent 70%),
-      radial-gradient(70% 60% at 55% 40%, #4c2379 0%, transparent 70%),
-      linear-gradient(160deg, #2c1452 0%, #3a1a66 45%, #231043 80%, #140a26 100%);
+      radial-gradient(28% 32% at 64% 30%, var(--river-haze-a), transparent 70%),
+      radial-gradient(24% 40% at 0% 32%, var(--river-haze-b), transparent 70%),
+      radial-gradient(70% 60% at 55% 40%, var(--river-core) 0%, transparent 70%),
+      var(--river-sky);
     color: var(--fg);
   }
 
@@ -1006,8 +1197,8 @@ body {
 
   .river .btn-solid,
   .river .btn-solid:hover:not(:disabled) {
-    background: #efe7ff;
-    color: #1c0d35;
+    background: var(--river-fg);
+    color: var(--bg);
   }
 
   .river-layer {
@@ -1032,8 +1223,8 @@ body {
     border-radius: 50%;
     background: radial-gradient(
       50% 50% at 50% 50%,
-      rgba(160, 110, 210, 0.5) 0%,
-      rgba(120, 75, 180, 0.2) 45%,
+      var(--river-band-a) 0%,
+      var(--river-band-b) 45%,
       transparent 72%
     );
     transform: rotate(-32deg);
@@ -1047,7 +1238,7 @@ body {
     height: 460px;
     margin: -230px 0 0 -230px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(205, 175, 255, 0.18), transparent 65%);
+    background: radial-gradient(circle, var(--river-lantern), transparent 65%);
     opacity: 0;
     transition: opacity 0.6s var(--ease-out);
     will-change: transform;
@@ -1056,7 +1247,7 @@ body {
   .river-vignette {
     inset: 0;
     background:
-      radial-gradient(120% 90% at 45% 40%, transparent 55%, rgba(15, 6, 30, 0.7) 100%),
+      radial-gradient(120% 90% at 45% 40%, transparent 55%, var(--river-vignette) 100%),
       linear-gradient(to bottom, transparent 86%, var(--bg) 100%);
   }
 
@@ -1077,7 +1268,7 @@ body {
     inset: 0;
     z-index: 1;
     overflow: hidden;
-    background: #0b0616;
+    background: var(--scene-ink);
   }
 
   /* Tall screenshots pan down slowly while hovered. */
@@ -1140,13 +1331,16 @@ body {
     display: grid;
     place-items: center;
     font-size: 9rem;
-    color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: rgba(177, 140, 255, 0.45);
     background:
       radial-gradient(70% 60% at 30% 20%, rgba(177, 140, 255, 0.25), transparent 70%),
       linear-gradient(160deg, #1c0f36, #0d0718);
   }
 
   /* Night wash so any photo sits in the palette and the name stays legible. */
+  /* Deliberately dark in both themes. This is a scrim over a photograph, and
+     the name set on it is light type; following the page palette would put
+     near-white lettering on a near-white wash the moment anyone switched. */
   .about-tint {
     position: absolute;
     inset: 0;
@@ -1158,12 +1352,12 @@ body {
 
   .about-note-num {
     font-size: 2.5rem;
-    color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: color-mix(in srgb, var(--accent-ink) 45%, transparent);
     transition: color 0.5s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .about-note:hover .about-note-num {
-    color: var(--accent);
+    color: var(--accent-ink);
     transform: translateX(6px);
   }
 
@@ -1265,8 +1459,8 @@ body {
   }
 
   .status-dot.is-open {
-    background: #30d158;
-    box-shadow: 0 0 10px #30d158;
+    background: var(--ok);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--ok) 55%, transparent);
   }
 
   .status-dot.is-open::after {
@@ -1274,7 +1468,7 @@ body {
     position: absolute;
     inset: -4px;
     border-radius: 50%;
-    border: 1px solid #30d158;
+    border: 1px solid var(--ok);
     animation: node-ripple 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
 
@@ -1324,8 +1518,8 @@ body {
     overflow: hidden;
     border: 1px solid var(--line-strong);
     border-radius: calc(var(--r-lg) - 8px);
-    background: #0b0616;
-    box-shadow: 0 30px 60px -45px rgba(0, 0, 0, 0.9);
+    background: var(--scene-ink);
+    box-shadow: var(--shadow-lg);
   }
 
   .browser-bar {
@@ -1335,7 +1529,7 @@ body {
     height: 2.375rem;
     padding: 0 0.875rem;
     border-bottom: 1px solid var(--line);
-    background: color-mix(in srgb, var(--surface) 75%, #000);
+    background: color-mix(in srgb, var(--scene-ink) 88%, var(--fg));
   }
 
   .browser-dots {
@@ -1361,7 +1555,7 @@ body {
     overflow: hidden;
     padding: 0.25rem 0.875rem;
     border-radius: var(--r-full);
-    background: rgba(239, 231, 255, 0.05);
+    background: color-mix(in srgb, var(--fg) 6%, transparent);
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     color: var(--muted);
@@ -1398,9 +1592,9 @@ body {
     padding: clamp(1.25rem, 3vw, 2.25rem);
     overflow: hidden;
     background:
-      radial-gradient(70% 90% at 90% 0%, rgba(177, 140, 255, 0.28), transparent 65%),
-      radial-gradient(60% 70% at 0% 100%, rgba(90, 50, 150, 0.35), transparent 70%),
-      linear-gradient(160deg, #1c0f36, #0d0718);
+      radial-gradient(70% 90% at 90% 0%, var(--scene-wash-a), transparent 65%),
+      radial-gradient(60% 70% at 0% 100%, var(--scene-wash-b), transparent 70%),
+      linear-gradient(160deg, color-mix(in srgb, var(--scene-ink) 82%, var(--accent)), var(--scene-ink));
     z-index: 2;
     clip-path: inset(0 0 0 0);
     transition:
@@ -1410,16 +1604,16 @@ body {
 
   .poster-1 {
     background:
-      radial-gradient(70% 90% at 10% 0%, rgba(140, 110, 255, 0.3), transparent 65%),
-      radial-gradient(60% 70% at 100% 100%, rgba(120, 60, 170, 0.35), transparent 70%),
-      linear-gradient(200deg, #1a1038, #0d0718);
+      radial-gradient(70% 90% at 10% 0%, var(--scene-wash-a), transparent 65%),
+      radial-gradient(60% 70% at 100% 100%, var(--scene-wash-b), transparent 70%),
+      linear-gradient(200deg, color-mix(in srgb, var(--scene-ink) 84%, var(--accent)), var(--scene-ink));
   }
 
   .poster-2 {
     background:
-      radial-gradient(80% 80% at 50% 0%, rgba(200, 150, 255, 0.24), transparent 65%),
-      radial-gradient(50% 60% at 100% 80%, rgba(80, 60, 160, 0.4), transparent 70%),
-      linear-gradient(180deg, #200f3a, #0d0718);
+      radial-gradient(80% 80% at 50% 0%, var(--scene-wash-a), transparent 65%),
+      radial-gradient(50% 60% at 100% 80%, var(--scene-wash-b), transparent 70%),
+      linear-gradient(180deg, color-mix(in srgb, var(--scene-ink) 80%, var(--accent)), var(--scene-ink));
   }
 
   /* Faint water rings, so the poster belongs to the pond. */
@@ -1434,7 +1628,7 @@ body {
     background: repeating-radial-gradient(
       circle,
       transparent 0 34px,
-      rgba(239, 231, 255, 0.06) 34px 35px
+      var(--scene-grid) 34px 35px
     );
     pointer-events: none;
   }
@@ -1505,7 +1699,7 @@ body {
     align-content: center;
     justify-items: center;
     gap: 1rem;
-    background: #0d0718;
+    background: var(--scene-ink);
   }
 
   .peek-skeleton {
@@ -1568,7 +1762,7 @@ body {
   }
 
   .cert-row:hover .cert-name {
-    color: var(--accent);
+    color: var(--accent-ink);
     transform: translateX(10px);
   }
 
@@ -1676,7 +1870,7 @@ body {
   .marquee-star {
     font-style: normal;
     font-size: 0.4em;
-    color: var(--accent);
+    color: var(--accent-ink);
   }
 
   @keyframes marquee {
