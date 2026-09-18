@@ -5,10 +5,19 @@ import { ExperimentsIntro } from "@/components/site/ExperimentsIntro";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSettings();
+  // The page itself needs no database at all, so a blip must not take it down
+  // with the rest of the site. The name is the only thing read here and it is
+  // only used in a description, so losing it costs nothing worth a 500.
+  let name = "the author";
+  try {
+    name = (await getSettings()).get("site.title", name);
+  } catch {
+    /* falls through to the generic description */
+  }
+
   return {
     title: "Experiments",
-    description: `Work in progress from ${settings.get("site.title", "the author")}: the portfolio as something you play rather than scroll.`,
+    description: `Work in progress from ${name}: the portfolio as something you play rather than scroll.`,
     // Nothing here to index yet, and a page that is mostly a promise is not
     // what anyone should land on from a search.
     robots: { index: false, follow: true },
