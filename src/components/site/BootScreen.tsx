@@ -10,8 +10,13 @@ import { useEffect, useState } from "react";
  * Why it is shaped like this:
  *  - It is in the server HTML, so it covers the very first paint. Mounting it
  *    from an effect let the hero flash before the loader appeared.
- *  - An inline script runs before the first paint and hides it when this
- *    session has already seen it, so repeat navigations never flash it either.
+ *  - It plays on every load of the document, reload included, and the page
+ *    starts at the top underneath it. Moving between routes does not replay
+ *    it: this lives in the layout, which survives client-side navigation, so
+ *    the component simply stays mounted and finished.
+ *  - A framed page is the one exception. The project previews load case study
+ *    pages into an iframe, and the layout marks those as seen before paint so
+ *    a preview never sits there playing a loader.
  *  - The whole sequence is CSS-timed, which is also the hard ceiling: nothing
  *    here can trap a visitor, with or without JavaScript.
  *  - Transform and opacity only, on two promoted layers. This runs while the
@@ -22,11 +27,20 @@ import { useEffect, useState } from "react";
  *    sequence. Both were overdraw at exactly the wrong moment.
  *  - Still behind the `site.showIntro` CMS toggle.
  */
-const SESSION_KEY = "intro-shown-v7";
 // Keep in step with the timings in globals.css (Intro).
 const TOTAL_MS = 3900;
 
-const HIDE_IF_SEEN = `try{if(sessionStorage.getItem("${SESSION_KEY}")==="1")document.documentElement.dataset.intro="seen"}catch(e){document.documentElement.dataset.intro="seen"}`;
+// Before the first paint: pin the page to the top, so a reload opens on the
+// hero rather than wherever the visitor happened to be. Browsers restore the
+// old offset on reload by default, and doing this here rather than in an
+// effect means the restore never lands at all.
+//
+// Two things it deliberately does not touch:
+//  - back_forward navigations, where restoring the old position is the
+//    correct behaviour and taking it away is just a broken Back button;
+//  - a URL carrying a hash, which is someone deep-linking to a section and
+//    asking for exactly one position that is not the top.
+const START_AT_TOP = `try{var n=performance.getEntriesByType("navigation")[0];if((!n||n.type!=="back_forward")&&!location.hash){history.scrollRestoration="manual";window.scrollTo(0,0)}}catch(e){}`;
 
 export function BootScreen({
   logoText,
@@ -43,11 +57,10 @@ export function BootScreen({
       return;
     }
 
-    try {
-      sessionStorage.setItem(SESSION_KEY, "1");
-    } catch {
-      /* private mode: it simply shows again next session */
-    }
+    // Belt and braces with the pre-paint script: anything that restored a
+    // scroll offset between that script and this effect is undone here, before
+    // the ground splits on it. Same hash exemption.
+    if (!window.location.hash) window.scrollTo(0, 0);
 
     // On <html>, not <body>: the smooth scroller watches the root's overflow
     // and pauses itself while it is hidden.
@@ -70,7 +83,7 @@ export function BootScreen({
 
   return (
     <>
-      <script dangerouslySetInnerHTML={{ __html: HIDE_IF_SEEN }} />
+      <script dangerouslySetInnerHTML={{ __html: START_AT_TOP }} />
       <div className="intro keep-motion" role="status" aria-live="polite">
         <div aria-hidden className="intro-half intro-half-top" />
         <div aria-hidden className="intro-half intro-half-bottom" />

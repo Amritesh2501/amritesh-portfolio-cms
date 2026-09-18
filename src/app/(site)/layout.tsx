@@ -6,6 +6,7 @@ import { ScrollProgress } from "@/components/site/Parallax";
 import { HoverFx } from "@/components/site/HoverFx";
 import { SmoothScroll } from "@/components/site/SmoothScroll";
 import { SiteMist } from "@/components/site/SiteMist";
+import { ToTop } from "@/components/site/ToTop";
 
 // Runs before first paint. When a page is framed (the project card previews
 // load case study pages into a window), it drops the site chrome and skips the
@@ -26,12 +27,24 @@ export default async function SiteLayout({
     getNavigationSafe("HEADER"),
   ]);
 
-  const navItems = nav.map((item) => ({
-    id: item.id,
-    label: item.label,
-    href: item.href,
-    external: item.external,
-  }));
+  const navItems = [
+    ...nav.map((item) => ({
+      id: item.id,
+      label: item.label,
+      href: item.href,
+      external: item.external,
+    })),
+    // Appended in code rather than seeded as a CMS row, because it is not a
+    // section of this page: it opens in its own tab, and deleting it from
+    // admin would leave the route reachable with nothing pointing at it.
+    // external drives target="_blank" in both the header and the palette.
+    {
+      id: "experiments",
+      label: "Experiments",
+      href: "/experiments",
+      external: true,
+    },
+  ];
 
   return (
     <div className="fx relative flex min-h-[100dvh] flex-col">
@@ -67,6 +80,7 @@ export default async function SiteLayout({
         {children}
       </main>
 
+      <ToTop />
       <CommandPalette navItems={navItems} />
     </div>
   );

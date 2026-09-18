@@ -1,5 +1,7 @@
 import type { HomeData } from "@/lib/content";
+import type { GitHubActivity as Activity } from "@/lib/github";
 import { Certifications } from "./Certifications";
+import { GitHubActivity } from "./GitHubActivity";
 import { ScrollDrift } from "./Parallax";
 import { RevealGroup, RevealItem, SkillMeter } from "./Reveal";
 import { Empty } from "./Section";
@@ -14,9 +16,12 @@ import { Empty } from "./Section";
 export function Stack({
   skillGroups,
   certifications,
+  github,
 }: {
   skillGroups: HomeData["skillGroups"];
   certifications: HomeData["certifications"];
+  /** Null when there is no handle set, or GitHub could not be reached. */
+  github: Activity | null;
 }) {
   const names = skillGroups.flatMap((group) => group.skills.map((skill) => skill.name));
 
@@ -58,6 +63,10 @@ export function Stack({
       )}
 
       {certifications.length > 0 ? <Certifications certifications={certifications} /> : null}
+
+      {/* Under Stack rather than in a section of its own: what someone builds
+          with and how often they are building are the same question. */}
+      {github ? <GitHubActivity activity={github} /> : null}
     </>
   );
 }

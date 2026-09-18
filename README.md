@@ -163,6 +163,25 @@ single accent, and monospace reserved for anything technical.
   hard dismissal ceiling so it can never trap anyone, and is behind the
   `site.showIntro` CMS toggle.
 
+### GitHub activity
+
+The Stack section ends with 90 days of GitHub. The handle is a CMS setting
+(`site.githubUser`); clear it to hide the whole block.
+
+Without `GITHUB_TOKEN` the grid is built from the public events feed. That is
+not the contribution graph and the caption says so: it counts public events on
+public repositories, and GitHub only keeps that feed for a few weeks, so most
+of the 90 days will read as empty however much you have been working.
+
+With `GITHUB_TOKEN` set it switches to the GraphQL contributions calendar,
+which is the real thing, private contributions included if the token can see
+them. A fine-grained token with no permissions selected is enough. Both paths
+fail soft: any error returns null and the block simply does not render, because
+a portfolio should not go down because GitHub is having an afternoon.
+
+Responses are cached for 30 minutes, so a reload does not spend the unauthed
+hourly budget of 60 requests per IP.
+
 ### Theme: how colours and mode interact
 
 The site ships both palettes and a toggle in the header. Which one a visitor

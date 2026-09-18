@@ -10,11 +10,10 @@ import type { CardProject } from "./ProjectCard";
 /**
  * The full index.
  *
- * Deliberately not the home page's layout. There, four projects get a
- * full-width browser window each and the point is to look at them. Here the
- * point is to find one, so it is a two-column plate grid: the image still
- * leads, but a screen holds four of them instead of one, and the metadata sits
- * where it can be scanned down a column rather than read.
+ * Deliberately not the home page's layout. There, four projects get a whole
+ * viewport each and the point is to look at them. Here the point is to find
+ * one, so it is a list read down its left edge: title, one line, category and
+ * year, with a thumbnail that opens out only on the row under the pointer.
  *
  * The category filters live here rather than on the home page, because this is
  * the only view with enough in it to be worth narrowing.
@@ -79,20 +78,20 @@ export function ProjectIndex({
       {filtered.length === 0 ? (
         <Empty>Nothing published in this category yet.</Empty>
       ) : (
-        <ul className="grid gap-x-10 gap-y-16 sm:grid-cols-2 lg:gap-x-16 lg:gap-y-24">
+        <ul className="index-list">
           <AnimatePresence mode="popLayout" initial={false}>
             {filtered.map((project, i) => (
               <motion.li
                 key={project.id}
                 layout={!reduce}
-                initial={reduce ? false : { opacity: 0, y: 16 }}
+                initial={reduce ? false : { opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0 }}
                 transition={{
-                  duration: 0.5,
-                  delay: reduce ? 0 : Math.min(i, 6) * 0.05,
+                  duration: 0.45,
+                  delay: reduce ? 0 : Math.min(i, 8) * 0.04,
                   ease: [0.22, 1, 0.36, 1],
-                  layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+                  layout: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
                 }}
               >
                 <IndexCard project={project} tone={["a", "b", "c"][i % 3]} />
@@ -105,54 +104,51 @@ export function ProjectIndex({
   );
 }
 
+/**
+ * One entry in the index.
+ *
+ * A row, not a tile. The two-column plate grid this replaces gave every
+ * project a big picture and a paragraph, which is the home page's job; an
+ * index is read down its left edge, and a column of titles you can run your
+ * eye along beats a mosaic you have to scan in two dimensions. The thumbnail
+ * is still here, but it earns its place by opening out on hover rather than
+ * sitting at full size on all of them at once.
+ */
 function IndexCard({ project, tone }: { project: CardProject; tone: string }) {
   const meta = [project.categoryName, project.year].filter(Boolean).join(" · ");
 
   return (
-    <Link href={`/projects/${project.slug}`} className="group block">
-      <div className={`plate plate-${tone}`}>
+    <Link href={`/projects/${project.slug}`} className="index-row group">
+      <span className={`index-thumb plate-${tone}`} aria-hidden>
         {project.preview ? (
-          // Plain img: thumbnails can be any CMS URL, and next/image refuses
-          // hosts that are not allow-listed in next.config.
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={project.preview}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="plate-img"
-          />
+          <img src={project.preview} alt="" loading="lazy" decoding="async" />
         ) : (
-          <span className="t-serif plate-letter" aria-hidden>
+          <span className="t-serif index-thumb-letter">
             {project.title.trim().charAt(0)}
           </span>
         )}
-      </div>
+      </span>
 
-      <div className="mt-6 flex items-start justify-between gap-6">
-        <div className="min-w-0">
-          {meta ? <p className="t-meta tabular-nums">{meta}</p> : null}
-          <h2 className="t-display mt-2.5 text-[clamp(1.375rem,2.2vw,1.875rem)] text-[var(--fg)] transition-colors duration-500 group-hover:text-[var(--accent-ink)]">
-            {project.title}
-          </h2>
-          <p className="mt-3 max-w-[46ch] text-[0.9375rem] leading-relaxed tracking-[-0.012em] text-[var(--muted)]">
-            {project.shortDescription}
-          </p>
-          {project.technologies.length > 0 ? (
-            <div className="mt-5 flex flex-wrap gap-1.5">
-              {project.technologies.slice(0, 4).map((tech) => (
-                <span key={tech} className="tag">
-                  {tech}
-                </span>
-              ))}
-            </div>
-          ) : null}
-        </div>
-
-        <span aria-hidden className="arrow-ring mt-1 h-10 w-10 text-[1rem]">
-          <Arrow direction="up-right" />
+      <span className="index-row-body">
+        <h2 className="t-display text-[clamp(1.375rem,2.6vw,2rem)] text-[var(--fg)] transition-colors duration-500 group-hover:text-[var(--accent-ink)]">
+          {project.title}
+        </h2>
+        <span className="mt-2 block max-w-[52ch] text-[0.9375rem] leading-relaxed tracking-[-0.012em] text-[var(--muted)]">
+          {project.shortDescription}
         </span>
-      </div>
+      </span>
+
+      <span className="index-row-meta">
+        {meta ? <span className="t-meta tabular-nums">{meta}</span> : null}
+      </span>
+
+      {/* The index arrow is bare: no ring. A ring on every row of a long list
+          is forty circles down the page, and the rule under the row is already
+          the frame. It travels the width of that rule on hover instead. */}
+      <span className="index-row-go" aria-hidden>
+        <Arrow />
+      </span>
     </Link>
   );
 }
