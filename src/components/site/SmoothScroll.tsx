@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { isLowPower } from "@/lib/perf";
 import "lenis/dist/lenis.css";
 
 /**
@@ -23,6 +24,11 @@ import "lenis/dist/lenis.css";
 export function SmoothScroll() {
   useEffect(() => {
     if (document.documentElement.dataset.embed) return;
+    // Native scrolling runs on the compositor and survives a busy main thread.
+    // Lenis does not: it sets the scroll position from JavaScript every frame,
+    // so the moment the main thread stutters the page stutters with it. On a
+    // device that is already struggling, the smooth scroller is the jitter.
+    if (isLowPower()) return;
     const lenis = new Lenis({
       autoRaf: true,
       // Duration and an easing curve rather than a bare lerp. A lerp is a

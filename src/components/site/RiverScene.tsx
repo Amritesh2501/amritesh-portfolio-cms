@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { isLowPower } from "@/lib/perf";
 
 type Fish = {
   x: number;
@@ -136,10 +137,16 @@ export function RiverScene() {
 
     let w = 0;
     let h = 0;
+    // One flag for the whole scene: fewer fish and fewer pixels. Not a
+    // lighter version of the same scene, the same scene with less in it, and
+    // nobody counts the fish.
+    const lean = isLowPower();
 
     const resize = () => {
       const rect = root.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+      // Every extra pixel of backing store is cleared, drawn and uploaded on
+      // every frame, so this is the cheapest single lever in the scene.
+      const dpr = Math.min(window.devicePixelRatio || 1, lean ? 1 : MAX_DPR);
       w = rect.width;
       h = rect.height;
       canvas.width = Math.round(w * dpr);
@@ -164,7 +171,8 @@ export function RiverScene() {
       attributeFilter: ["data-mode"],
     });
 
-    const fish: Fish[] = Array.from({ length: small ? 11 : 20 }, () => {
+    const fishCount = lean ? (small ? 5 : 9) : small ? 11 : 20;
+    const fish: Fish[] = Array.from({ length: fishCount }, () => {
       const base = rnd(0.4, 0.8);
       return {
         x: rnd(0, w),

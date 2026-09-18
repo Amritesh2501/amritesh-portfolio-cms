@@ -96,6 +96,30 @@ function themeInit(defaultMode: string) {
   return `try{var d=document.documentElement,c=localStorage.getItem("theme"),m=(c==="light"||c==="dark")?c:"${defaultMode}";if(m!=="light"&&m!=="dark")m=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";d.dataset.mode=m}catch(e){document.documentElement.dataset.mode="dark"}`;
 }
 
+/**
+ * Grades the device before the first paint, so the page can decide what it can
+ * afford rather than starting every effect and dropping frames discovering it
+ * cannot.
+ *
+ * Deliberately crude. These are the only signals a browser will give away for
+ * free, none of them is a benchmark, and the cost of guessing low on a fast
+ * machine is a slightly quieter page while the cost of guessing high on a slow
+ * one is the thing this is here to prevent.
+ *
+ * Touch is NOT a signal on its own: a current phone outruns plenty of laptops.
+ * What it does mean is a mobile GPU, which is where full-screen blend modes and
+ * backdrop filters get expensive, so it counts only alongside something else.
+ */
+const GRADE_DEVICE = `try{
+var n=navigator,m=matchMedia,w=0;
+if((n.hardwareConcurrency||8)<=4)w++;
+if((n.deviceMemory||8)<=4)w++;
+if(n.connection&&n.connection.saveData)w+=2;
+if(m("(pointer: coarse)").matches)w++;
+if(m("(prefers-reduced-motion: reduce)").matches)w+=2;
+if(w>=2)document.documentElement.dataset.perf="low";
+}catch(e){}`;
+
 export default async function RootLayout({
   children,
 }: {
@@ -149,6 +173,7 @@ export default async function RootLayout({
           <style dangerouslySetInnerHTML={{ __html: darkPalette }} />
         ) : null}
         <script dangerouslySetInnerHTML={{ __html: themeInit(defaultMode) }} />
+        <script dangerouslySetInnerHTML={{ __html: GRADE_DEVICE }} />
       </head>
       <body className={effects}>{children}</body>
     </html>
