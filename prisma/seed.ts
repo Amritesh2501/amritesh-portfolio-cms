@@ -105,7 +105,7 @@ async function seedSocialLinks() {
     {
       platform: "GitHub",
       label: "GitHub",
-      url: "https://github.com/",
+      url: "https://github.com/Amritesh2501",
       icon: "github",
       displayOrder: 0,
       status: DRAFT,
@@ -790,6 +790,7 @@ async function seedSettings() {
     { key: "site.contactEmail", value: "amriteshtiwari2003@gmail.com", group: "site", label: "Contact email", type: "text", description: "Shown in the contact section. Set your real address here.", displayOrder: 6 },
     { key: "site.contactHeading", value: "Let's work together", group: "site", label: "Contact heading", type: "text", displayOrder: 7 },
     { key: "site.contactBlurb", value: "Roles, contract work, or a system you need built properly. Tell me what you are trying to ship.", group: "site", label: "Contact blurb", type: "textarea", displayOrder: 8 },
+    { key: "site.githubUser", value: "Amritesh2501", group: "site", label: "GitHub username", type: "text", description: "Drives the activity grid in the Stack section. Leave empty to hide it.", displayOrder: 10 },
     { key: "site.showIntro", value: "true", group: "site", label: "Boot sequence intro", type: "boolean", description: "The short terminal boot animation on first visit.", displayOrder: 9 },
 
     // --- theme ---

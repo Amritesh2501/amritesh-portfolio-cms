@@ -14,10 +14,10 @@ export function Arrow({
   direction = "right",
   className = "",
 }: {
-  direction?: "right" | "up-right" | "left" | "down";
+  direction?: "right" | "up-right" | "up" | "left" | "down";
   className?: string;
 }) {
-  const rotation = { right: 0, "up-right": -45, left: 180, down: 90 }[direction];
+  const rotation = { right: 0, "up-right": -45, up: -90, left: 180, down: 90 }[direction];
 
   return (
     <svg

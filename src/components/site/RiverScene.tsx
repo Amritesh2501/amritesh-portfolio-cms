@@ -546,6 +546,21 @@ export function RiverScene() {
       <div data-depth="92" className="river-layer">
         <div className="river-fog river-fog-c" />
       </div>
+
+      {/* Liquid. Three lobes that swell and drift against each other on long,
+          offset cycles; where they overlap the lavender doubles and reads as
+          depth in the water rather than as three separate shapes. They sit on
+          [data-depth] layers too, so the pointer drags them with everything
+          else. */}
+      <div data-depth="52" className="river-layer">
+        <div className="river-liquid river-liquid-a" />
+      </div>
+      <div data-depth="74" className="river-layer">
+        <div className="river-liquid river-liquid-b" />
+      </div>
+      <div data-depth="34" className="river-layer">
+        <div className="river-liquid river-liquid-c" />
+      </div>
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <div className="river-vignette" />
     </div>

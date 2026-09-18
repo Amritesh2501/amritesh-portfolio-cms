@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Arrow } from "@/components/site/Arrow";
 import { getHomeData } from "@/lib/content";
+import { getGitHubActivity } from "@/lib/github";
 import { Hero } from "@/components/site/Hero";
 import { Empty, Section } from "@/components/site/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
@@ -45,6 +46,9 @@ export default async function HomePage() {
   }
 
   const base = await getSiteUrl();
+  // Cached by fetch's own revalidate, so this does not cost a round trip on
+  // every render of a force-dynamic page.
+  const github = await getGitHubActivity(settings.get("site.githubUser"));
 
   const cards: CardProject[] = projects.map((p) => ({
     id: p.id,
@@ -148,7 +152,11 @@ export default async function HomePage() {
       </Section>
 
       <Section id="stack" label="Stack" aside={`${skillCount} entries`}>
-        <Stack skillGroups={skillGroups} certifications={certifications} />
+        <Stack
+          skillGroups={skillGroups}
+          certifications={certifications}
+          github={github}
+        />
       </Section>
 
       <Section id="contact" label="Contact">
