@@ -78,7 +78,7 @@ I work across the whole path from schema to interface, and I would rather own a 
 On the side: Praxium.ai, an adaptive learning platform where the assessment generation and knowledge-gap detection are the hard parts, not the chat interface.`,
     location: "India",
     // APPENDIX C item 4: placeholders. Set the real values in /admin > Profile.
-    email: "hello@example.com",
+    email: "amriteshtiwari2003@gmail.com",
     phone: "",
     resumeUrl: "",
     profileImage: null,
@@ -121,7 +121,7 @@ async function seedSocialLinks() {
     {
       platform: "Email",
       label: "Email",
-      url: "mailto:hello@example.com",
+      url: "mailto:amriteshtiwari2003@gmail.com",
       icon: "maildotru",
       displayOrder: 2,
       status: DRAFT,
@@ -787,7 +787,7 @@ async function seedSettings() {
     { key: "site.logoImage", value: "", group: "site", label: "Logo image", type: "media", description: "Overrides the logo text when set.", displayOrder: 3 },
     { key: "site.footerText", value: "Built and maintained by Amritesh Tiwari. Every word on this site is editable from the CMS.", group: "site", label: "Footer text", type: "textarea", displayOrder: 4 },
     { key: "site.copyright", value: "© 2026 Amritesh Tiwari", group: "site", label: "Copyright line", type: "text", displayOrder: 5 },
-    { key: "site.contactEmail", value: "hello@example.com", group: "site", label: "Contact email", type: "text", description: "Shown in the contact section. Set your real address here.", displayOrder: 6 },
+    { key: "site.contactEmail", value: "amriteshtiwari2003@gmail.com", group: "site", label: "Contact email", type: "text", description: "Shown in the contact section. Set your real address here.", displayOrder: 6 },
     { key: "site.contactHeading", value: "Let's work together", group: "site", label: "Contact heading", type: "text", displayOrder: 7 },
     { key: "site.contactBlurb", value: "Roles, contract work, or a system you need built properly. Tell me what you are trying to ship.", group: "site", label: "Contact blurb", type: "textarea", displayOrder: 8 },
     { key: "site.showIntro", value: "true", group: "site", label: "Boot sequence intro", type: "boolean", description: "The short terminal boot animation on first visit.", displayOrder: 9 },

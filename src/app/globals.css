@@ -155,7 +155,10 @@
   --river-core: #ddd4fa;
   --river-band-a: rgba(248, 244, 255, 0.85);
   --river-band-b: rgba(196, 178, 245, 0.34);
-  --river-fog: rgba(214, 198, 250, 0.5);
+  /* Fog on a pale ground has to be denser and more saturated than fog on a
+     dark one: on #0d0718 a 16% wash is already visible, on #f4f1fa the same
+     wash is nothing. Lavender rather than white for the same reason. */
+  --river-fog: rgba(176, 142, 240, 0.34);
   --river-vignette: rgba(250, 247, 255, 0.55);
   --river-ink: 52, 36, 92;
   --river-spark: 150, 120, 205;
@@ -166,8 +169,8 @@
 
   --wash-top: color-mix(in srgb, #cdbcf5 65%, transparent);
   --wash-mid: color-mix(in srgb, #e2d9f8 50%, transparent);
-  --fog-tint: rgba(255, 255, 255, 0.85);
-  --fog-opacity: 0.045;
+  --fog-tint: rgba(176, 142, 240, 0.9);
+  --fog-opacity: 0.16;
 
   color-scheme: light;
 }
@@ -716,14 +719,37 @@ body {
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
+  }
+
+  /* Two banks the pointer drags, on every page and in both palettes. Inset
+     well past the viewport so that moving them never uncovers an edge. */
+  .site-mist-bank {
+    position: absolute;
+    inset: -22%;
+    will-change: transform;
     background:
-      radial-gradient(55% 45% at 85% 0%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 70%),
-      radial-gradient(50% 45% at 0% 100%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%);
+      radial-gradient(48% 40% at 78% 12%, var(--fog-tint), transparent 70%),
+      radial-gradient(42% 38% at 12% 84%, var(--fog-tint), transparent 70%);
+    opacity: 0.42;
+  }
+
+  .site-mist-bank + .site-mist-bank {
+    background:
+      radial-gradient(56% 44% at 24% 22%, var(--fog-tint), transparent 72%),
+      radial-gradient(38% 48% at 88% 72%, var(--fog-tint), transparent 70%);
+    opacity: 0.28;
   }
 
   /* The noise tile, drifting. One composited layer moving on transform alone,
      which is why it can move at all: see the performance note on RiverScene
      for why nothing else in the ambient layers does. */
+  :root[data-mode="light"] .site-mist::before,
+  :root[data-mode="light"] .site-mist::after {
+    /* The tile is pale violet, so over a pale page it can only add light and
+       disappears. Multiplying makes the same texture read as shadow. */
+    mix-blend-mode: multiply;
+  }
+
   .site-mist::before,
   .site-mist::after {
     content: "";
@@ -777,6 +803,22 @@ body {
     right: 0;
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--line-strong) 20%, var(--glow) 50%, var(--line-strong) 80%, transparent);
+  }
+
+  /* A word in a section heading: a clipping box with the word inside it, so
+     the word can be moved out of sight without a mask or a filter. inline-flex
+     rather than inline-block, or the descenders on g, y and p are clipped by
+     the overflow that makes the effect work in the first place. */
+  .heading-word {
+    display: inline-flex;
+    overflow: hidden;
+    vertical-align: bottom;
+    padding-bottom: 0.12em;
+  }
+
+  .heading-word > span {
+    display: inline-block;
+    will-change: transform;
   }
 
   /* ---------------------------------------------------------------------------
@@ -1108,14 +1150,19 @@ body {
   /* -------------------------------------------------------------------------
      Intro
 
-     The name settles, then the ground splits and the page is underneath.
+     A longer sequence, at roughly 3.8s: the mark settles, a rule draws under
+     it, the name rises letter by letter, a meter fills the width of the rule,
+     and only then does the ground split apart and the page appear.
 
-     Everything here animates transform or opacity and nothing else, and the
-     two halves are promoted to their own compositor layers up front, because
-     the whole sequence runs while React is hydrating the page below it: any
-     frame that costs layout or paint is a frame the main thread does not have
-     to give. The previous version lifted two full-viewport gradient curtains
-     in sequence, which is the same idea at twice the overdraw.
+     The meter is what earns the length. Without it the middle second is dead
+     air and the whole thing reads as a site that is slow to start; with it
+     there is something to watch resolving, and the split lands as the end of a
+     sentence rather than as a timeout expiring.
+
+     Everything animates transform or opacity and nothing else, and the two
+     halves are promoted up front, because the sequence runs while React
+     hydrates the page below it: a frame spent on layout or paint is a frame
+     the main thread has not got.
 
      The CSS timing is also the hard ceiling. With JavaScript disabled the
      overlay still leaves on its own and can never trap anyone.
@@ -1127,7 +1174,7 @@ body {
     z-index: var(--z-boot);
     overflow: hidden;
     pointer-events: none;
-    animation: intro-gone 0.01s linear 1.95s forwards;
+    animation: intro-gone 0.01s linear 3.8s forwards;
   }
 
   .intro-half {
@@ -1143,7 +1190,7 @@ body {
       linear-gradient(var(--intro-bg), var(--intro-bg));
     background-size: 100% 200%;
     will-change: transform;
-    animation: intro-part 0.72s cubic-bezier(0.76, 0, 0.24, 1) 1.28s forwards;
+    animation: intro-part 0.85s cubic-bezier(0.76, 0, 0.24, 1) 3.05s forwards;
   }
 
   .intro-half-top {
@@ -1163,25 +1210,16 @@ body {
     display: grid;
     align-content: center;
     justify-items: center;
-    gap: 1.35rem;
+    gap: 1.4rem;
     will-change: transform, opacity;
-    animation: intro-stage-out 0.5s cubic-bezier(0.76, 0, 0.24, 1) 1.1s forwards;
+    animation: intro-stage-out 0.55s cubic-bezier(0.76, 0, 0.24, 1) 2.8s forwards;
   }
 
   .intro-mark {
-    font-size: clamp(2.75rem, 7vw, 4rem);
+    font-size: clamp(3rem, 8vw, 4.75rem);
     line-height: 1;
     color: var(--accent-ink);
-    animation: intro-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  /* Drawn from the centre outward, under the mark. */
-  .intro-rule {
-    width: clamp(7rem, 22vw, 12rem);
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    transform: scaleX(0);
-    animation: intro-draw 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.14s forwards;
+    animation: intro-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .intro-name {
@@ -1189,7 +1227,7 @@ body {
     overflow: hidden;
     font-size: clamp(0.6875rem, 1.5vw, 0.875rem);
     font-weight: 500;
-    letter-spacing: 0.38em;
+    letter-spacing: 0.4em;
     text-transform: uppercase;
     color: var(--intro-fg);
     white-space: pre;
@@ -1197,14 +1235,41 @@ body {
 
   .intro-name span {
     display: inline-block;
-    animation: intro-letter 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: intro-letter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* The meter: a hairline track with a fill that runs its width. Two elements,
+     one scaled, no width animation anywhere near it. */
+  .intro-meter {
+    position: relative;
+    width: clamp(8rem, 24vw, 14rem);
+    height: 1px;
+    margin-top: 0.4rem;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--intro-fg) 18%, transparent);
+    transform: scaleX(0);
+    animation: intro-draw 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.25s forwards;
+  }
+
+  .intro-meter::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--accent));
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    animation: intro-fill 1.9s cubic-bezier(0.5, 0, 0.2, 1) 0.95s forwards;
   }
 
   @keyframes intro-rise {
-    from { opacity: 0; transform: translateY(16px); }
+    from { opacity: 0; transform: translateY(18px); }
   }
 
   @keyframes intro-draw {
+    to { transform: scaleX(1); }
+  }
+
+  @keyframes intro-fill {
     to { transform: scaleX(1); }
   }
 
@@ -1213,7 +1278,7 @@ body {
   }
 
   @keyframes intro-stage-out {
-    to { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 0; transform: translateY(-22px); }
   }
 
   @keyframes intro-part {
@@ -1716,6 +1781,78 @@ body {
     font-size: clamp(4rem, 9vw, 7rem);
     line-height: 1;
     color: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  /* ---------------------------------------------------------------------------
+     Work stack
+
+     Each project holds the viewport while it is read, then the next rises over
+     it. Sticky does the holding; GSAP only scrubs the scale and opacity of the
+     one behind (see WorkStack for why it is not ScrollTrigger's pin).
+
+     Each panel needs an opaque ground of its own, or the card behind shows
+     through the one in front and the whole stack reads as a smear.
+     ------------------------------------------------------------------------- */
+
+  .work-stack {
+    position: relative;
+  }
+
+  .work-panel {
+    position: sticky;
+    top: 0;
+    display: grid;
+    align-items: center;
+    min-height: 100dvh;
+    padding: 5rem 0;
+  }
+
+  .work-panel-inner {
+    /* GSAP writes scale and opacity here. Its own layer, so the scrub never
+       costs a paint of the card underneath. */
+    will-change: transform, opacity;
+    transform-origin: 50% 40%;
+  }
+
+  .work-card {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+    padding: clamp(1.5rem, 3vw, 2.75rem);
+    border: 1px solid var(--line);
+    border-radius: var(--r-xl);
+    background:
+      linear-gradient(165deg,
+        color-mix(in srgb, var(--surface) 94%, transparent),
+        color-mix(in srgb, var(--bg) 96%, transparent)),
+      var(--bg);
+    box-shadow: var(--shadow-lg);
+    transition: border-color 0.5s var(--ease-out);
+  }
+
+  .work-card:hover {
+    border-color: var(--line-strong);
+  }
+
+  @media (min-width: 1024px) {
+    .work-card {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      gap: clamp(2.5rem, 4vw, 4rem);
+    }
+  }
+
+  .work-card-copy {
+    min-width: 0;
+  }
+
+  .work-card-window {
+    min-width: 0;
+  }
+
+  /* The last panel must not sit under the ones above it once the stack is
+     done, or the section below scrolls up into a card that is still stuck. */
+  .work-panel:last-child {
+    position: relative;
   }
 
   /* A browser window around each project. */

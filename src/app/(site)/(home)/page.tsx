@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Arrow } from "@/components/site/Arrow";
 import { getHomeData } from "@/lib/content";
 import { Hero } from "@/components/site/Hero";
-import { Section } from "@/components/site/Section";
+import { Empty, Section } from "@/components/site/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
-import { ProjectGrid } from "@/components/site/ProjectGrid";
+import { WorkStack } from "@/components/site/WorkStack";
 import { About } from "@/components/site/About";
 import { Experience } from "@/components/site/Experience";
 import { Stack } from "@/components/site/Stack";
@@ -131,9 +131,11 @@ export default async function HomePage() {
       ) : null}
 
       <Section id="work" label="Selected work">
-        {/* No category chips here: with a handful of curated rows there is
-            nothing to filter. They live on /projects, over the full set. */}
-        <ProjectGrid projects={shown} categories={[]} />
+        {shown.length > 0 ? (
+          <WorkStack projects={shown} />
+        ) : (
+          <Empty>No published projects yet. Publish one from the CMS.</Empty>
+        )}
         {cards.length > 0 ? <AllProjectsRow rest={rest} /> : null}
       </Section>
 
