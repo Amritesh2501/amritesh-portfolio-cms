@@ -21,9 +21,10 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const REST = { y: 0, scale: 1 } as const;
 const INSTANT = { y: { duration: 0 }, scale: { duration: 0 } } as const;
 
-// When the intro's curtain starts to lift. Hero copy waits for it, so it rises
+// When the intro's ground starts to split. Hero copy waits for it, so it rises
 // as the page is uncovered instead of finishing unseen behind the loader.
-const INTRO_HANDOFF = 1.3;
+// Keep in step with the intro timings in globals.css.
+const INTRO_HANDOFF = 3.05;
 
 function introDelay() {
   if (typeof document === "undefined") return 0;

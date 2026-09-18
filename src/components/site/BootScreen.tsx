@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 
 /**
- * The intro: the mark settles over a drawn rule, the name rises letter by
- * letter, then the ground splits apart and the page is underneath.
+ * The intro: the mark settles, a rule draws under it, the name rises letter by
+ * letter, a meter fills the width of that rule, and then the ground splits
+ * apart and the page is underneath. Roughly 3.8s end to end.
  *
  * Why it is shaped like this:
  *  - It is in the server HTML, so it covers the very first paint. Mounting it
@@ -21,9 +22,9 @@ import { useEffect, useState } from "react";
  *    sequence. Both were overdraw at exactly the wrong moment.
  *  - Still behind the `site.showIntro` CMS toggle.
  */
-const SESSION_KEY = "intro-shown-v6";
+const SESSION_KEY = "intro-shown-v7";
 // Keep in step with the timings in globals.css (Intro).
-const TOTAL_MS = 2000;
+const TOTAL_MS = 3900;
 
 const HIDE_IF_SEEN = `try{if(sessionStorage.getItem("${SESSION_KEY}")==="1")document.documentElement.dataset.intro="seen"}catch(e){document.documentElement.dataset.intro="seen"}`;
 
@@ -77,14 +78,14 @@ export function BootScreen({
           <span aria-hidden className="intro-mark t-serif">
             {logoText}
           </span>
-          <span aria-hidden className="intro-rule" />
           <p aria-hidden className="intro-name">
             {Array.from(name).map((char, i) => (
-              <span key={i} style={{ animationDelay: `${0.3 + i * 0.026}s` }}>
+              <span key={i} style={{ animationDelay: `${0.55 + i * 0.03}s` }}>
                 {char}
               </span>
             ))}
           </p>
+          <span aria-hidden className="intro-meter" />
           <span className="sr-only">Loading {name}</span>
         </div>
       </div>

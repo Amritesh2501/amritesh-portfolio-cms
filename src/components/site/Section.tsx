@@ -1,4 +1,5 @@
 import { DrawLine, Reveal } from "./Reveal";
+import { SectionHeading } from "./SectionHeading";
 
 /**
  * The structural compartment used across the public site.
@@ -35,12 +36,12 @@ export function Section({
       <div className="relative mx-auto w-full max-w-[1400px] px-6 py-24 sm:px-8 lg:px-12 lg:py-36">
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-            <h2
+            <SectionHeading
               id={`${id}-heading`}
               className="t-display text-[clamp(2rem,4.4vw,3.25rem)] text-[var(--fg)]"
             >
               {label}
-            </h2>
+            </SectionHeading>
             {aside ? (
               <span className="t-meta pb-1.5 text-[0.625rem]">{aside}</span>
             ) : null}

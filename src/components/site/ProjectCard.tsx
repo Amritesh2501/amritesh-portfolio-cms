@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { Arrow } from "./Arrow";
 import { useEffect, useRef, useState } from "react";
 import { Parallax } from "./Parallax";
 
@@ -23,15 +21,6 @@ export type CardProject = {
   metrics: { value: string; label: string }[];
 };
 
-const LIFECYCLE_LABEL: Record<string, string> = {
-  LIVE: "Live",
-  IN_DEVELOPMENT: "In development",
-  ARCHIVED: "Archived",
-  PRIVATE: "Private",
-  COMING_SOON: "Coming soon",
-};
-
-const TECH_LIMIT = 5;
 // Sites render at a real laptop viewport, then scale down into the window,
 // which has the same 16:10 shape.
 const FRAME_WIDTH = 1440;
@@ -60,48 +49,47 @@ function hostOf(url: string) {
 }
 
 /**
- * A project as an editorial row: the window on one side, the story on the
- * other, alternating down the page.
+ * A project shown as a browser window.
  *
- * The window at rest shows the project's thumbnail (or, without one, a
- * lettered poster). Hovering the row wipes the thumbnail up to reveal the
- * preview: the live site when there is a live URL, otherwise the project's own
- * case study page on this site, which hides its chrome when framed.
+ * At rest the window shows the thumbnail, or a lettered poster when there is
+ * none. Hovering wipes the poster up to reveal the preview: the live site when
+ * there is a live URL, otherwise the case study page on this site, which hides
+ * its chrome when framed.
  *
  * When frames load:
- *  - a live site starts loading once its row is near the screen, because real
- *    sites often play their own splash screen first, and the hover should land
- *    on the site rather than on its loader. It unloads when the row scrolls
- *    well away.
+ *  - a live site starts loading once the window is near the screen, because
+ *    real sites often play their own splash first, and the hover should land
+ *    on the site rather than on its loader. It unloads when it scrolls away.
  *  - the case study page is local and quick, so it loads on hover and is
  *    removed shortly after the pointer leaves.
  * Either way no hidden site keeps running for the rest of the visit.
+ *
+ * This is only the window. What sits beside it belongs to the caller, which is
+ * WorkStack: it used to be half of an editorial row, and the row is what the
+ * stack replaced.
  */
-export function ProjectCard({
+export function ProjectWindow({
   project,
   index,
-  showFeatured = true,
 }: {
   project: CardProject;
+  /** Picks which of the three poster grounds this one lands on. */
   index: number;
-  /** Off when every row in the list is featured, where the chip says nothing. */
-  showFeatured?: boolean;
 }) {
-  const label = LIFECYCLE_LABEL[project.lifecycle] ?? project.lifecycle;
   const [armed, setArmed] = useState(false);
   const [near, setNear] = useState(false);
-  const rowRef = useRef<HTMLAnchorElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
   const unload = useRef<number | undefined>(undefined);
 
   useEffect(() => () => window.clearTimeout(unload.current), []);
 
   useEffect(() => {
-    const row = rowRef.current;
-    if (!project.liveUrl || !row) return;
+    const box = boxRef.current;
+    if (!project.liveUrl || !box) return;
     const io = new IntersectionObserver(([entry]) => setNear(entry.isIntersecting), {
       rootMargin: "400px 0px",
     });
-    io.observe(row);
+    io.observe(box);
     return () => io.disconnect();
   }, [project.liveUrl]);
 
@@ -118,148 +106,78 @@ export function ProjectCard({
   const frameUrl = project.liveUrl ?? caseStudy;
   const showFrame = project.liveUrl ? near : armed;
   const address = project.liveUrl ? hostOf(project.liveUrl) : caseStudy;
-  const flip = index % 2 === 1;
 
   return (
-    <Link
-      ref={rowRef}
-      href={caseStudy}
-      className="work-row group grid items-center gap-8 lg:grid-cols-12 lg:gap-16"
+    <div
+      ref={boxRef}
+      className="browser"
       onPointerEnter={arm}
       onPointerLeave={disarm}
       onFocus={arm}
       onBlur={disarm}
     >
-      <div className={`lg:col-span-7 ${flip ? "lg:order-2" : ""}`}>
-        <div className="browser">
-          <div className="browser-bar" aria-hidden>
-            <span className="browser-dots">
-              <span />
-              <span />
-              <span />
-            </span>
-            <span className="browser-url">{address}</span>
-            <span className="browser-kind">
-              {project.liveUrl ? (
-                <>
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--ok)]" />
-                  Live
-                </>
-              ) : (
-                "Case study"
-              )}
-            </span>
-          </div>
-
-          <div className="browser-view">
-            <div className={`poster poster-${index % 3}`}>
-              {project.preview ? (
-                <Parallax speed={0.06} className="absolute inset-x-0 inset-y-[-8%]">
-                  {/* Plain img: thumbnails can be any CMS URL, and next/image
-                      refuses hosts that are not allow-listed in next.config. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={project.preview}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover object-top"
-                  />
-                </Parallax>
-              ) : (
-                <p className="t-serif relative max-w-[14ch] text-[clamp(1.75rem,3.2vw,2.75rem)] text-[var(--fg)]">
-                  {project.title}
-                </p>
-              )}
-              <span aria-hidden className="poster-hint">
-                Hover to preview
-              </span>
-            </div>
-
-            <div className="peek" aria-hidden>
-              {showFrame ? (
-                <LiveFrame
-                  url={frameUrl}
-                  title={project.title}
-                  external={Boolean(project.liveUrl)}
-                />
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className={`lg:col-span-5 ${flip ? "lg:order-1" : ""}`}>
-        {/* No row number here or on the poster: the reader can count, and it
-            was printed twice on every row. The category and year carry the
-            metadata on their own. */}
-        <div className="flex items-center gap-4">
-          <span className="t-meta tabular-nums">
-            {[project.categoryName, project.year].filter(Boolean).join(" · ")}
-          </span>
-          <span aria-hidden className="work-rule h-px flex-1 bg-[var(--line-strong)]" />
-        </div>
-
-        <h3 className="t-display mt-6 text-[clamp(2rem,3.6vw,3rem)] text-[var(--fg)] transition-colors duration-500 group-hover:text-[var(--accent-ink)]">
-          {project.title}
-        </h3>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <span className="chip">{label}</span>
-          {showFeatured && project.featured ? (
-            <span className="chip">Featured</span>
-          ) : null}
-        </div>
-
-        <p className="mt-5 max-w-[52ch] text-[1rem] leading-relaxed tracking-[-0.012em] text-[var(--muted)]">
-          {project.shortDescription}
-        </p>
-
-        {project.metrics.length > 0 ? (
-          <dl className="mt-7 flex flex-wrap gap-x-10 gap-y-3">
-            {project.metrics.slice(0, 3).map((metric) => (
-              <div key={metric.label}>
-                <dd className="t-serif text-[2rem] text-[var(--fg)]">
-                  {metric.value}
-                </dd>
-                <dt className="t-meta mt-1.5 text-[0.6875rem]">{metric.label}</dt>
-              </div>
-            ))}
-          </dl>
-        ) : null}
-
-        <div className="mt-7 flex flex-wrap items-center gap-1.5">
-          {project.technologies.slice(0, TECH_LIMIT).map((tech) => (
-            <span key={tech} className="tag">
-              {tech}
-            </span>
-          ))}
-          {project.technologies.length > TECH_LIMIT ? (
-            <span className="t-meta text-[0.6875rem]">
-              +{project.technologies.length - TECH_LIMIT}
-            </span>
-          ) : null}
-        </div>
-
-        <span className="mt-8 inline-flex items-center gap-3 text-[0.9375rem] font-medium tracking-[-0.01em] text-[var(--fg)]">
-          <span className="work-cta">Read the case study</span>
-          <span aria-hidden className="arrow-ring h-9 w-9 text-[0.9375rem]">
-            <Arrow />
-          </span>
+      <div className="browser-bar" aria-hidden>
+        <span className="browser-dots">
+          <span />
+          <span />
+          <span />
+        </span>
+        <span className="browser-url">{address}</span>
+        <span className="browser-kind">
+          {project.liveUrl ? (
+            <>
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--ok)]" />
+              Live
+            </>
+          ) : (
+            "Case study"
+          )}
         </span>
       </div>
-    </Link>
+
+      <div className="browser-view">
+        <div className={`poster poster-${index % 3}`}>
+          {project.preview ? (
+            <Parallax speed={0.06} className="absolute inset-x-0 inset-y-[-8%]">
+              {/* Plain img: thumbnails can be any CMS URL, and next/image
+                  refuses hosts that are not allow-listed in next.config. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={project.preview}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover object-top"
+              />
+            </Parallax>
+          ) : (
+            <p className="t-serif relative max-w-[14ch] text-[clamp(1.75rem,3.2vw,2.75rem)] text-[var(--fg)]">
+              {project.title}
+            </p>
+          )}
+          <span aria-hidden className="poster-hint">
+            Hover to preview
+          </span>
+        </div>
+
+        <div className="peek" aria-hidden>
+          {showFrame ? (
+            <LiveFrame
+              url={frameUrl}
+              title={project.title}
+              external={Boolean(project.liveUrl)}
+            />
+          ) : null}
+        </div>
+      </div>
+    </div>
   );
 }
 
 /**
- * A site rendered at a laptop viewport and scaled into the window. The scale
- * is measured once per size change and handed to CSS.
- */
-/**
  * The site itself, rendered at laptop width and scaled into the window.
  *
- * The pan down the page is a CSS animation that is paused until the row is
+ * The pan down the page is a CSS animation that is paused until the window is
  * hovered or focused, which means it costs nothing while the card sits there,
  * resumes from where it stopped rather than restarting, and needs no rAF loop
  * or scroll handler of its own.
