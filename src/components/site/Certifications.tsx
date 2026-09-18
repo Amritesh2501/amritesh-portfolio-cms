@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Arrow } from "./Arrow";
 import type { HomeData } from "@/lib/content";
 import { Reveal, RevealGroup, RevealItem } from "./Reveal";
 
@@ -108,9 +109,9 @@ export function Certifications({ certifications }: { certifications: Cert[] }) {
                 ) : null}
                 <span
                   aria-hidden
-                  className={`cert-arrow grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] text-[var(--accent-ink)] ${cert.credentialUrl ? "" : "invisible"}`}
+                  className={`arrow-ring h-10 w-10 text-[1rem] ${cert.credentialUrl ? "" : "invisible"}`}
                 >
-                  &#8599;
+                  <Arrow direction="up-right" />
                 </span>
               </span>
             </>

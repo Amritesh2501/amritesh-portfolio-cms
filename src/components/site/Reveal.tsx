@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   motion,
+  useInView,
   useReducedMotion,
   useScroll,
   useSpring,
@@ -22,13 +23,40 @@ const INSTANT = { y: { duration: 0 }, scale: { duration: 0 } } as const;
 
 // When the intro's curtain starts to lift. Hero copy waits for it, so it rises
 // as the page is uncovered instead of finishing unseen behind the loader.
-const INTRO_HANDOFF = 1.4;
+const INTRO_HANDOFF = 1.3;
 
 function introDelay() {
   if (typeof document === "undefined") return 0;
   const showing =
     document.documentElement.dataset.intro !== "seen" && document.querySelector(".intro");
   return showing ? INTRO_HANDOFF : 0;
+}
+
+const VIEWPORT = { amount: 0.15, margin: "0px 0px -60px 0px" } as const;
+
+/**
+ * Which way a block is offset while it is hidden: +1 below the viewport, -1
+ * above it.
+ *
+ * This is what makes the reveal reverse. Offsetting everything downward means
+ * that scrolling back up pulls a block down out of the way and then drops it
+ * in from the same side it just left, which reads as a glitch. Keyed to the
+ * element's side of the viewport instead, content always travels the way the
+ * page is travelling: rising into place on the way down, settling back down on
+ * the way up.
+ *
+ * Measured only on the transition in or out of view, never per frame.
+ */
+function useRevealSide(ref: React.RefObject<HTMLElement | null>, inView: boolean) {
+  const [side, setSide] = useState(1);
+
+  useEffect(() => {
+    if (inView || !ref.current) return;
+    const { top } = ref.current.getBoundingClientRect();
+    setSide(top > window.innerHeight / 2 ? 1 : -1);
+  }, [inView, ref]);
+
+  return side;
 }
 
 /**
@@ -41,8 +69,10 @@ function introDelay() {
  * filter, which re-rasterised every block as it arrived and was the main
  * source of stutter while scrolling into a new section.
  *
- * Not once: a block hides again after it leaves the viewport, so it rises back
- * in whether the page is scrolled down or up.
+ * Not once, and direction-aware: a block hides again after it leaves the
+ * viewport, and is offset toward whichever side of the viewport it is on, so
+ * scrolling up plays the arrival in reverse instead of replaying the same
+ * upward rise for content that is coming back down from above.
  *
  * Under prefers-reduced-motion it keeps the opacity fade and drops the travel.
  */
@@ -63,15 +93,27 @@ export function Reveal({
   afterIntro?: boolean;
 }) {
   const reduce = useReducedMotion();
-  const Tag = motion[as];
+  // motion[as] is a union of element components, so its ref type is the
+  // intersection of all three and nothing satisfies it. The rendered tag is
+  // still whatever `as` says; only the typing is narrowed.
+  const Tag = motion[as] as typeof motion.div;
   const wait = delay + (afterIntro ? introDelay() : 0);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, VIEWPORT);
+  const side = useRevealSide(ref, inView);
 
   return (
     <Tag
+      ref={ref}
       className={className}
       initial={reduce ? { opacity: 0 } : { opacity: 0, y, scale: 0.985 }}
-      whileInView={{ opacity: 1, ...REST }}
-      viewport={{ once: false, amount: 0.15, margin: "0px 0px -60px 0px" }}
+      animate={
+        inView
+          ? { opacity: 1, ...REST }
+          : reduce
+            ? { opacity: 0 }
+            : { opacity: 0, y: y * side, scale: 0.985 }
+      }
       transition={
         reduce
           ? { duration: 0.5, delay: wait, ease: EASE, ...INSTANT }
@@ -98,14 +140,21 @@ export function RevealGroup({
   className?: string;
   as?: "div" | "ul" | "ol" | "dl";
 }) {
-  const Tag = motion[as];
+  const Tag = motion[as] as typeof motion.div;
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.1, margin: "0px 0px -60px 0px" });
+  // Passed down as `custom`, which motion propagates from a parent to its
+  // children, so every RevealItem below offsets toward the same side without
+  // measuring itself.
+  const side = useRevealSide(ref, inView);
 
   return (
     <Tag
+      ref={ref}
       className={className}
+      custom={side}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: false, amount: 0.1, margin: "0px 0px -60px 0px" }}
+      animate={inView ? "visible" : "hidden"}
       variants={{
         hidden: {},
         visible: { transition: { staggerChildren: stagger, delayChildren: 0.05 } },
@@ -128,7 +177,7 @@ export function RevealItem({
   y?: number;
 }) {
   const reduce = useReducedMotion();
-  const Tag = motion[as];
+  const Tag = motion[as] as typeof motion.div;
 
   return (
     <Tag
@@ -144,7 +193,13 @@ export function RevealItem({
               },
             }
           : {
-              hidden: { opacity: 0, y, scale: 0.98 },
+              // A function variant is handed the parent's `custom`, which is
+              // the side of the viewport the group is on.
+              hidden: (side: number = 1) => ({
+                opacity: 0,
+                y: y * side,
+                scale: 0.98,
+              }),
               visible: {
                 opacity: 1,
                 ...REST,

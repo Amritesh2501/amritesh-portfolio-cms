@@ -46,10 +46,10 @@ const MOTE_STEPS = 4;
 const MAX_TURN = 0.045;
 // Light spring: how hard a layer is pulled back to rest, how much of its speed
 // it keeps each frame, and how far the pointer can push it.
-const FOG_PULL = 0.018;
-const FOG_KEEP = 0.9;
-const FOG_PUSH = 0.0012;
-const FOG_REACH = 80;
+const FOG_PULL = 0.016;
+const FOG_KEEP = 0.915;
+const FOG_PUSH = 0.0026;
+const FOG_REACH = 150;
 
 const rnd = (min: number, max: number) => min + Math.random() * (max - min);
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
@@ -99,14 +99,17 @@ function readPalette(el: HTMLElement) {
 /**
  * The hero's living layer.
  *
- * A clear pond, no fog: the intro's fog lifts to reveal it. Nothing here moves
- * on its own except the life in the water. The pointer is the only wind:
- * moving it sways the band of light on the water along the direction of
- * travel, and a damped spring carries it back to rest. Fish swim on smooth
- * curves, now and then breaking the surface with a small ring,
- * scatter from a fast cursor or a tap and drift closer to a still one; motes
- * are pushed aside; ripples spread where the pointer skims or taps; a lantern
- * of light eases after it.
+ * Nothing here moves on its own except the life in the water. The pointer is
+ * the only wind: it drags the fog banks and the band of light along its
+ * direction of travel, each in proportion to its depth so the bank shears
+ * rather than sliding as one sheet, and a damped spring carries them back to
+ * rest. Fish swim on smooth curves, now and then breaking the surface with a
+ * small ring, scatter from a fast cursor or a tap and drift closer to a still
+ * one; motes are pushed aside; ripples spread where the pointer skims or taps.
+ *
+ * No light follows the cursor. A glow pinned to the pointer reads as a torch
+ * held over the scene rather than as weather in it, and it was the one thing
+ * here that announced itself as an effect.
  *
  * Performance rules, each of which was a measured source of lag:
  *  - Pointer events only record coordinates; all work happens once per frame.
@@ -124,14 +127,12 @@ function readPalette(el: HTMLElement) {
 export function RiverScene() {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const lanternRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const root = rootRef.current;
     const canvas = canvasRef.current;
-    const lantern = lanternRef.current;
     const ctx = canvas?.getContext("2d");
-    if (!root || !canvas || !lantern || !ctx) return;
+    if (!root || !canvas || !ctx) return;
 
     let w = 0;
     let h = 0;
@@ -163,7 +164,7 @@ export function RiverScene() {
       attributeFilter: ["data-mode"],
     });
 
-    const fish: Fish[] = Array.from({ length: small ? 7 : 12 }, () => {
+    const fish: Fish[] = Array.from({ length: small ? 11 : 20 }, () => {
       const base = rnd(0.4, 0.8);
       return {
         x: rnd(0, w),
@@ -203,7 +204,6 @@ export function RiverScene() {
       taps: [] as { clientX: number; clientY: number }[],
     };
     const pointer = { x: -9999, y: -9999, inside: false, speed: 0, dx: 0, dy: 0, lastMove: 0, lastRipple: 0 };
-    const lanternPos = { x: 0, y: 0, shown: false, placed: false, last: "" };
 
     const layers: Layer[] = Array.from(root.querySelectorAll<HTMLElement>("[data-depth]")).map(
       (node) => ({ node, depth: Number(node.dataset.depth) || 0, x: 0, y: 0, vx: 0, vy: 0, last: "" }),
@@ -343,27 +343,6 @@ export function RiverScene() {
       }
     };
 
-    const moveLantern = (dt: number) => {
-      if (pointer.inside !== lanternPos.shown) {
-        lanternPos.shown = pointer.inside;
-        lantern.style.opacity = pointer.inside ? "1" : "0";
-      }
-      if (!pointer.inside) return;
-      if (!lanternPos.placed) {
-        lanternPos.x = pointer.x;
-        lanternPos.y = pointer.y;
-        lanternPos.placed = true;
-      }
-      const k = ease(0.14, dt);
-      lanternPos.x += (pointer.x - lanternPos.x) * k;
-      lanternPos.y += (pointer.y - lanternPos.y) * k;
-      const value = `translate(${lanternPos.x.toFixed(1)}px, ${lanternPos.y.toFixed(1)}px)`;
-      if (value !== lanternPos.last) {
-        lantern.style.transform = value;
-        lanternPos.last = value;
-      }
-    };
-
     const moteBuckets: Mote[][] = Array.from({ length: MOTE_STEPS }, () => []);
 
     let raf = 0;
@@ -394,7 +373,6 @@ export function RiverScene() {
       if (still) pointer.speed *= Math.pow(0.85, dt);
 
       moveFog(dt);
-      moveLantern(dt);
 
       ctx.clearRect(0, 0, w, h);
 
@@ -552,10 +530,22 @@ export function RiverScene() {
       aria-hidden
       className="keep-motion pointer-events-none absolute inset-0 -z-10"
     >
+      {/* Each layer is pushed by the pointer in proportion to its depth, so
+          the near fog runs ahead of the far fog and the bank shears instead of
+          sliding as one sheet. The markup is the only thing that decides how
+          many there are: the effect picks up every [data-depth] it finds. */}
       <div data-depth="30" className="river-layer">
         <div className="river-band" />
       </div>
-      <div ref={lanternRef} className="river-lantern" />
+      <div data-depth="64" className="river-layer">
+        <div className="river-fog river-fog-a" />
+      </div>
+      <div data-depth="38" className="river-layer">
+        <div className="river-fog river-fog-b" />
+      </div>
+      <div data-depth="92" className="river-layer">
+        <div className="river-fog river-fog-c" />
+      </div>
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <div className="river-vignette" />
     </div>

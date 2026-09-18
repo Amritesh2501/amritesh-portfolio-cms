@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Arrow } from "@/components/site/Arrow";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getProjectBySlug, getProjects, getSettings } from "@/lib/content";
@@ -326,11 +327,8 @@ export default async function ProjectPage({
                 {next.title}
               </span>
             </span>
-            <span
-              aria-hidden
-              className="shrink-0 text-[1.75rem] text-[var(--accent-ink)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-2"
-            >
-              &rarr;
+            <span aria-hidden className="arrow-ring h-14 w-14 text-[1.5rem]">
+              <Arrow />
             </span>
           </Link>
         </nav>

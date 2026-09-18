@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 
 /**
- * The intro: the name rises letter by letter over a thin progress line, then
- * two curtains lift away to reveal the page.
+ * The intro: the mark settles over a drawn rule, the name rises letter by
+ * letter, then the ground splits apart and the page is underneath.
  *
  * Why it is shaped like this:
  *  - It is in the server HTML, so it covers the very first paint. Mounting it
@@ -13,15 +13,17 @@ import { useEffect, useState } from "react";
  *    session has already seen it, so repeat navigations never flash it either.
  *  - The whole sequence is CSS-timed, which is also the hard ceiling: nothing
  *    here can trap a visitor, with or without JavaScript.
- *  - Transform and opacity only. The previous fog intro scaled two
- *    viewport-and-a-half noise textures, blurred a glowing ring with a
- *    drop-shadow and mirrored it with box-reflect, all while the page hydrated
- *    underneath. That was the lag.
+ *  - Transform and opacity only, on two promoted layers. This runs while the
+ *    page below is hydrating, so a frame spent on layout or paint is a frame
+ *    the main thread has not got. The fog intro before it scaled two
+ *    viewport-and-a-half noise textures and blurred a glowing ring; the
+ *    curtain version after that lifted two full-viewport gradients in
+ *    sequence. Both were overdraw at exactly the wrong moment.
  *  - Still behind the `site.showIntro` CMS toggle.
  */
-const SESSION_KEY = "intro-shown-v5";
+const SESSION_KEY = "intro-shown-v6";
 // Keep in step with the timings in globals.css (Intro).
-const TOTAL_MS = 2300;
+const TOTAL_MS = 2000;
 
 const HIDE_IF_SEEN = `try{if(sessionStorage.getItem("${SESSION_KEY}")==="1")document.documentElement.dataset.intro="seen"}catch(e){document.documentElement.dataset.intro="seen"}`;
 
@@ -68,23 +70,22 @@ export function BootScreen({
   return (
     <>
       <script dangerouslySetInnerHTML={{ __html: HIDE_IF_SEEN }} />
-      <div className="intro keep-motion">
-        <div aria-hidden className="intro-curtain intro-curtain-back" />
-        <div role="status" aria-live="polite" className="intro-curtain intro-curtain-front">
-          <div className="intro-stage">
-            <span aria-hidden className="intro-mark t-serif">
-              {logoText}
-            </span>
-            <p aria-hidden className="intro-name">
-              {Array.from(name).map((char, i) => (
-                <span key={i} style={{ animationDelay: `${0.15 + i * 0.03}s` }}>
-                  {char}
-                </span>
-              ))}
-            </p>
-            <span aria-hidden className="intro-bar" />
-            <span className="sr-only">Loading {name}</span>
-          </div>
+      <div className="intro keep-motion" role="status" aria-live="polite">
+        <div aria-hidden className="intro-half intro-half-top" />
+        <div aria-hidden className="intro-half intro-half-bottom" />
+        <div className="intro-stage">
+          <span aria-hidden className="intro-mark t-serif">
+            {logoText}
+          </span>
+          <span aria-hidden className="intro-rule" />
+          <p aria-hidden className="intro-name">
+            {Array.from(name).map((char, i) => (
+              <span key={i} style={{ animationDelay: `${0.3 + i * 0.026}s` }}>
+                {char}
+              </span>
+            ))}
+          </p>
+          <span className="sr-only">Loading {name}</span>
         </div>
       </div>
     </>

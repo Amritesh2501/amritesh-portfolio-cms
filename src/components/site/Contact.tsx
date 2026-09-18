@@ -1,4 +1,5 @@
 import type { HomeData } from "@/lib/content";
+import { Arrow } from "./Arrow";
 import { ContactForm, CopyButton } from "./ContactForm";
 import { Reveal } from "./Reveal";
 
@@ -71,12 +72,7 @@ export function Contact({
                       className="btn btn-sm group"
                     >
                       {social.label}
-                      <span
-                        aria-hidden
-                        className="text-[var(--accent-ink)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                      >
-                        &#8599;
-                      </span>
+                      <Arrow direction="up-right" className="text-[var(--accent-ink)]" />
                     </a>
                   </li>
                 ))}
