@@ -90,7 +90,7 @@ export function Certifications({ certifications }: { certifications: Cert[] }) {
                 <span className="cert-name t-display block text-[clamp(1.25rem,2.6vw,2rem)] text-[var(--fg)]">
                   {cert.name}
                 </span>
-                <span className="t-meta mt-2 block text-[0.5625rem]">{cert.issuer}</span>
+                <span className="t-meta mt-2 block text-[0.6875rem]">{cert.issuer}</span>
               </span>
               <span className="flex items-center gap-5">
                 {cert.certificateImage ? (

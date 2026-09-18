@@ -27,7 +27,7 @@ export function Contact({
       <div aria-hidden className="contact-ripples" />
 
       <Reveal>
-        <p className="t-serif max-w-[15ch] text-[clamp(2.75rem,7vw,5.5rem)] leading-[0.95] text-[var(--fg)] [text-shadow:0_0_40px_rgba(190,150,255,0.25)]">
+        <p className="t-serif max-w-[15ch] pb-1 text-[clamp(2.75rem,7vw,5.5rem)] leading-[1.1] text-[var(--fg)]">
           {heading}
         </p>
       </Reveal>
@@ -41,7 +41,7 @@ export function Contact({
         <div className="grid content-start gap-12">
           {email ? (
             <Reveal delay={0.1}>
-              <p className="text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--muted)]">
+              <p className="t-label text-[var(--muted)]">
                 Write directly
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -58,7 +58,7 @@ export function Contact({
 
           {socials.length > 0 ? (
             <Reveal delay={0.16}>
-              <p className="text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--muted)]">
+              <p className="t-label text-[var(--muted)]">
                 Elsewhere
               </p>
               <ul className="mt-4 flex flex-wrap gap-2">
@@ -89,7 +89,7 @@ export function Contact({
               <dl className="grid gap-6 border-t border-[var(--line)] pt-8 sm:grid-cols-2">
                 {availability ? (
                   <div>
-                    <dt className="t-meta text-[0.5625rem]">Status</dt>
+                    <dt className="t-meta text-[0.6875rem]">Status</dt>
                     <dd className="mt-2.5 flex items-center gap-2.5 text-[0.9375rem] text-[var(--fg)]">
                       <span
                         aria-hidden
@@ -101,7 +101,7 @@ export function Contact({
                 ) : null}
                 {location ? (
                   <div>
-                    <dt className="t-meta text-[0.5625rem]">Based in</dt>
+                    <dt className="t-meta text-[0.6875rem]">Based in</dt>
                     <dd className="mt-2.5 text-[0.9375rem] text-[var(--fg)]">{location}</dd>
                   </div>
                 ) : null}
@@ -112,7 +112,7 @@ export function Contact({
 
         <Reveal delay={0.12}>
           <div className="card contact-panel p-6 sm:p-10">
-            <p className="t-serif text-[2rem] leading-none text-[var(--fg)]">Send a message</p>
+            <p className="t-serif pb-1 text-[2rem] leading-[1.1] text-[var(--fg)]">Send a message</p>
             <div className="mt-8">
               <ContactForm />
             </div>

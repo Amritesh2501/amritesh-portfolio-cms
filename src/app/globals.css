@@ -13,7 +13,7 @@
    ------------------------------------------------------------------------- */
 
 @theme {
-  --font-display: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
 
   --color-bg: var(--bg);
@@ -31,6 +31,9 @@
   --surface: #170d2b;
   --elevated: #221539;
   --fg: #efe7ff;
+  /* One step down from --fg, above --muted. Secondary headlines sit here, so
+     they read as quieter than the section heading without dropping to body. */
+  --fg-soft: color-mix(in srgb, var(--fg) 78%, var(--muted));
   --muted: #a898c8;
   --accent: #b18cff;
 
@@ -69,6 +72,7 @@
   --surface: #ffffff;
   --elevated: #ede4fa;
   --fg: #221338;
+  --fg-soft: color-mix(in srgb, var(--fg) 78%, var(--muted));
   --muted: #6b5a8a;
   --line: color-mix(in srgb, var(--fg) 10%, transparent);
   --line-strong: color-mix(in srgb, var(--fg) 18%, transparent);
@@ -639,16 +643,6 @@ body {
     text-transform: uppercase;
   }
 
-  /* Section index, lettered in the hero's italic serif. */
-  .num {
-    font-family: var(--font-serif), Georgia, serif;
-    font-style: italic;
-    font-size: 1.5rem;
-    line-height: 1;
-    color: var(--accent);
-    text-shadow: 0 0 18px var(--glow);
-  }
-
   .tag {
     border: 1px solid var(--line-strong);
     border-radius: var(--r-full);
@@ -974,8 +968,10 @@ body {
     font-family: var(--font-serif), "Iowan Old Style", Georgia, serif;
     font-style: italic;
     font-weight: 400;
-    letter-spacing: -0.02em;
-    line-height: 1;
+    letter-spacing: -0.012em;
+    /* Not 1: an italic descender (y, g, j, p) clips against a line-height of
+       one, and this class sets names and headlines that contain them. */
+    line-height: 1.08;
   }
 
   /* The scene is always night, whatever the site mode, so its text tokens are
@@ -1064,30 +1060,6 @@ body {
       linear-gradient(to bottom, transparent 86%, var(--bg) 100%);
   }
 
-  .river-scroll-line {
-    position: relative;
-    display: block;
-    width: 1px;
-    height: 44px;
-    overflow: hidden;
-    background: rgba(239, 231, 255, 0.14);
-  }
-
-  .river-scroll-line::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 1px;
-    height: 40%;
-    background: #efe7ff;
-    animation: river-drip 2.4s var(--ease-in-out) infinite;
-  }
-
-  @keyframes river-drip {
-    from { transform: translateY(-100%); }
-    to { transform: translateY(250%); }
-  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -1474,16 +1446,6 @@ body {
     transform: scale(1.04);
   }
 
-  .poster-index {
-    position: absolute;
-    right: clamp(1rem, 2.5vw, 2rem);
-    top: 0.25rem;
-    font-size: clamp(5rem, 10vw, 9rem);
-    line-height: 1;
-    color: rgba(239, 231, 255, 0.06);
-    pointer-events: none;
-  }
-
   .poster-hint {
     position: absolute;
     right: clamp(1.25rem, 3vw, 2.25rem);
@@ -1689,11 +1651,6 @@ body {
     animation: marquee 45s linear infinite;
   }
 
-  .marquee-reverse .marquee-track {
-    animation-direction: reverse;
-    animation-duration: 55s;
-  }
-
   .marquee:hover .marquee-track {
     animation-play-state: paused;
   }
@@ -1714,10 +1671,6 @@ body {
     line-height: 1.15;
     white-space: nowrap;
     color: color-mix(in srgb, var(--fg) 22%, transparent);
-  }
-
-  .marquee-reverse .marquee-item {
-    color: color-mix(in srgb, var(--accent) 30%, transparent);
   }
 
   .marquee-star {

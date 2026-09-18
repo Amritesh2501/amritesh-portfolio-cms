@@ -129,7 +129,7 @@ export function ProjectCard({
             <span className="browser-kind">
               {project.liveUrl ? (
                 <>
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#30d158] shadow-[0_0_8px_#30d158]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#30d158]" />
                   Live
                 </>
               ) : (
@@ -154,14 +154,9 @@ export function ProjectCard({
                   />
                 </Parallax>
               ) : (
-                <>
-                  <span aria-hidden className="poster-index t-serif">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <p className="t-serif relative max-w-[14ch] text-[clamp(1.75rem,3.2vw,2.75rem)] leading-[1.02] text-[var(--fg)]">
-                    {project.title}
-                  </p>
-                </>
+                <p className="t-serif relative max-w-[14ch] text-[clamp(1.75rem,3.2vw,2.75rem)] text-[var(--fg)]">
+                  {project.title}
+                </p>
               )}
               <span aria-hidden className="poster-hint">
                 Hover to preview
@@ -182,14 +177,14 @@ export function ProjectCard({
       </div>
 
       <div className={`lg:col-span-5 ${flip ? "lg:order-1" : ""}`}>
+        {/* No row number here or on the poster: the reader can count, and it
+            was printed twice on every row. The category and year carry the
+            metadata on their own. */}
         <div className="flex items-center gap-4">
-          <span className="t-serif text-[3.5rem] leading-none text-[var(--accent)]">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          <span aria-hidden className="work-rule h-px flex-1 bg-[var(--line-strong)]" />
-          <span className="t-meta text-[0.5625rem] tabular-nums">
+          <span className="t-meta tabular-nums">
             {[project.categoryName, project.year].filter(Boolean).join(" · ")}
           </span>
+          <span aria-hidden className="work-rule h-px flex-1 bg-[var(--line-strong)]" />
         </div>
 
         <h3 className="t-display mt-6 text-[clamp(2rem,3.6vw,3rem)] text-[var(--fg)] transition-colors duration-500 group-hover:text-[var(--accent)]">
@@ -209,10 +204,10 @@ export function ProjectCard({
           <dl className="mt-7 flex flex-wrap gap-x-10 gap-y-3">
             {project.metrics.slice(0, 3).map((metric) => (
               <div key={metric.label}>
-                <dd className="t-serif text-[2rem] leading-none text-[var(--fg)]">
+                <dd className="t-serif text-[2rem] text-[var(--fg)]">
                   {metric.value}
                 </dd>
-                <dt className="t-meta mt-1.5 text-[0.5625rem]">{metric.label}</dt>
+                <dt className="t-meta mt-1.5 text-[0.6875rem]">{metric.label}</dt>
               </div>
             ))}
           </dl>
@@ -225,7 +220,7 @@ export function ProjectCard({
             </span>
           ))}
           {project.technologies.length > TECH_LIMIT ? (
-            <span className="t-meta text-[0.5625rem]">
+            <span className="t-meta text-[0.6875rem]">
               +{project.technologies.length - TECH_LIMIT}
             </span>
           ) : null}
@@ -271,7 +266,7 @@ function LiveFrame({ url, title, external }: { url: string; title: string; exter
       {!loaded ? (
         <span className="peek-loading">
           <span className="peek-skeleton" />
-          <span className="t-meta text-[0.5625rem]">Loading preview</span>
+          <span className="t-meta text-[0.6875rem]">Loading preview</span>
         </span>
       ) : null}
       <div className="peek-scroll">

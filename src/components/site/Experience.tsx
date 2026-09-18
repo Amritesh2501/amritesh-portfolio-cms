@@ -11,7 +11,7 @@ function yearSpan(start: Date | null, end: Date | null, current: boolean) {
   const from = start ? new Date(start).getFullYear() : null;
   const to = current ? "Now" : end ? new Date(end).getFullYear() : null;
   if (!from) return to ? String(to) : "";
-  return !to || to === from ? String(from) : `${from} – ${to}`;
+  return !to || to === from ? String(from) : `${from}-${to}`;
 }
 
 /**
@@ -45,10 +45,10 @@ export function Experience({
                 />
 
                 <Reveal delay={i * 0.04} className="md:pr-10 md:pt-5 md:text-right">
-                  <p className="t-serif text-[1.625rem] leading-none text-[var(--fg)]">
+                  <p className="t-serif text-[1.625rem] text-[var(--fg)]">
                     {yearSpan(role.startDate, role.endDate, role.currentlyWorking)}
                   </p>
-                  <p className="t-meta mt-2 tabular-nums text-[0.5625rem]">
+                  <p className="t-meta mt-2 tabular-nums text-[0.6875rem]">
                     {dateRange(role.startDate, role.endDate, role.currentlyWorking)}
                   </p>
                 </Reveal>
@@ -88,11 +88,11 @@ export function Experience({
                         {role.achievements.map((item) => (
                           <li
                             key={item}
-                            className="relative pl-7 text-[0.9375rem] leading-relaxed tracking-[-0.012em] text-[var(--muted)]"
+                            className="relative pl-6 text-[0.9375rem] leading-relaxed tracking-[-0.012em] text-[var(--muted)]"
                           >
                             <span
                               aria-hidden
-                              className="absolute left-0.5 top-[0.45em] h-3 w-3 rounded-full border border-[var(--accent)] shadow-[0_0_10px_-2px_var(--glow)]"
+                              className="absolute left-0 top-[0.62em] h-1.5 w-1.5 rounded-full bg-[var(--accent)]"
                             />
                             {item}
                           </li>
@@ -120,7 +120,7 @@ export function Experience({
       {education.length > 0 ? (
         <div className="mt-20">
           <Reveal>
-            <p className="text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--fg)]">
+            <p className="t-display text-[1.375rem] text-[var(--fg)]">
               Education
             </p>
           </Reveal>
@@ -139,7 +139,7 @@ export function Experience({
                     {[entry.field, entry.institution].filter(Boolean).join(", ")}
                   </p>
                 </div>
-                <p className="t-meta tabular-nums text-[0.5625rem] sm:text-right">
+                <p className="t-meta tabular-nums text-[0.6875rem] sm:text-right">
                   {dateRange(entry.startDate, entry.endDate, false)}
                   {entry.location ? (
                     <>

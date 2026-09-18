@@ -3,22 +3,24 @@ import { HeroParallax } from "./Parallax";
 import { Reveal } from "./Reveal";
 import { RiverScene } from "./RiverScene";
 
+/**
+ * Four things and nothing else: what he does, who he is, one line, two ways
+ * in. The availability flag lives in the header and again in Contact, the
+ * longer description opens About, and the "Scroll" cue is gone: a full-height
+ * hero over a moving river already reads as the top of a page.
+ */
 export function Hero({
   name,
   headline,
   tagline,
-  description,
   resumeUrl,
   hasProjects,
-  availability,
 }: {
   name: string;
   headline: string;
   tagline: string;
-  description: string;
   resumeUrl: string;
   hasProjects: boolean;
-  availability: { status: string; text: string } | null;
 }) {
   // Positioning is one CMS string split on its separator, so editing
   // "Full Stack Developer | Cloud & AI Engineer" in admin changes both halves.
@@ -34,39 +36,11 @@ export function Hero({
     >
       <RiverScene />
 
-      <div className="relative mx-auto w-full max-w-[1400px] px-6 py-24 sm:px-8 lg:px-12">
+      <div className="relative mx-auto w-full max-w-[1400px] px-6 pt-20 pb-24 sm:px-8 lg:px-12">
         <HeroParallax depth={0.55} className="max-w-[46rem]">
-          {availability?.text ? (
-            <Reveal afterIntro y={16}>
-              <span className="chip">
-                {/* Real semantic state: whether he is open to work right now. */}
-                <span
-                  aria-hidden
-                  className="h-1.5 w-1.5 rounded-[var(--r-full)]"
-                  style={{
-                    background:
-                      availability.status === "OPEN" ? "#30d158" : "var(--muted)",
-                    boxShadow:
-                      availability.status === "OPEN" ? "0 0 8px #30d158" : "none",
-                  }}
-                />
-                {availability.text}
-              </span>
-            </Reveal>
-          ) : null}
-
-          <Reveal afterIntro delay={0.1} y={40}>
-            <h1
-              id="hero-heading"
-              className="t-serif mt-6 text-[clamp(3.25rem,9vw,7.5rem)] text-[var(--fg)] [text-shadow:0_0_40px_rgba(190,150,255,0.35)]"
-            >
-              {name}
-            </h1>
-          </Reveal>
-
           {positions.length > 0 ? (
-            <Reveal afterIntro delay={0.22}>
-              <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] font-medium uppercase tracking-[0.24em] text-[var(--muted)]">
+            <Reveal afterIntro y={16}>
+              <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] font-medium uppercase tracking-[0.24em] text-[var(--muted)]">
                 {positions.map((position, i) => (
                   <span key={position} className="flex items-center gap-4">
                     {i > 0 ? (
@@ -79,32 +53,34 @@ export function Hero({
             </Reveal>
           ) : null}
 
+          <Reveal afterIntro delay={0.12} y={40}>
+            <h1
+              id="hero-heading"
+              className="t-serif mt-5 text-[clamp(3.25rem,9vw,7rem)] text-[var(--fg)]"
+            >
+              {name}
+            </h1>
+          </Reveal>
+
           {tagline ? (
-            <Reveal afterIntro delay={0.34}>
-              <p className="t-serif mt-10 max-w-[30ch] text-[clamp(1.5rem,2.6vw,2.125rem)] text-[var(--fg-soft)]">
+            <Reveal afterIntro delay={0.26}>
+              <p className="mt-6 max-w-[38ch] text-[clamp(1.0625rem,1.7vw,1.375rem)] leading-relaxed tracking-[-0.016em] text-[var(--fg-soft)]">
                 {tagline}
               </p>
             </Reveal>
           ) : null}
 
-          {description ? (
-            <Reveal afterIntro delay={0.44}>
-              <p className="mt-5 max-w-[52ch] text-[1.0625rem] leading-relaxed tracking-[-0.014em] text-[var(--muted)]">
-                {description}
-              </p>
-            </Reveal>
-          ) : null}
-
-          <Reveal afterIntro delay={0.54}>
+          <Reveal afterIntro delay={0.38}>
             <div className="mt-10 flex flex-wrap gap-3">
               {hasProjects ? (
                 <Link href="/#work" className="btn btn-solid">
                   View projects
                 </Link>
-              ) : null}
-              <Link href="/#contact" className="btn">
-                Let&apos;s work together
-              </Link>
+              ) : (
+                <Link href="/#contact" className="btn btn-solid">
+                  Get in touch
+                </Link>
+              )}
               {resumeUrl ? (
                 <a
                   href={resumeUrl}
@@ -120,14 +96,6 @@ export function Hero({
           </Reveal>
         </HeroParallax>
       </div>
-
-      <a
-        href="#work"
-        className="keep-motion absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-3 text-[0.625rem] font-medium uppercase tracking-[0.28em] text-[var(--muted)] transition-colors hover:text-[var(--fg)] sm:left-[27%]"
-      >
-        Scroll
-        <span aria-hidden className="river-scroll-line" />
-      </a>
     </section>
   );
 }

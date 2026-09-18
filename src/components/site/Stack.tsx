@@ -5,9 +5,11 @@ import { RevealGroup, RevealItem, SkillMeter } from "./Reveal";
 import { Empty } from "./Section";
 
 /**
- * Stack: two marquee rows of every skill name running in opposite directions
- * (and drifting with the scroll), then one card per area with a meter for
- * each skill, then the certifications.
+ * Stack: one marquee of every skill name (drifting with the scroll), then one
+ * card per area with a meter for each skill, then the certifications.
+ *
+ * One row, not two counter-running ones. The second row read as filler: the
+ * same device twice adds no information and halves the impact of the first.
  */
 export function Stack({
   skillGroups,
@@ -17,17 +19,13 @@ export function Stack({
   certifications: HomeData["certifications"];
 }) {
   const names = skillGroups.flatMap((group) => group.skills.map((skill) => skill.name));
-  const half = Math.ceil(names.length / 2);
 
   return (
     <>
       {names.length > 0 ? (
-        <div aria-hidden className="-mx-6 grid gap-3 overflow-hidden sm:-mx-8 lg:-mx-12">
+        <div aria-hidden className="-mx-6 overflow-hidden sm:-mx-8 lg:-mx-12">
           <ScrollDrift distance={220} className="-mx-32">
-            <Marquee items={names.slice(0, half)} />
-          </ScrollDrift>
-          <ScrollDrift distance={-220} className="-mx-32">
-            <Marquee items={names.slice(half)} reverse />
+            <Marquee items={names} />
           </ScrollDrift>
         </div>
       ) : null}
@@ -64,7 +62,7 @@ export function Stack({
   );
 }
 
-function Marquee({ items, reverse = false }: { items: string[]; reverse?: boolean }) {
+function Marquee({ items }: { items: string[] }) {
   if (items.length === 0) return null;
   // Two copies side by side; the track slides by exactly one copy, so it loops
   // without a seam. keep-motion: the marquee was asked to move, so it runs even
@@ -80,7 +78,7 @@ function Marquee({ items, reverse = false }: { items: string[]; reverse?: boolea
     </span>
   );
   return (
-    <div className={`marquee keep-motion ${reverse ? "marquee-reverse" : ""}`}>
+    <div className="marquee keep-motion">
       <div className="marquee-track">{[copy("a"), copy("b")]}</div>
     </div>
   );

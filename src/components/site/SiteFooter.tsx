@@ -29,7 +29,7 @@ export async function SiteFooter() {
 
           {nav.length > 0 ? (
             <nav aria-label="Footer">
-              <p className="t-meta text-[0.5625rem]">Sections</p>
+              <p className="t-meta text-[0.6875rem]">Sections</p>
               <ul className="mt-5 grid gap-3">
                 {nav.map((item) => (
                   <li key={item.id}>
@@ -49,7 +49,7 @@ export async function SiteFooter() {
 
           {socials.length > 0 ? (
             <div>
-              <p className="t-meta text-[0.5625rem]">Elsewhere</p>
+              <p className="t-meta text-[0.6875rem]">Elsewhere</p>
               <ul className="mt-5 grid gap-3">
                 {socials.map((social) => (
                   <li key={social.id}>
@@ -69,10 +69,10 @@ export async function SiteFooter() {
         </div>
 
         <div className="flex flex-col gap-3 border-t border-[var(--line)] py-7 sm:flex-row sm:items-center sm:justify-between">
-          <p className="t-meta text-[0.5625rem]">{settings.get("site.copyright")}</p>
+          <p className="t-meta text-[0.6875rem]">{settings.get("site.copyright")}</p>
           <Link
             href="/admin"
-            className="t-meta text-[0.5625rem] transition-colors hover:text-[var(--fg)]"
+            className="t-meta text-[0.6875rem] transition-colors hover:text-[var(--fg)]"
           >
             CMS
           </Link>
