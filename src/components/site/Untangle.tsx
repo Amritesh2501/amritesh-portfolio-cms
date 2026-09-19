@@ -13,8 +13,13 @@ import { LEVELS, buildBoard, countCrossings } from "@/lib/untangle";
  *
  * Coordinates are a 0..1 unit square, so the board is resolution independent:
  * the SVG viewBox scales it and nothing recalculates on resize.
+ *
+ * onSolved is how the world outside hears about a clean board: the gate in the
+ * experiments world is locked on the first one. It fires once per board rather
+ * than on every render, because "solved" is derived from the node positions
+ * and stays true for as long as the player leaves them alone.
  */
-export function Untangle() {
+export function Untangle({ onSolved }: { onSolved?: (level: number) => void } = {}) {
   const [level, setLevel] = useState(0);
   const [board, setBoard] = useState(() => buildBoard(0));
   const [dragging, setDragging] = useState<number | null>(null);
@@ -27,6 +32,13 @@ export function Untangle() {
   );
 
   const solved = crossings === 0;
+
+  const firedFor = useRef(-1);
+  useEffect(() => {
+    if (!solved || firedFor.current === level) return;
+    firedFor.current = level;
+    onSolved?.(level);
+  }, [solved, level, onSolved]);
 
   /** Pointer position as 0..1 of the board, clamped inside it. */
   const toBoard = useCallback((clientX: number, clientY: number) => {
@@ -84,6 +96,9 @@ export function Untangle() {
   };
 
   const reset = (next: number) => {
+    // Re-arms onSolved, so shuffling a solved board and clearing it again
+    // reports a fresh win rather than being swallowed as a repeat.
+    firedFor.current = -1;
     setLevel(next);
     setBoard(buildBoard(next));
     setMoves(0);
