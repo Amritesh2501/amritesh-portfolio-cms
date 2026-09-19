@@ -109,6 +109,15 @@ function themeInit(defaultMode: string) {
  * Touch is NOT a signal on its own: a current phone outruns plenty of laptops.
  * What it does mean is a mobile GPU, which is where full-screen blend modes and
  * backdrop filters get expensive, so it counts only alongside something else.
+ *
+ * prefers-reduced-motion is NOT a signal here either, and it used to be worth
+ * two points, which was enough to grade any machine low on its own. It is a
+ * preference, not a benchmark: Windows' "Animation effects: off" sets it on a
+ * desktop that can run anything, and the result was a workstation with no
+ * smooth scrolling and half the page's effects stripped out. The setting is
+ * already honoured on its own terms, in the reduced-motion media queries in
+ * globals.css and through useReducedMotion in the components, which is the
+ * right place for it: that visitor asked for less movement, not less fidelity.
  */
 const GRADE_DEVICE = `try{
 var n=navigator,m=matchMedia,w=0;
@@ -116,7 +125,6 @@ if((n.hardwareConcurrency||8)<=4)w++;
 if((n.deviceMemory||8)<=4)w++;
 if(n.connection&&n.connection.saveData)w+=2;
 if(m("(pointer: coarse)").matches)w++;
-if(m("(prefers-reduced-motion: reduce)").matches)w+=2;
 if(w>=2)document.documentElement.dataset.perf="low";
 }catch(e){}`;
 

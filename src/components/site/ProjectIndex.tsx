@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Arrow } from "./Arrow";
 import { Empty } from "./Section";
 import type { CardProject } from "./ProjectCard";
@@ -12,11 +11,25 @@ import type { CardProject } from "./ProjectCard";
  *
  * Deliberately not the home page's layout. There, four projects get a whole
  * viewport each and the point is to look at them. Here the point is to find
- * one, so it is a list read down its left edge: title, one line, category and
- * year, with a thumbnail that opens out only on the row under the pointer.
+ * one, so it is a numbered ledger: index, plate, title, one line, year.
  *
- * The category filters live here rather than on the home page, because this is
- * the only view with enough in it to be worth narrowing.
+ * Two things this is built to avoid, both of which were felt as the page
+ * stuttering rather than seen as a design problem:
+ *
+ *  - The thumbnail track is a FIXED width and the plate is always there. It
+ *    used to be a zero-width grid column that transitioned open on hover, and
+ *    animating a grid track is a full layout of the list on every frame of a
+ *    600ms transition. Running the pointer down forty rows while scrolling
+ *    queued forty of those, on the same main thread that the smooth scroller
+ *    sets the scroll position from, so the page appeared to give up scrolling.
+ *    Hover now only moves transforms and colours, which never leave the
+ *    compositor.
+ *
+ *  - Filtering is a CSS enter animation keyed on the active filter, not a
+ *    per-row layout animation. motion's `layout` measures every row it is on
+ *    whenever anything reflows, which is the same cost arriving from the other
+ *    direction. Nothing here reorders in place, it swaps sets, so a stagger
+ *    says the same thing for none of it.
  */
 export function ProjectIndex({
   projects,
@@ -26,7 +39,6 @@ export function ProjectIndex({
   categories: { slug: string; name: string }[];
 }) {
   const [active, setActive] = useState("all");
-  const reduce = useReducedMotion();
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
@@ -78,26 +90,25 @@ export function ProjectIndex({
       {filtered.length === 0 ? (
         <Empty>Nothing published in this category yet.</Empty>
       ) : (
-        <ul className="index-list">
-          <AnimatePresence mode="popLayout" initial={false}>
-            {filtered.map((project, i) => (
-              <motion.li
-                key={project.id}
-                layout={!reduce}
-                initial={reduce ? false : { opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0 }}
-                transition={{
-                  duration: 0.45,
-                  delay: reduce ? 0 : Math.min(i, 8) * 0.04,
-                  ease: [0.22, 1, 0.36, 1],
-                  layout: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
-                }}
-              >
-                <IndexCard project={project} tone={["a", "b", "c"][i % 3]} />
-              </motion.li>
-            ))}
-          </AnimatePresence>
+        // Keyed on the filter, so switching category remounts the list and
+        // every row plays its enter animation again. One line instead of an
+        // AnimatePresence.
+        <ul key={active} className="index-list">
+          {filtered.map((project, i) => (
+            <li
+              key={project.id}
+              className="index-item"
+              // Capped: past the eighth row the stagger is only delaying
+              // content that is below the fold anyway.
+              style={{ animationDelay: `${Math.min(i, 8) * 45}ms` }}
+            >
+              <IndexCard
+                project={project}
+                position={i + 1}
+                tone={["a", "b", "c"][i % 3]}
+              />
+            </li>
+          ))}
         </ul>
       )}
     </div>
@@ -105,20 +116,34 @@ export function ProjectIndex({
 }
 
 /**
- * One entry in the index.
+ * One entry in the index: a numbered ledger line.
  *
- * A row, not a tile. The two-column plate grid this replaces gave every
- * project a big picture and a paragraph, which is the home page's job; an
- * index is read down its left edge, and a column of titles you can run your
- * eye along beats a mosaic you have to scan in two dimensions. The thumbnail
- * is still here, but it earns its place by opening out on hover rather than
- * sitting at full size on all of them at once.
+ * The number is the design. A long list of titles needs a left edge with a
+ * rhythm to it, and a counting column gives the eye something to travel down
+ * and a way to say where something was. The plate beside it is small, square
+ * and permanently visible rather than a reveal, because an index is scanned
+ * and a picture that only exists under the pointer cannot be scanned.
+ *
+ * Everything that happens on hover is transform and colour: the plate lifts
+ * its image, the title and the arrow slide, a wash fades in behind the row.
  */
-function IndexCard({ project, tone }: { project: CardProject; tone: string }) {
-  const meta = [project.categoryName, project.year].filter(Boolean).join(" · ");
-
+function IndexCard({
+  project,
+  position,
+  tone,
+}: {
+  project: CardProject;
+  position: number;
+  tone: string;
+}) {
   return (
     <Link href={`/projects/${project.slug}`} className="index-row group">
+      <span aria-hidden className="index-row-wash" />
+
+      <span className="index-num t-meta tabular-nums" aria-hidden>
+        {String(position).padStart(2, "0")}
+      </span>
+
       <span className={`index-thumb plate-${tone}`} aria-hidden>
         {project.preview ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -130,17 +155,27 @@ function IndexCard({ project, tone }: { project: CardProject; tone: string }) {
         )}
       </span>
 
-      <span className="index-row-body">
-        <h2 className="t-display text-[clamp(1.375rem,2.6vw,2rem)] text-[var(--fg)] transition-colors duration-500 group-hover:text-[var(--accent-ink)]">
+      <div className="index-row-body">
+        <h2 className="index-title t-display text-[clamp(1.375rem,2.6vw,2rem)]">
           {project.title}
         </h2>
         <span className="mt-2 block max-w-[52ch] text-[0.9375rem] leading-relaxed tracking-[-0.012em] text-[var(--muted)]">
           {project.shortDescription}
         </span>
-      </span>
+        {project.technologies.length > 0 ? (
+          <span className="index-row-tech" aria-hidden>
+            {project.technologies.slice(0, 3).join(" · ")}
+          </span>
+        ) : null}
+      </div>
 
       <span className="index-row-meta">
-        {meta ? <span className="t-meta tabular-nums">{meta}</span> : null}
+        {project.year ? (
+          <span className="t-serif index-year tabular-nums">{project.year}</span>
+        ) : null}
+        {project.categoryName ? (
+          <span className="t-meta mt-1 block">{project.categoryName}</span>
+        ) : null}
       </span>
 
       {/* The index arrow is bare: no ring. A ring on every row of a long list

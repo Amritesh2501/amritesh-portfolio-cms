@@ -291,6 +291,516 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+   The experiments world
+
+   A drawn scene wider than any screen, with a camera over it. The camera is
+   ONE transform on .xw-stage with a transition on it: moving between two
+   places is two numbers and a scale, and the compositor does the rest. There
+   is no per-frame JavaScript in this whole screen.
+
+   Everything here is scoped under .xw and inherits the terminal's green, so
+   the world reads as the same place the text was typed in.
+   ------------------------------------------------------------------------- */
+
+.xp.is-world {
+  /* The world frames itself; the page underneath must not scroll behind it. */
+  overflow: hidden;
+}
+
+.xw {
+  position: absolute;
+  inset: 0;
+}
+
+.xw-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #04060b;
+}
+
+/* left/top 50% with a 0 0 origin is what makes the camera maths one line: the
+   stage's own origin sits at the centre of the screen, so translating by
+   -x,-y puts world point (x, y) dead centre whatever the zoom is. */
+.xw-stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 0 0;
+  will-change: transform;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.62, 0.02, 0.24, 1);
+}
+
+.xw-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The black. On at mount with no transition, so the world is never glimpsed
+   before the camera has been placed; the fade only exists on the way out. */
+.xw-black {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1s var(--ease-out);
+}
+
+.xw-black.is-on {
+  opacity: 1;
+  transition: none;
+}
+
+/* --- Scene materials ----------------------------------------------------- */
+
+.xw-stone {
+  fill: #101c18;
+  stroke: var(--xp-dim);
+  stroke-width: 1.5;
+  stroke-opacity: 0.55;
+}
+
+.xw-iron {
+  fill: #16241f;
+  stroke: var(--xp-dim);
+  stroke-width: 1.5;
+}
+
+.xw-iron-line {
+  stroke: var(--xp-dim);
+  stroke-width: 3;
+}
+
+/* Each leaf foreshortens toward its own post. transform-box: view-box puts the
+   origin in viewBox units, which is the only coordinate system the scene is
+   authored in, so the hinge is literally the post's inner edge. */
+.xw-leaf {
+  transform-box: view-box;
+  transition: transform 1.6s cubic-bezier(0.34, 1.2, 0.5, 1);
+}
+
+.xw-leaf-l {
+  transform-origin: 746px 650px;
+}
+
+.xw-leaf-r {
+  transform-origin: 1054px 650px;
+}
+
+.xw-gate.is-open .xw-leaf {
+  transform: scaleX(0.12);
+}
+
+.xw-lamp-glow,
+.xw-beacon-glow {
+  animation: xw-flicker 5.5s ease-in-out infinite;
+}
+
+@keyframes xw-flicker {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  45% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.6;
+  }
+}
+
+.xw-roof {
+  fill: #12201b;
+  stroke: var(--xp-dim);
+  stroke-width: 2;
+}
+
+.xw-wall {
+  fill: #0d1814;
+  stroke: var(--xp-dim);
+  stroke-width: 2;
+}
+
+.xw-window,
+.xw-door {
+  fill: #0a120f;
+  stroke: var(--xp-dim);
+  stroke-width: 2;
+  transition: fill 0.9s var(--ease-out);
+}
+
+.xw-house.is-lit .xw-window,
+.xw-house.is-lit .xw-door {
+  fill: color-mix(in srgb, var(--xp-fg) 38%, #0a120f);
+  stroke: var(--xp-fg);
+}
+
+.xw-plaque {
+  fill: #0d1814;
+  stroke: var(--xp-dim);
+  stroke-width: 1.5;
+}
+
+.xw-plaque-text {
+  fill: var(--xp-dim);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.18em;
+  text-anchor: middle;
+}
+
+.xw-mast.is-live .xw-iron-line {
+  stroke: var(--xp-fg);
+  stroke-opacity: 0.8;
+}
+
+/* --- HUD ----------------------------------------------------------------- */
+
+.xw-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(1rem, 3vw, 2rem);
+  /* The scene under it stays clickable-through; only the controls take the
+     pointer, so the HUD never becomes a sheet of glass over the world. */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-out);
+}
+
+.xw-hud.is-in {
+  opacity: 1;
+}
+
+.xw-hud-top,
+.xw-hud-bottom {
+  pointer-events: auto;
+}
+
+.xw-hud-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.xw-title {
+  font-size: 0.75rem;
+  letter-spacing: 0.32em;
+  color: var(--xp-fg);
+}
+
+.xw-count {
+  margin-right: auto;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--xp-dim);
+}
+
+.xw-hud-bottom {
+  display: grid;
+  gap: 0.875rem;
+  max-width: 62ch;
+}
+
+.xw-blurb {
+  margin: 0;
+  font-size: clamp(0.8125rem, 2.4vw, 0.9375rem);
+  line-height: 1.7;
+  color: var(--xp-fg);
+  /* The scene behind is dark but not uniformly, and this sits over ground fog
+     at some stations. A shadow is cheaper than a plate behind the text. */
+  text-shadow:
+    0 2px 14px #04060b,
+    0 0 4px #04060b;
+}
+
+.xw-stations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.xw-station {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 28%, transparent);
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, #04060b 72%, transparent);
+  color: var(--xp-dim);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition:
+    border-color 0.3s var(--ease-out),
+    color 0.3s var(--ease-out),
+    transform 0.3s var(--ease-out);
+}
+
+.xw-station:hover:not(:disabled) {
+  color: var(--xp-fg);
+  border-color: var(--xp-fg);
+  transform: translateY(-2px);
+}
+
+.xw-station.is-here {
+  color: var(--xp-fg);
+  border-color: var(--xp-fg);
+}
+
+.xw-station.is-done {
+  color: var(--xp-fg);
+}
+
+.xw-station:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- The puzzle panel ---------------------------------------------------- */
+
+.xw-panel {
+  position: absolute;
+  z-index: 4;
+  inset: auto 0 0;
+  max-height: 88%;
+  overflow-y: auto;
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  background: color-mix(in srgb, #04060b 94%, transparent);
+  animation: xw-panel-in 0.5s var(--ease-out) both;
+}
+
+@media (min-width: 900px) {
+  /* On a wide screen it is a column on the right, so the thing you just zoomed
+     into is still on screen next to the puzzle about it. */
+  .xw-panel {
+    inset: 0 0 0 auto;
+    width: min(30rem, 42vw);
+    max-height: none;
+    border-top: 0;
+    border-left: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+    align-content: start;
+    animation-name: xw-panel-in-side;
+  }
+}
+
+@keyframes xw-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes xw-panel-in-side {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.xw-panel:focus {
+  outline: none;
+}
+
+.xw-panel-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.xw-panel-title {
+  margin: 0;
+  font-size: 1.125rem;
+  letter-spacing: 0.04em;
+  color: var(--xp-fg);
+}
+
+.xw-panel-blurb {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--xp-dim);
+}
+
+.xw-panel-won {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 20%, transparent);
+  font-size: 0.875rem;
+  color: var(--xp-fg);
+}
+
+.xw-panel-won p {
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Minigames shared chrome (Order, Recall)
+   ------------------------------------------------------------------------- */
+
+.mg {
+  display: grid;
+  gap: 1rem;
+  font-family: var(--font-mono);
+}
+
+.mg-hud {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--xp-dim);
+}
+
+.mg-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--xp-dim);
+}
+
+.mg-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* Order */
+
+.mg-order {
+  display: grid;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mg-floor {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 16%, transparent);
+  border-radius: var(--r-sm);
+  background: #070c10;
+  font-size: 0.875rem;
+  color: var(--xp-dim);
+  transition:
+    border-color 0.3s var(--ease-out),
+    color 0.3s var(--ease-out);
+}
+
+.mg-floor.is-home {
+  border-color: color-mix(in srgb, var(--xp-fg) 55%, transparent);
+  color: var(--xp-fg);
+}
+
+.mg-floor-n {
+  font-size: 0.6875rem;
+  opacity: 0.6;
+}
+
+.mg-floor-arrows {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.mg-nudge {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--xp-fg);
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.2s var(--ease-out);
+}
+
+.mg-nudge:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--xp-fg) 16%, transparent);
+}
+
+.mg-nudge:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.mg-order.is-solved .mg-floor {
+  border-color: var(--xp-fg);
+}
+
+/* Recall */
+
+.mg-pads {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.mg-pad {
+  padding: clamp(1.25rem, 5vw, 2.25rem) 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 24%, transparent);
+  border-radius: var(--r-sm);
+  background: #070c10;
+  color: var(--xp-dim);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  transition:
+    background 0.18s var(--ease-out),
+    color 0.18s var(--ease-out),
+    border-color 0.18s var(--ease-out);
+}
+
+.mg-pad:hover:not(:disabled) {
+  border-color: var(--xp-fg);
+  color: var(--xp-fg);
+}
+
+.mg-pad:disabled {
+  cursor: default;
+}
+
+.mg-pad.is-lit {
+  background: color-mix(in srgb, var(--xp-fg) 78%, transparent);
+  border-color: var(--xp-fg);
+  color: #05060a;
+}
+
+/* ---------------------------------------------------------------------------
    Untangle
    ------------------------------------------------------------------------- */
 
@@ -2144,47 +2654,88 @@ html {
     border-top: 1px solid var(--line);
   }
 
-  /* One row. The thumbnail column is a fixed track that grows on hover, so the
-     title stays on the same left edge all the way down the list: the whole
-     point of a list is that the eye does not have to go looking. */
+  /* One row, on a track grid that NEVER changes width. Every hover state below
+     is transform, opacity or colour, so running the pointer down a long list
+     while the page is scrolling costs the compositor and nothing else. The
+     version this replaces transitioned grid-template-columns to open the
+     thumbnail, which relaid out the whole list on every frame it ran; see
+     ProjectIndex for the full account. */
   .index-row {
+    position: relative;
+    /* Its own stacking context, so the wash below can sit at z-index -1 and
+       land behind the row's content but still in front of the page ground.
+       Without it, -1 escapes to the root and the body background eats it. */
+    isolation: isolate;
     display: grid;
-    grid-template-columns: 0 minmax(0, 1fr) auto;
+    grid-template-columns: auto 3.5rem minmax(0, 1fr) auto;
     align-items: center;
-    gap: 0 clamp(1rem, 2.5vw, 2rem);
-    padding: clamp(1.5rem, 2.4vw, 2.25rem) 0;
+    gap: 0 clamp(0.875rem, 2vw, 1.75rem);
+    padding: clamp(1.25rem, 2vw, 1.75rem) 0;
     border-bottom: 1px solid var(--line);
-    transition:
-      grid-template-columns 0.6s var(--ease-out),
-      padding 0.4s var(--ease-out),
-      border-color 0.4s var(--ease-out);
+    transition: border-color 0.4s var(--ease-out);
   }
 
-  .index-row:hover {
-    border-color: var(--line-strong);
-  }
-
-  @media (min-width: 768px) {
-    .index-row:hover,
-    .index-row:focus-visible {
-      grid-template-columns: clamp(7rem, 13vw, 11rem) minmax(0, 1fr) auto;
+  @media (min-width: 640px) {
+    .index-row {
+      grid-template-columns: auto 5rem minmax(0, 1fr) auto auto;
+      gap: 0 clamp(1rem, 2.5vw, 2rem);
     }
   }
 
+  .index-row:hover,
+  .index-row:focus-visible {
+    border-color: var(--line-strong);
+    outline: none;
+  }
+
+  /* The wash sits behind the row and bleeds past the content edges, so the
+     highlight reads as the row lighting up rather than as a card appearing.
+     Opacity only: no box-shadow, nothing that repaints its neighbours. */
+  .index-row-wash {
+    position: absolute;
+    inset: 0 clamp(-1.5rem, -2vw, -0.75rem);
+    z-index: -1;
+    border-radius: var(--r-sm);
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--accent) 9%, transparent),
+      transparent 60%
+    );
+    opacity: 0;
+    transition: opacity 0.4s var(--ease-out);
+  }
+
+  .index-row:hover .index-row-wash,
+  .index-row:focus-visible .index-row-wash {
+    opacity: 1;
+  }
+
+  /* The counting column. It is the list's left edge and its rhythm, so it is
+     the one thing that does not move or fade on hover. */
+  .index-num {
+    align-self: start;
+    padding-top: 0.45rem;
+    font-size: 0.6875rem;
+    opacity: 0.45;
+    transition: opacity 0.4s var(--ease-out), color 0.4s var(--ease-out);
+  }
+
+  .index-row:hover .index-num,
+  .index-row:focus-visible .index-num {
+    color: var(--accent-ink);
+    opacity: 1;
+  }
+
+  /* Square, small and always visible: an index is scanned, and a picture that
+     exists only under the pointer cannot be scanned. */
   .index-thumb {
     position: relative;
     display: grid;
     place-items: center;
     overflow: hidden;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 1;
     border-radius: var(--r-sm);
-    opacity: 0;
-    transition: opacity 0.5s var(--ease-out);
-  }
-
-  .index-row:hover .index-thumb,
-  .index-row:focus-visible .index-thumb {
-    opacity: 1;
+    border: 1px solid var(--line);
   }
 
   .index-thumb img {
@@ -2192,16 +2743,67 @@ html {
     width: 100%;
     object-fit: cover;
     object-position: 50% 0%;
+    opacity: 0.55;
+    filter: saturate(0.6);
+    transform: scale(1.01);
+    transition:
+      opacity 0.5s var(--ease-out),
+      filter 0.5s var(--ease-out),
+      transform 0.6s var(--ease-out);
+  }
+
+  .index-row:hover .index-thumb img,
+  .index-row:focus-visible .index-thumb img {
+    opacity: 1;
+    filter: saturate(1);
+    transform: scale(1.09);
   }
 
   .index-thumb-letter {
-    font-size: 2.25rem;
+    font-size: 1.5rem;
     line-height: 1;
-    color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: color-mix(in srgb, var(--accent) 55%, transparent);
   }
 
   .index-row-body {
     min-width: 0;
+    /* Slides the whole text block a few pixels toward the arrow on hover.
+       transform, so the row's height and the rows under it never move. */
+    transition: transform 0.5s var(--ease-out);
+  }
+
+  @media (min-width: 768px) {
+    .index-row:hover .index-row-body,
+    .index-row:focus-visible .index-row-body {
+      transform: translateX(0.375rem);
+    }
+  }
+
+  .index-title {
+    color: var(--fg);
+    transition: color 0.5s var(--ease-out);
+  }
+
+  .index-row:hover .index-title,
+  .index-row:focus-visible .index-title {
+    color: var(--accent-ink);
+  }
+
+  /* The stack, set as one quiet line rather than as tag pills. Pills on every
+     row of an index are a wall of chips; this is a caption. */
+  .index-row-tech {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .index-row-tech {
+      display: block;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--muted) 72%, transparent);
+    }
   }
 
   .index-row-meta {
@@ -2214,6 +2816,15 @@ html {
       text-align: right;
       white-space: nowrap;
     }
+  }
+
+  /* The year set in the serif at size, so the right edge has a column of its
+     own to read down rather than a line of small grey type. */
+  .index-year {
+    display: block;
+    font-size: clamp(1.125rem, 2vw, 1.5rem);
+    line-height: 1;
+    color: var(--fg-soft);
   }
 
   /* The bare index arrow: it slides the width of the gap rather than sitting
@@ -2235,8 +2846,24 @@ html {
     transform: translateX(0.5rem);
   }
 
-  /* Three grounds, cycled, so an entry with no thumbnail still has a face and
-     a column of them does not repeat. */
+  /* The filter's enter animation. Keyed by remounting the list, so there is no
+     JavaScript animating anything here at all; the reduced-motion block near
+     the top of this file already flattens it to nothing. */
+  .index-item {
+    animation: index-in 0.5s var(--ease-out) both;
+  }
+
+  @keyframes index-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
   .plate-a {
     background:
       radial-gradient(70% 90% at 90% 0%, var(--scene-wash-a), transparent 65%),

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useReducedMotion } from "motion/react";
-import { Untangle } from "./Untangle";
+import { World } from "./World";
 
 const LINES = [
   "You have left the portfolio.",
@@ -32,15 +32,25 @@ const LINE_MS = 260;
  *
  * Under prefers-reduced-motion nothing types at all: the text is simply there,
  * which is the same information without the two seconds of movement.
+ *
+ * "Start exploring" cuts to black and hands over to the world. The terminal is
+ * unmounted rather than hidden, so the typed copy, its timers and its scroll
+ * position are all gone by the time the camera moves; the world comes up under
+ * a black plate of its own and fades it off once the shot is composed, which
+ * is what makes the cut read as a cut rather than as a screen being replaced.
  */
 export function ExperimentsIntro() {
   const reduce = useReducedMotion();
   const [typed, setTyped] = useState(reduce ? LINES.join("\n") : "");
   const [done, setDone] = useState(Boolean(reduce));
   const [started, setStarted] = useState(false);
-  const gameRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // `done` guards the way BACK: leaving the world remounts the terminal, and
+    // without it the warning would type itself out a second time underneath
+    // buttons that are already on screen.
+    if (started || done) return;
+
     if (reduce) {
       setTyped(LINES.join("\n"));
       setDone(true);
@@ -64,14 +74,15 @@ export function ExperimentsIntro() {
 
     timer = window.setTimeout(step, 600);
     return () => window.clearTimeout(timer);
-  }, [reduce]);
+  }, [reduce, started, done]);
 
-  useEffect(() => {
-    if (!started) return;
-    // Focus moves to the board so the keyboard route into the game works and
-    // the page announces that something new has arrived.
-    gameRef.current?.focus();
-  }, [started]);
+  if (started) {
+    return (
+      <div className="xp is-world">
+        <World onExit={() => setStarted(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="xp">
@@ -83,7 +94,7 @@ export function ExperimentsIntro() {
           {!done ? <span className="xp-caret" /> : null}
         </pre>
 
-        {done && !started ? (
+        {done ? (
           <div className="xp-actions">
             <button
               type="button"
@@ -95,12 +106,6 @@ export function ExperimentsIntro() {
             <a href="/" className="btn btn-sm">
               Back to the portfolio
             </a>
-          </div>
-        ) : null}
-
-        {started ? (
-          <div className="xp-game" ref={gameRef} tabIndex={-1}>
-            <Untangle />
           </div>
         ) : null}
       </div>
