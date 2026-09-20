@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
+import * as sound from "@/lib/sound";
 import { World } from "./World";
 
 const LINES = [
   "You have left the portfolio.",
   "",
   "What is through here is not finished, and some of it is not serious.",
-  "Expect minigames, small puzzles, and pieces of the site scattered",
-  "across them. Solve one, get a piece back.",
+  "There is a room, a shelf, and four files on it. Three of them are",
+  "holding a piece of this site. Open one, solve what is inside, get the",
+  "piece back.",
   "",
-  "The whole thing only assembles once you have found them all.",
+  "It has sound. There is a switch for that in the corner.",
   "",
   "Nothing you do here can break anything. Nothing is saved.",
 ];
@@ -21,6 +23,9 @@ const LINES = [
 const CHAR_MS = 18;
 // A held beat at the end of a line, so the text breathes instead of pouring.
 const LINE_MS = 260;
+
+/** How long the screen stays black before the room arrives. */
+const BLACK_MS = 1900;
 
 /**
  * The gate: a black screen that types its warning, then offers a way in.
@@ -33,17 +38,19 @@ const LINE_MS = 260;
  * Under prefers-reduced-motion nothing types at all: the text is simply there,
  * which is the same information without the two seconds of movement.
  *
- * "Start exploring" cuts to black and hands over to the world. The terminal is
- * unmounted rather than hidden, so the typed copy, its timers and its scroll
- * position are all gone by the time the camera moves; the world comes up under
- * a black plate of its own and fades it off once the shot is composed, which
- * is what makes the cut read as a cut rather than as a screen being replaced.
+ * "Start exploring" is also where the audio is allowed to exist. A browser
+ * will not let a page make a sound until somebody has clicked something, and
+ * this is the click — which is convenient, because it is also the moment the
+ * sound is supposed to arrive. The screen goes black, the hit lands, and the
+ * room is built underneath while nobody can see it.
  */
 export function ExperimentsIntro() {
   const reduce = useReducedMotion();
   const [typed, setTyped] = useState(reduce ? LINES.join("\n") : "");
   const [done, setDone] = useState(Boolean(reduce));
   const [started, setStarted] = useState(false);
+  const [entering, setEntering] = useState(false);
+  const timer = useRef<number>(0);
 
   useEffect(() => {
     // `done` guards the way BACK: leaving the world remounts the terminal, and
@@ -59,7 +66,7 @@ export function ExperimentsIntro() {
 
     const full = LINES.join("\n");
     let i = 0;
-    let timer: number;
+    let t: number;
 
     const step = () => {
       i++;
@@ -69,23 +76,42 @@ export function ExperimentsIntro() {
         return;
       }
       // A newline is a beat, not a character.
-      timer = window.setTimeout(step, full[i] === "\n" ? LINE_MS : CHAR_MS);
+      t = window.setTimeout(step, full[i] === "\n" ? LINE_MS : CHAR_MS);
     };
 
-    timer = window.setTimeout(step, 600);
-    return () => window.clearTimeout(timer);
+    t = window.setTimeout(step, 600);
+    return () => window.clearTimeout(t);
   }, [reduce, started, done]);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const enter = () => {
+    if (entering) return;
+    setEntering(true);
+    // Must happen inside the click, or the browser refuses the context.
+    if (sound.unlock()) sound.sting();
+    timer.current = window.setTimeout(
+      () => setStarted(true),
+      reduce ? 700 : BLACK_MS,
+    );
+  };
+
+  const leave = () => {
+    sound.stopDrone();
+    setStarted(false);
+    setEntering(false);
+  };
 
   if (started) {
     return (
       <div className="xp is-world">
-        <World onExit={() => setStarted(false)} />
+        <World onExit={leave} />
       </div>
     );
   }
 
   return (
-    <div className="xp">
+    <div className={`xp ${entering ? "is-entering" : ""}`}>
       <div className="xp-inner">
         <p className="sr-only">{LINES.join(" ")}</p>
 
@@ -99,9 +125,10 @@ export function ExperimentsIntro() {
             <button
               type="button"
               className="btn btn-solid"
-              onClick={() => setStarted(true)}
+              onClick={enter}
+              disabled={entering}
             >
-              Start exploring
+              {entering ? "…" : "Start exploring"}
             </button>
             <a href="/" className="btn btn-sm">
               Back to the portfolio
@@ -109,6 +136,9 @@ export function ExperimentsIntro() {
           </div>
         ) : null}
       </div>
+
+      {/* The cut. Covers the terminal, holds, and the room comes up under it. */}
+      <div aria-hidden className={`xp-cut ${entering ? "is-on" : ""}`} />
     </div>
   );
 }
