@@ -1,0 +1,1757 @@
+/**
+ * THE AMRITESH FILES.
+ *
+ * Scoped to this route rather than added to globals.css, which is long enough
+ * already and has nothing else to say about any of this.
+ *
+ * The palette is the brief's: black, charcoal, brown, beige paper, one warm
+ * tungsten and one cold window. Amber carries every interactive state, and red
+ * appears only where red appears in a real file — on a stamp. Nothing glows
+ * unless it is a screen or a lamp.
+ *
+ * The page pins its own tokens rather than touching data-mode: a case file
+ * that politely turned itself beige to match a light-mode preference would not
+ * read as having left the portfolio.
+ */
+
+.fg-root,
+.fg-boot {
+  --ink: #050507;
+  --char: #121317;
+  --raise: #1b1d22;
+  --line: #2a2d34;
+  --paper: #cfc3a4;
+  --paper-dim: #9c9076;
+  --text: #cdd1d8;
+  --dim: #767b84;
+  --amber: #e0a250;
+  --cool: #7aa6d8;
+  --stamp: #9c3636;
+
+  --mono: var(--font-jetbrains), ui-monospace, monospace;
+  --serif: var(--font-serif), Georgia, serif;
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--mono);
+  -webkit-font-smoothing: antialiased;
+}
+
+.fg-root *,
+.fg-boot * {
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------------------
+   Boot
+   ------------------------------------------------------------------------- */
+
+.fg-boot {
+  display: grid;
+  place-items: center;
+  padding: 6vh 6vw;
+  overflow-y: auto;
+  transition: opacity 1s ease;
+}
+
+.fg-boot.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fg-boot-inner {
+  width: min(78ch, 100%);
+}
+
+.fg-boot-term {
+  margin: 0;
+  font: 400 clamp(0.72rem, 1.4vw, 0.88rem) / 1.9 var(--mono);
+  color: var(--dim);
+  white-space: pre-wrap;
+  letter-spacing: 0.06em;
+}
+
+.fg-boot-warning {
+  margin-top: clamp(1.6rem, 5vh, 3rem);
+  border-top: 1px solid var(--line);
+  padding-top: clamp(1.2rem, 3vh, 2rem);
+}
+
+.fg-boot-warning h1 {
+  margin: 0 0 1.2rem;
+  font: 700 clamp(1.6rem, 5vw, 2.6rem) / 1 var(--mono);
+  letter-spacing: 0.22em;
+  color: var(--stamp);
+}
+
+.fg-boot-warning pre {
+  margin: 0;
+  font: 400 clamp(0.78rem, 1.5vw, 0.95rem) / 1.85 var(--mono);
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.fg-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 0.15em;
+  background: currentColor;
+  vertical-align: -0.18em;
+  animation: fg-blink 1s steps(2) infinite;
+}
+
+@keyframes fg-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.fg-boot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-top: clamp(1.8rem, 5vh, 3rem);
+  animation: fg-rise 0.7s var(--ease, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+/** The authorization control: a plate with a status lamp, not a web button. */
+.fg-auth {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.95rem 2rem;
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, transparent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--amber) 8%, transparent);
+  color: var(--amber);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.fg-auth:hover,
+.fg-auth:focus-visible {
+  background: color-mix(in srgb, var(--amber) 16%, transparent);
+  border-color: var(--amber);
+}
+
+.fg-auth-label {
+  font: 700 clamp(0.9rem, 2vw, 1.05rem) / 1 var(--mono);
+  letter-spacing: 0.2em;
+}
+
+.fg-auth-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.64rem;
+  letter-spacing: 0.24em;
+  color: color-mix(in srgb, var(--amber) 70%, var(--dim));
+}
+
+.fg-auth-sub::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--stamp);
+  animation: fg-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes fg-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes fg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Camera
+   ------------------------------------------------------------------------- */
+
+.fg-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--ink);
+}
+
+.fg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+  /* The one transition that makes the camera cinematic rather than snappy. */
+  transition: transform 1.25s cubic-bezier(0.22, 1, 0.28, 1);
+}
+
+/* A plane is inert; the interactive things standing on it are not. The art
+   never takes a click, so a full-bleed SVG cannot swallow the hotspot in
+   front of it. */
+.fg-layer {
+  pointer-events: none;
+}
+
+.fg-hot,
+.fg-anchor {
+  pointer-events: auto;
+}
+
+.fg-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fg-anchor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+/** The black plate a room comes up under. */
+.fg-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: var(--ink);
+  pointer-events: none;
+  animation: fg-lift 2.2s ease forwards;
+}
+
+@keyframes fg-lift {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Hotspots
+   ------------------------------------------------------------------------- */
+
+.fg-hot {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--amber);
+}
+
+.fg-hot:disabled {
+  cursor: default;
+}
+
+/* Subtle by default: a thin bracket, not a halo around every object. */
+.fg-hot-ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--amber) 22%, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.fg-hot-ring::before,
+.fg-hot-ring::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--amber);
+}
+
+.fg-hot-ring::before {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.fg-hot-ring::after {
+  right: -1px;
+  bottom: -1px;
+  border-left: 0;
+  border-top: 0;
+}
+
+/* A slow breath so a dark room still reads as having something live in it. */
+.fg-hot.is-open .fg-hot-ring {
+  opacity: 0.4;
+  animation: fg-breathe 3.4s ease-in-out infinite;
+}
+
+.fg-hot.is-open:hover .fg-hot-ring,
+.fg-hot.is-open:focus-visible .fg-hot-ring {
+  opacity: 1;
+  animation: none;
+}
+
+@keyframes fg-breathe {
+  50% {
+    opacity: 0.72;
+  }
+}
+
+.fg-hot.is-done .fg-hot-ring {
+  opacity: 0.16;
+  border-color: color-mix(in srgb, var(--text) 30%, transparent);
+}
+
+.fg-hot.is-done .fg-hot-ring::before,
+.fg-hot.is-done .fg-hot-ring::after {
+  border-color: color-mix(in srgb, var(--text) 40%, transparent);
+}
+
+.fg-hot-tag {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.35rem 0.6rem;
+  background: color-mix(in srgb, #000 82%, transparent);
+  border-left: 2px solid var(--amber);
+  opacity: 0;
+  transform-origin: center;
+  transition: opacity 0.25s ease;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.fg-hot:hover .fg-hot-tag,
+.fg-hot:focus-visible .fg-hot-tag {
+  opacity: 1;
+}
+
+.fg-hot.is-done .fg-hot-tag {
+  border-left-color: var(--dim);
+}
+
+.fg-hot-kicker {
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  color: var(--amber);
+}
+
+.fg-hot.is-done .fg-hot-kicker {
+  color: var(--dim);
+}
+
+.fg-hot-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------------------
+   HUD
+   ------------------------------------------------------------------------- */
+
+.fg-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  padding: clamp(1rem, 2.6vw, 2.1rem);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+}
+
+.fg-hud-tl {
+  position: absolute;
+  top: clamp(1rem, 2.6vw, 2.1rem);
+  left: clamp(1rem, 2.6vw, 2.1rem);
+  width: min(23ch, 40vw);
+}
+
+.fg-hud-tr {
+  position: absolute;
+  top: clamp(1rem, 2.6vw, 2.1rem);
+  right: clamp(1rem, 2.6vw, 2.1rem);
+  width: min(22ch, 36vw);
+  text-align: right;
+}
+
+.fg-hud-code {
+  margin: 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  color: var(--dim);
+}
+
+.fg-hud-title {
+  margin: 0.2rem 0 0.7rem;
+  font: 400 clamp(1.1rem, 2.6vw, 1.7rem) / 1 var(--mono);
+  letter-spacing: 0.18em;
+  color: var(--text);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.55rem;
+}
+
+.fg-hud-key {
+  margin: 0.9rem 0 0.2rem;
+  font-size: 0.56rem;
+  letter-spacing: 0.26em;
+  color: var(--dim);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--line);
+}
+
+.fg-hud-val {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.74rem;
+}
+
+.fg-hud-count {
+  margin: 0.2rem 0 0;
+  font: 400 clamp(1.3rem, 3vw, 1.9rem) / 1 var(--mono);
+  color: var(--amber);
+  letter-spacing: 0.06em;
+}
+
+.fg-hud-objectives,
+.fg-hud-list,
+.fg-hud-cases {
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.34rem;
+}
+
+.fg-hud-objectives li,
+.fg-hud-list li {
+  display: flex;
+  gap: 0.55rem;
+  align-items: baseline;
+  font-size: 0.68rem;
+  color: var(--dim);
+}
+
+.fg-hud-tr li {
+  flex-direction: row-reverse;
+}
+
+.fg-hud-objectives li.is-done,
+.fg-hud-list li.is-got {
+  color: var(--text);
+}
+
+.fg-hud-list li.is-got span[aria-hidden] {
+  color: var(--amber);
+}
+
+/* Unrecovered evidence is named but not legible: the shape of the answer is
+   the tease, and reading it off the HUD would be the whole case for free. */
+.fg-redact {
+  position: relative;
+  color: transparent;
+  background: color-mix(in srgb, var(--text) 16%, transparent);
+  border-radius: 1px;
+}
+
+.fg-meter {
+  display: block;
+  height: 8px;
+  margin-top: 0.4rem;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, #000 50%, transparent);
+}
+
+.fg-meter span {
+  display: block;
+  height: 100%;
+  background: var(--amber);
+  transition: width 0.7s ease;
+}
+
+.fg-hud-cases li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  font-size: 0.66rem;
+  color: var(--dim);
+  border-bottom: 1px dotted color-mix(in srgb, var(--line) 80%, transparent);
+  padding-bottom: 0.22rem;
+}
+
+.fg-hud-cases li.is-solved {
+  color: var(--amber);
+}
+
+.fg-hud-cases li.is-sealed .fg-hud-case-count {
+  color: color-mix(in srgb, var(--dim) 70%, transparent);
+}
+
+.fg-hud-quote {
+  margin: 1.4rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font: italic 400 0.86rem/1.5 var(--serif);
+  letter-spacing: 0;
+  color: var(--paper-dim);
+}
+
+.fg-hud-quote span {
+  display: block;
+  margin-top: 0.3rem;
+  padding-left: 2.4rem;
+}
+
+.fg-hud-station {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1rem, 3vw, 2.4rem);
+  transform: translateX(-50%);
+  width: min(46ch, 84vw);
+  text-align: center;
+}
+
+.fg-hud-station-name {
+  margin: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  color: var(--amber);
+}
+
+.fg-hud-station-blurb {
+  margin: 0.35rem 0 0;
+  font: italic 400 0.95rem/1.5 var(--serif);
+  letter-spacing: 0;
+  color: var(--text);
+}
+
+.fg-hud-controls {
+  position: absolute;
+  left: clamp(1rem, 2.6vw, 2.1rem);
+  bottom: clamp(1rem, 2.6vw, 2.1rem);
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, #000 55%, transparent);
+}
+
+.fg-hud-controls p {
+  margin: 0;
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  color: var(--dim);
+}
+
+.fg-nudge {
+  position: absolute;
+  z-index: 25;
+  left: 50%;
+  bottom: clamp(5.5rem, 13vh, 8rem);
+  transform: translateX(-50%);
+  padding: 0.6rem 1.4rem;
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent);
+  background: color-mix(in srgb, #000 70%, transparent);
+  color: var(--amber);
+  font: 400 0.64rem var(--mono);
+  letter-spacing: 0.24em;
+  cursor: pointer;
+  animation: fg-rise 0.6s ease both;
+}
+
+.fg-nudge:hover,
+.fg-nudge:focus-visible {
+  background: color-mix(in srgb, var(--amber) 14%, transparent);
+}
+
+.fg-toast {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  top: clamp(1rem, 4vh, 3rem);
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.5rem 1.2rem;
+  border-left: 2px solid var(--amber);
+  background: color-mix(in srgb, #000 80%, transparent);
+  color: var(--amber);
+  font-size: 0.64rem;
+  letter-spacing: 0.24em;
+  animation: fg-rise 0.4s ease both;
+}
+
+/* ---------------------------------------------------------------------------
+   Buttons
+   ------------------------------------------------------------------------- */
+
+.fg-btn {
+  display: inline-block;
+  padding: 0.7rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--amber) 10%, transparent);
+  color: var(--amber);
+  font: 400 0.72rem var(--mono);
+  letter-spacing: 0.2em;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.fg-btn:hover:not(:disabled),
+.fg-btn:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--amber) 20%, transparent);
+  border-color: var(--amber);
+}
+
+.fg-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.fg-btn-wide {
+  width: 100%;
+}
+
+.fg-btn-ghost {
+  border-color: var(--line);
+  background: none;
+  color: var(--dim);
+}
+
+.fg-btn-ghost:hover:not(:disabled),
+.fg-btn-ghost:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  border-color: var(--dim);
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------------------
+   Modals
+   ------------------------------------------------------------------------- */
+
+.fg-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  overflow-y: auto;
+  /* The room stays visible behind, darkened and out of focus, so the player
+     never loses their place in it. */
+  background: color-mix(in srgb, #000 74%, transparent);
+  backdrop-filter: blur(7px);
+  animation: fg-fade 0.3s ease both;
+}
+
+@keyframes fg-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.fg-modal-panel {
+  width: min(52ch, 100%);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--raise), var(--char));
+  box-shadow: 0 40px 90px -30px #000;
+  padding: clamp(1.2rem, 3vw, 2rem);
+}
+
+.fg-modal-panel:focus {
+  outline: none;
+}
+
+.fg-modal-head {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+
+.fg-modal-kicker {
+  margin: 0;
+  font-size: 0.56rem;
+  letter-spacing: 0.28em;
+  color: var(--dim);
+}
+
+.fg-modal-title {
+  margin: 0.3rem 0 0.4rem;
+  font: 400 1.35rem/1 var(--mono);
+  letter-spacing: 0.2em;
+  color: var(--amber);
+}
+
+.fg-modal-brief {
+  margin: 0;
+  font: italic 400 0.9rem/1.5 var(--serif);
+  color: var(--text);
+}
+
+.fg-modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.fg-denied {
+  font-size: 0.66rem;
+  letter-spacing: 0.24em;
+  color: var(--stamp);
+  animation: fg-shake 0.4s ease;
+}
+
+@keyframes fg-shake {
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.fg-note {
+  margin: 1rem 0 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+  text-align: center;
+}
+
+.fg-note strong {
+  color: var(--amber);
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------------------------
+   GAME A — timing
+   ------------------------------------------------------------------------- */
+
+.fg-timing {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.fg-rounds {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.fg-rounds span {
+  width: 34px;
+  height: 3px;
+  background: var(--line);
+}
+
+.fg-rounds span.is-done {
+  background: var(--amber);
+}
+
+.fg-rounds span.is-now {
+  background: color-mix(in srgb, var(--amber) 50%, var(--line));
+}
+
+.fg-bar {
+  position: relative;
+  height: 58px;
+  border: 1px solid var(--line);
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, #000 40%, transparent) 0 11px,
+    transparent 11px 12px
+  );
+  overflow: hidden;
+}
+
+.fg-bar.is-hit {
+  border-color: var(--amber);
+}
+
+.fg-bar.is-miss {
+  border-color: var(--stamp);
+}
+
+.fg-bar-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--amber) 22%, transparent);
+  border-left: 1px solid var(--amber);
+  border-right: 1px solid var(--amber);
+}
+
+.fg-bar-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--text);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--text) 60%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+   GAME F — memory
+   ------------------------------------------------------------------------- */
+
+.fg-memory {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.fg-memory-stage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 120px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, #000 40%, transparent);
+}
+
+.fg-glyph.is-big {
+  font-size: 3.4rem;
+  line-height: 1;
+  color: var(--amber);
+}
+
+.fg-glyph.is-idle {
+  color: var(--dim);
+  letter-spacing: 0.4em;
+  font-size: 2rem;
+}
+
+.fg-glyph.is-wrong {
+  color: var(--stamp);
+}
+
+.fg-glyphs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.fg-glyph-btn {
+  width: 54px;
+  height: 54px;
+  border: 1px solid var(--line);
+  background: var(--raise);
+  color: var(--text);
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.fg-glyph-btn:hover:not(:disabled),
+.fg-glyph-btn:focus-visible:not(:disabled) {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.fg-glyph-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------------------
+   GAME G — lock
+   ------------------------------------------------------------------------- */
+
+.fg-lock {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.fg-clues {
+  width: 100%;
+  margin: 0;
+  padding: 0.8rem 1rem;
+  list-style: none;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 5%, transparent);
+  counter-reset: clue;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.fg-clues li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.68rem;
+  counter-increment: clue;
+}
+
+.fg-clues li::before {
+  content: counter(clue) ".";
+  color: var(--amber);
+}
+
+.fg-clue-src {
+  flex: 1;
+  color: var(--dim);
+}
+
+.fg-clue-reads {
+  color: var(--paper);
+  letter-spacing: 0.14em;
+}
+
+.fg-readout {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fg-readout.is-wrong .fg-digit {
+  border-color: var(--stamp);
+  color: var(--stamp);
+  animation: fg-shake 0.4s ease;
+}
+
+.fg-digit {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 62px;
+  border: 1px solid var(--line);
+  background: #000;
+  color: var(--amber);
+  font-size: 1.8rem;
+}
+
+.fg-keypad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.fg-key {
+  padding: 0.7rem 0;
+  border: 1px solid var(--line);
+  background: var(--raise);
+  color: var(--text);
+  font: 400 0.95rem var(--mono);
+  cursor: pointer;
+}
+
+.fg-key:hover,
+.fg-key:focus-visible {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.fg-key-wide {
+  grid-column: span 5;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+}
+
+/* ---------------------------------------------------------------------------
+   GAME H — sweep
+   ------------------------------------------------------------------------- */
+
+.fg-search-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.fg-swatch {
+  padding: 1.2rem 0.6rem;
+  border: 1px solid var(--line);
+  background: var(--raise);
+  color: var(--text);
+  font: 400 0.66rem/1.4 var(--mono);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.fg-swatch:hover,
+.fg-swatch:focus-visible {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.fg-swatch.is-wrong {
+  border-color: var(--stamp);
+  color: var(--stamp);
+  animation: fg-shake 0.4s ease;
+}
+
+/* ---------------------------------------------------------------------------
+   GAME E — filing
+   ------------------------------------------------------------------------- */
+
+.fg-sort {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.fg-doc {
+  display: grid;
+  gap: 0.4rem;
+  place-items: center;
+  padding: 1.6rem 1rem;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 14%, transparent), transparent);
+  transform: rotate(-0.5deg);
+}
+
+.fg-doc-kicker {
+  font-size: 0.54rem;
+  letter-spacing: 0.28em;
+  color: var(--dim);
+}
+
+.fg-doc-label {
+  font: italic 400 1.15rem var(--serif);
+  color: var(--paper);
+}
+
+.fg-bins {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.fg-bin {
+  padding: 0.85rem 0.3rem;
+  border: 1px solid var(--line);
+  background: var(--raise);
+  color: var(--dim);
+  font: 400 0.58rem var(--mono);
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+
+.fg-bin:hover:not(:disabled),
+.fg-bin:focus-visible:not(:disabled) {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.fg-bin.is-wrong {
+  border-color: var(--stamp);
+  color: var(--stamp);
+  animation: fg-shake 0.4s ease;
+}
+
+/* ---------------------------------------------------------------------------
+   GAME I — reconstruct
+   ------------------------------------------------------------------------- */
+
+.fg-chain {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.fg-link {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  background: var(--raise);
+}
+
+.fg-link.is-solved {
+  border-color: color-mix(in srgb, var(--amber) 50%, transparent);
+}
+
+.fg-link-n {
+  color: var(--amber);
+  font-size: 0.7rem;
+}
+
+.fg-link-label {
+  flex: 1;
+  letter-spacing: 0.16em;
+  font-size: 0.8rem;
+}
+
+.fg-link-moves {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.fg-link-moves button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.fg-link-moves button:hover:not(:disabled) {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.fg-link-moves button:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------------------
+   Evidence reward
+   ------------------------------------------------------------------------- */
+
+.fg-modal-panel.is-doc {
+  width: min(58ch, 100%);
+  background: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.fg-reward-kicker {
+  margin: 0;
+  text-align: center;
+  font-size: 0.62rem;
+  letter-spacing: 0.34em;
+  color: var(--amber);
+  animation: fg-rise 0.5s ease both;
+}
+
+/* The payout is typeset as a document extract, not a game popup. */
+.fg-doc-card {
+  position: relative;
+  padding: clamp(1.4rem, 4vw, 2.2rem);
+  background: linear-gradient(175deg, #cfc3a4, #b3a789);
+  color: #1d1810;
+  box-shadow: 0 30px 70px -20px #000;
+  transform: rotate(-0.4deg);
+  animation: fg-rise 0.5s 0.1s ease both;
+}
+
+.fg-doc-card::after {
+  /* Paper tooth. Keeps a big beige slab from reading as flat card stock. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.022) 0 1px,
+    transparent 1px 3px
+  );
+  pointer-events: none;
+}
+
+.fg-doc-card.is-placeholder {
+  background: linear-gradient(175deg, #b8b2a4, #9b9689);
+}
+
+.fg-doc-card header {
+  border-bottom: 1px solid rgba(29, 24, 16, 0.25);
+  padding-bottom: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.fg-doc-tag {
+  font-size: 0.56rem;
+  letter-spacing: 0.28em;
+  color: rgba(29, 24, 16, 0.6);
+}
+
+.fg-doc-card h3 {
+  margin: 0.3rem 0 0;
+  font: 400 clamp(1.1rem, 3vw, 1.5rem) / 1.2 var(--mono);
+  letter-spacing: 0.1em;
+}
+
+.fg-doc-body p {
+  margin: 0 0 0.8rem;
+  font: 400 0.92rem/1.7 var(--serif);
+  letter-spacing: 0;
+}
+
+.fg-doc-body p:last-child {
+  margin-bottom: 0;
+}
+
+.fg-doc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fg-doc-tags li {
+  padding: 0.28rem 0.6rem;
+  border: 1px solid rgba(29, 24, 16, 0.3);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+}
+
+.fg-stamp {
+  position: absolute;
+  right: clamp(1rem, 4vw, 2.2rem);
+  bottom: clamp(1rem, 4vw, 1.8rem);
+  padding: 0.3rem 0.7rem;
+  border: 2px solid rgba(156, 54, 54, 0.55);
+  color: rgba(156, 54, 54, 0.62);
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  transform: rotate(-9deg);
+}
+
+.fg-reward-count {
+  margin: 0;
+  text-align: center;
+  font-size: 0.62rem;
+  letter-spacing: 0.26em;
+  color: var(--dim);
+}
+
+/* ---------------------------------------------------------------------------
+   Folders
+   ------------------------------------------------------------------------- */
+
+.fg-picker {
+  display: grid;
+  gap: 0.7rem;
+  justify-items: center;
+}
+
+.fg-picker-kicker {
+  margin: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  color: var(--amber);
+}
+
+.fg-folders {
+  display: flex;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  align-items: flex-end;
+}
+
+/* A binder, stood on a shelf: a tall spine with a label block, leaning a
+   little, and lifting when you reach for it. */
+.fg-folder {
+  display: grid;
+  gap: 0.5rem;
+  width: 92px;
+  padding: 0.7rem 0.4rem 0.6rem;
+  border: 1px solid #2f2418;
+  border-radius: 1px 1px 3px 3px;
+  background: linear-gradient(90deg, #14100b, #221a11 35%, #171209);
+  color: var(--paper);
+  cursor: pointer;
+  transform: rotate(var(--lean, 0deg));
+  transform-origin: bottom center;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+  box-shadow: 0 10px 22px -10px #000;
+}
+
+.fg-folder:hover:not(:disabled),
+.fg-folder:focus-visible:not(:disabled) {
+  transform: rotate(0deg) translateY(-16px);
+  box-shadow: 0 26px 40px -14px #000;
+}
+
+.fg-folder:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.fg-folder-spine {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  padding: 0.5rem 0.3rem;
+  background: linear-gradient(180deg, rgba(207, 195, 164, 0.72), rgba(185, 173, 142, 0.5));
+  color: #15110b;
+}
+
+.fg-folder-index {
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.fg-folder-name {
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
+  writing-mode: vertical-rl;
+  height: 86px;
+}
+
+.fg-folder-code {
+  font-size: 0.44rem;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+}
+
+.fg-folder-state {
+  font-size: 0.48rem;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+
+.fg-folder.is-open .fg-folder-state {
+  color: var(--amber);
+}
+
+.fg-folder.is-solved .fg-folder-state {
+  color: var(--amber);
+}
+
+/* The chosen binder, face on. */
+.fg-modal.is-folder {
+  place-items: center;
+}
+
+.fg-folder-card {
+  position: relative;
+  width: min(48ch, 100%);
+  padding: clamp(1.6rem, 4vw, 2.6rem);
+  background: linear-gradient(170deg, #2a2118, #191309);
+  border: 1px solid #3a2c1c;
+  box-shadow: 0 50px 100px -30px #000;
+  transform: rotate(-0.6deg);
+  animation: fg-come 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fg-come {
+  from {
+    opacity: 0;
+    transform: rotate(-6deg) translateY(40px) scale(0.86);
+  }
+}
+
+.fg-folder-stamp {
+  position: absolute;
+  top: clamp(1rem, 3vw, 1.6rem);
+  right: clamp(1rem, 3vw, 1.6rem);
+  padding: 0.3rem 0.7rem;
+  border: 2px solid rgba(156, 54, 54, 0.6);
+  color: rgba(156, 54, 54, 0.7);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  transform: rotate(8deg);
+}
+
+.fg-folder-card-code {
+  margin: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  color: var(--dim);
+}
+
+.fg-folder-card-title {
+  margin: 0.3rem 0 0.2rem;
+  font: 400 clamp(1.6rem, 5vw, 2.4rem) / 1 var(--mono);
+  letter-spacing: 0.18em;
+  color: var(--paper);
+}
+
+.fg-folder-card-place {
+  margin: 0 0 1.1rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  color: var(--amber);
+}
+
+.fg-folder-card-synopsis {
+  margin: 0 0 1.4rem;
+  font: italic 400 0.98rem/1.65 var(--serif);
+  color: var(--text);
+}
+
+.fg-folder-meta {
+  display: flex;
+  gap: 2.4rem;
+  margin: 0 0 1.6rem;
+  padding-top: 1rem;
+  border-top: 1px solid #3a2c1c;
+}
+
+.fg-folder-meta dt {
+  font-size: 0.54rem;
+  letter-spacing: 0.24em;
+  color: var(--dim);
+}
+
+.fg-folder-meta dd {
+  margin: 0.3rem 0 0;
+  font-size: 0.92rem;
+  letter-spacing: 0.1em;
+  color: var(--amber);
+}
+
+.fg-folder-actions {
+  display: grid;
+  gap: 0.6rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Page turn
+   ------------------------------------------------------------------------- */
+
+.fg-turn {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: #000;
+  animation: fg-fade 0.4s ease both;
+  perspective: 1400px;
+}
+
+.fg-turn-stack {
+  position: relative;
+  width: min(40ch, 70vw);
+  aspect-ratio: 3 / 4;
+  transform-style: preserve-3d;
+  animation: fg-turn-in 2.2s cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+
+/* The camera pushes through the stack and out the far side. */
+@keyframes fg-turn-in {
+  0% {
+    transform: scale(0.72) translateZ(0);
+  }
+  70% {
+    transform: scale(1.5) translateZ(90px);
+  }
+  100% {
+    transform: scale(7) translateZ(500px);
+    opacity: 0;
+  }
+}
+
+.fg-turn-page {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+  padding: 2.2rem 1.8rem;
+  background: linear-gradient(175deg, #cfc3a4, #a89c80);
+  transform-origin: left center;
+  backface-visibility: hidden;
+  box-shadow: 0 20px 50px -14px #000;
+  animation: fg-page 1.5s cubic-bezier(0.55, 0, 0.3, 1) both;
+}
+
+@keyframes fg-page {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(-168deg);
+  }
+}
+
+.fg-turn-rule {
+  display: block;
+  height: 7px;
+  background: rgba(29, 24, 16, 0.22);
+}
+
+.fg-turn-rule.is-short {
+  width: 45%;
+}
+
+.fg-turn-status {
+  position: absolute;
+  bottom: 12%;
+  margin: 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  color: var(--dim);
+}
+
+/* Reduced motion: keep the beat, drop the spin. */
+.fg-turn.is-reduced .fg-turn-stack,
+.fg-turn.is-reduced .fg-turn-page {
+  animation: fg-fade 0.4s ease both;
+}
+
+.fg-turn.is-reduced.is-late .fg-turn-stack {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+/* ---------------------------------------------------------------------------
+   Pause
+   ------------------------------------------------------------------------- */
+
+.fg-pause {
+  width: min(40ch, 100%);
+  padding: clamp(1.6rem, 4vw, 2.4rem);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--raise), #0b0c0e);
+  box-shadow: 0 50px 100px -30px #000;
+}
+
+.fg-pause:focus {
+  outline: none;
+}
+
+.fg-pause-kicker {
+  margin: 0;
+  font-size: 0.58rem;
+  letter-spacing: 0.3em;
+  color: var(--amber);
+}
+
+.fg-pause-title {
+  margin: 0.3rem 0 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+  font: 400 1.25rem/1 var(--mono);
+  letter-spacing: 0.18em;
+  color: var(--text);
+}
+
+.fg-menu {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.fg-menu button,
+.fg-menu a {
+  display: block;
+  width: 100%;
+  padding: 0.72rem 0.9rem;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: none;
+  color: var(--dim);
+  font: 400 0.74rem var(--mono);
+  letter-spacing: 0.22em;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.fg-menu button:hover:not(:disabled),
+.fg-menu button:focus-visible:not(:disabled),
+.fg-menu a:hover,
+.fg-menu a:focus-visible {
+  background: color-mix(in srgb, var(--amber) 10%, transparent);
+  border-left-color: var(--amber);
+  color: var(--amber);
+}
+
+.fg-menu button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.fg-panel {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.fg-panel-line {
+  margin: 0;
+  font: 400 0.76rem/1.7 var(--mono);
+  letter-spacing: 0.04em;
+  color: var(--dim);
+}
+
+.fg-pause-note {
+  margin: 1.2rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  color: var(--amber);
+}
+
+/* ---------------------------------------------------------------------------
+   Case solved
+   ------------------------------------------------------------------------- */
+
+.fg-solved {
+  width: min(46ch, 100%);
+  display: grid;
+  gap: 1.2rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.fg-solved-kicker {
+  margin: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.32em;
+  color: var(--dim);
+}
+
+/* The recovered pieces fly in and stack before the verdict lands. */
+.fg-solved-stack {
+  display: grid;
+  gap: 0.28rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fg-solved-stack li {
+  padding: 0.5rem 0.9rem;
+  border-left: 2px solid var(--amber);
+  background: color-mix(in srgb, var(--paper) 8%, transparent);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(14px) rotate(-1deg);
+  transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fg-solved-stack li.is-in {
+  opacity: 1;
+  transform: translateY(0) rotate(calc(var(--i) * 0.22deg - 0.4deg));
+}
+
+.fg-solved-title {
+  margin: 0;
+  font: 400 clamp(1.3rem, 4vw, 1.9rem) / 1.2 var(--mono);
+  letter-spacing: 0.2em;
+  color: var(--amber);
+  animation: fg-rise 0.6s ease both;
+}
+
+.fg-solved-line {
+  margin: 0;
+  font: italic 400 0.95rem/1.6 var(--serif);
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------------------
+   Small screens
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  /* Section 35: simplify the interface rather than shrink the desktop one.
+     The evidence rail and the quote are the two things a phone cannot spare
+     the width for, and neither is load-bearing — the count stays. */
+  .fg-hud-quote,
+  .fg-hud-list,
+  .fg-hud-controls {
+    display: none;
+  }
+
+  .fg-hud-tl,
+  .fg-hud-tr {
+    width: auto;
+    max-width: 44vw;
+  }
+
+  .fg-hud-station {
+    bottom: 0.8rem;
+    width: 88vw;
+  }
+
+  .fg-hud-station-blurb {
+    font-size: 0.85rem;
+  }
+
+  .fg-folders {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 82vw;
+  }
+
+  .fg-folder {
+    width: 74px;
+  }
+
+  .fg-folder-name {
+    height: 66px;
+  }
+
+  .fg-search-grid,
+  .fg-bins {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .fg-hot-tag {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion
+   ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* The camera transition stays: it is navigation, and cutting it to zero
+     would teleport the player between shots with no sense of the room being
+     continuous. Everything decorative goes. */
+  .fg-layer {
+    transition-duration: 0.5s;
+  }
+
+  .fg-caret,
+  .fg-auth-sub::before,
+  .fg-hot.is-open .fg-hot-ring {
+    animation: none;
+  }
+
+  .fg-hot.is-open .fg-hot-ring {
+    opacity: 0.6;
+  }
+
+  .fg-doc-card,
+  .fg-folder-card,
+  .fg-boot-actions,
+  .fg-reward-kicker,
+  .fg-solved-title,
+  .fg-toast,
+  .fg-nudge {
+    animation-duration: 0.01ms;
+  }
+
+  .fg-folder:hover:not(:disabled),
+  .fg-folder:focus-visible:not(:disabled) {
+    transform: rotate(0deg) translateY(-6px);
+  }
+
+  .fg-solved-stack li {
+    transition-duration: 0.15s;
+  }
+}
