@@ -202,11 +202,36 @@ export function Stage({
   const cy = scene.world.h / 2;
   const z = fit * shot.z;
 
+  /**
+   * Keep the frame inside the room.
+   *
+   * A station composed on something near an edge — the case whiteboard is
+   * hard against the left wall — wants to centre on it, and centring on it
+   * puts a slab of empty stage in shot. Clamping is what every 2D game camera
+   * does at the edge of a level: the subject slides off centre rather than
+   * the world running out, which is both correct and better composition.
+   *
+   * When the frame is wider than the room, as it is on the establishing shot,
+   * there is nothing to clamp to and it simply centres.
+   */
+  const halfW = view.w / (2 * z);
+  const halfH = view.h / (2 * z);
+  const aim = {
+    x:
+      halfW * 2 >= scene.world.w
+        ? cx
+        : Math.min(Math.max(shot.x, halfW), scene.world.w - halfW),
+    y:
+      halfH * 2 >= scene.world.h
+        ? cy
+        : Math.min(Math.max(shot.y, halfH), scene.world.h - halfH),
+  };
+
   const transformFor = (depth: number) => {
     // Parallax anchored on the middle of the room: layers are registered at
     // the establishing shot and separate either side of it.
-    const px = cx + (shot.x - cx) * depth;
-    const py = cy + (shot.y - cy) * depth;
+    const px = cx + (aim.x - cx) * depth;
+    const py = cy + (aim.y - cy) * depth;
     // The pointer lean scales with depth too, so it reads as the same room
     // turning rather than as the planes sliding independently.
     const lx = look.x * 26 * depth;

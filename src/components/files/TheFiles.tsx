@@ -28,14 +28,8 @@ import { CaseHud, HubHud } from "./Hud";
 import { EvidenceCard, MinigameShell, PauseMenu, type PauseAction } from "./Overlays";
 import { FolderCard, FolderPicker, PageTurn } from "./Shelf";
 import { Hotspot, Stage, type Layer } from "./Stage";
-import {
-  OfficeBack,
-  OfficeMid,
-  OfficeNear,
-  ResidenceBack,
-  ResidenceMid,
-  ResidenceNear,
-} from "./SceneArt";
+import { ResidenceBack, ResidenceMid, ResidenceNear } from "./SceneArt";
+import { OfficeForeground, OfficeLens, OfficePlate } from "./OfficeRoom";
 
 /**
  * THE AMRITESH FILES — the state machine.
@@ -248,21 +242,17 @@ export function TheFiles({
   const officeLayers: Layer[] = useMemo(() => {
     const atShelf = OFFICE.stations[station]?.id === "shelf";
     return [
-      { depth: LAYERS.BACK, node: <OfficeBack w={OFFICE.world.w} h={OFFICE.world.h} /> },
       {
-        depth: LAYERS.MID,
-        node: <OfficeMid w={OFFICE.world.w} h={OFFICE.world.h} />,
-        // The shelf is drawn on the middle plane, so the binders you can
-        // actually pull have to stand on it too or they drift off the ones
-        // that are painted there.
-        hot:
-          atShelf && mode === "office" ? (
-            <div className="fg-anchor" style={{ left: 1483, top: 495 }}>
-              <FolderPicker progress={progress} onPick={openCase} />
-            </div>
-          ) : null,
+        // The photograph, and the binder targets registered to it. Same plane,
+        // because the targets have to stay on the binders they belong to.
+        depth: 1,
+        node: <OfficePlate />,
+        hot: atShelf && mode === "office" ? (
+          <FolderPicker progress={progress} onPick={openCase} />
+        ) : null,
       },
-      { depth: LAYERS.NEAR, node: <OfficeNear w={OFFICE.world.w} h={OFFICE.world.h} /> },
+      // The front edge of the desk, tracking faster than the room behind it.
+      { depth: 1.12, node: <OfficeForeground /> },
     ];
   }, [station, mode, progress, openCase]);
 
@@ -330,6 +320,8 @@ export function TheFiles({
           onStation={setStation}
           frozen={frozen}
         />
+
+        <OfficeLens />
 
         <HubHud progress={progress} station={station} scene={OFFICE} />
 

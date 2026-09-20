@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useReducedMotion } from "motion/react";
-import { CASES, caseTotal, type Case } from "@/lib/files/cases";
+import { CASES, OFFICE_BINDERS, caseTotal, type Case } from "@/lib/files/cases";
 import { caseProgress, type Progress } from "@/lib/files/progress";
 
 /**
@@ -19,6 +19,19 @@ import { caseProgress, type Progress } from "@/lib/files/progress";
    Picking a binder
    ------------------------------------------------------------------------- */
 
+/**
+ * Six targets, laid over the six binders in the photograph.
+ *
+ * The picker draws no binders of its own. The room already contains six, they
+ * are lit correctly and they are numbered and labelled, so drawing a second
+ * set on top would only ever be a slightly worse copy sitting a few pixels
+ * off the original. What this adds is the part a photograph cannot have:
+ * something that lifts when you reach for it, knows whether its case is
+ * sealed, and can be reached with a keyboard.
+ *
+ * Geometry comes from OFFICE_BINDERS, one measured rectangle per spine, so
+ * the targets and the binders stay in register even though the shelf recedes.
+ */
 export function FolderPicker({
   progress,
   onPick,
@@ -28,59 +41,59 @@ export function FolderPicker({
 }) {
   return (
     <div className="fg-picker">
-      <p className="fg-picker-kicker">FILE SHELF — SIX CASES</p>
-      <ul className="fg-folders">
-        {CASES.map((file, i) => {
-          const prog = caseProgress(progress, file.id);
-          const locked =
-            Boolean(file.needs) && !caseProgress(progress, file.needs!).solved;
-          const state = !file.playable
-            ? "pending"
-            : locked
-              ? "locked"
-              : prog.solved
-                ? "solved"
-                : "open";
+      {CASES.map((file, i) => {
+        const prog = caseProgress(progress, file.id);
+        const locked =
+          Boolean(file.needs) && !caseProgress(progress, file.needs!).solved;
+        const state = !file.playable
+          ? "pending"
+          : locked
+            ? "locked"
+            : prog.solved
+              ? "solved"
+              : "open";
+        const pickable = state === "open" || state === "solved";
 
-          return (
-            <li key={file.id}>
-              <button
-                type="button"
-                className={`fg-folder is-${state}`}
-                // A hand-picked lean per binder: a shelf of perfectly upright
-                // files is the fastest way to make a room look rendered.
-                style={{ ["--lean" as string]: `${[0.8, -0.5, 1.1, -0.9, 0.4, -0.7][i]}deg` }}
-                onClick={() => (state === "open" || state === "solved") && onPick(file)}
-                disabled={state === "locked" || state === "pending"}
-                aria-label={`${file.index} ${file.name}. ${
-                  state === "pending"
-                    ? "Environment not built yet."
-                    : state === "locked"
-                      ? "Locked."
-                      : state === "solved"
-                        ? "Solved."
-                        : "Open this case."
-                }`}
-              >
-                <span className="fg-folder-spine">
-                  <span className="fg-folder-index">{file.index}</span>
-                  <span className="fg-folder-name">{file.name}</span>
-                  <span className="fg-folder-code">{file.code.replace("CASE ", "")}</span>
-                </span>
-                <span className="fg-folder-state">
-                  {state === "pending"
-                    ? "NOT YET FILED"
-                    : state === "locked"
-                      ? "SEALED"
-                      : state === "solved"
-                        ? "SOLVED"
-                        : `${prog.found} / ${prog.total}`}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+        return (
+          <button
+            key={file.id}
+            type="button"
+            className={`fg-spine is-${state}`}
+            style={{
+              left: OFFICE_BINDERS[i].x,
+              top: OFFICE_BINDERS[i].y,
+              width: OFFICE_BINDERS[i].w,
+              height: OFFICE_BINDERS[i].h,
+            }}
+            onClick={() => pickable && onPick(file)}
+            disabled={!pickable}
+            aria-label={`Binder ${file.index}, ${file.name}. ${
+              state === "pending"
+                ? "This room has not been built yet."
+                : state === "locked"
+                  ? "Sealed until an earlier case is solved."
+                  : state === "solved"
+                    ? "Solved. Open it again."
+                    : `${prog.found} of ${prog.total} recovered. Open this case.`
+            }`}
+          >
+            <span className="fg-spine-glow" aria-hidden />
+            <span className="fg-spine-tag" aria-hidden>
+              <span className="fg-spine-index">{file.index}</span>
+              <span className="fg-spine-name">{file.name}</span>
+              <span className="fg-spine-state">
+                {state === "pending"
+                  ? "NOT YET FILED"
+                  : state === "locked"
+                    ? "SEALED"
+                    : state === "solved"
+                      ? "SOLVED"
+                      : `${prog.found} / ${prog.total}`}
+              </span>
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }

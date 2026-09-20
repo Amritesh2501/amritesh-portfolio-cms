@@ -3,7 +3,7 @@
 import { CASES } from "@/lib/files/cases";
 
 /**
- * The two rooms, drawn.
+ * The residence, drawn.
  *
  * Vector rather than photography, for a reason that is not budget: the brief
  * wants foreground, middle-ground and background that move at different rates,
@@ -16,7 +16,8 @@ import { CASES } from "@/lib/files/cases";
  * that a room was generated rather than lived in. The skews are hand-picked
  * constants, not random, so the room is the same room on every render.
  *
- * Each room exports its layers separately; <Stage> parallaxes them.
+ * The hub is a photograph and lives in OfficeRoom; what is drawn here is the
+ * residence, whose layers <Stage> parallaxes.
  */
 
 /* ---------------------------------------------------------------------------
@@ -112,31 +113,6 @@ type Skew = { r?: number; dx?: number; dy?: number };
 const skew = (s: Skew = {}) =>
   `translate(${s.dx ?? 0} ${s.dy ?? 0}) rotate(${s.r ?? 0})`;
 
-/** A framed thing on a wall: certificate, photograph, commendation. */
-function Frame({
-  x,
-  y,
-  w,
-  h,
-  s,
-  tone = "#1a1a20",
-}: {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  s?: Skew;
-  tone?: string;
-}) {
-  return (
-    <g transform={`translate(${x} ${y}) ${skew(s)}`}>
-      <rect x={-w / 2} y={-h / 2} width={w} height={h} fill="#0d0d11" stroke="#2c2c34" strokeWidth="2" />
-      <rect x={-w / 2 + 5} y={-h / 2 + 5} width={w - 10} height={h - 10} fill={tone} />
-      <rect x={-w / 2 + 5} y={-h / 2 + 5} width={w - 10} height={(h - 10) * 0.4} fill="#ffffff" opacity="0.025" />
-    </g>
-  );
-}
-
 /** A pinned photograph or note on a corkboard. */
 function Pinned({
   x,
@@ -158,41 +134,6 @@ function Pinned({
       <rect x={-w / 2} y={-h / 2} width={w} height={h} fill={fill} opacity="0.5" />
       <rect x={-w / 2} y={-h / 2} width={w} height={h} fill="none" stroke="#000" strokeOpacity="0.4" />
       <circle cx="0" cy={-h / 2 + 5} r="3" fill="#7d2b2b" />
-    </g>
-  );
-}
-
-/** A drawer front with a pull and a label slot. */
-function Drawer({ x, y, w, h, id }: { x: number; y: number; w: number; h: number; id: string }) {
-  return (
-    <g transform={`translate(${x} ${y})`}>
-      <rect width={w} height={h} fill={`url(#${id}-metal)`} stroke="#0a0b0d" strokeWidth="1.5" />
-      <rect x={w * 0.5 - 22} y={h * 0.5 - 4} width="44" height="8" rx="2" fill="#0d0e11" />
-      <rect x="10" y="8" width="38" height="12" fill="#b4a985" opacity="0.28" />
-    </g>
-  );
-}
-
-/** A cardboard evidence box. */
-function EvidenceBox({ x, y, w, h, s }: { x: number; y: number; w: number; h: number; s?: Skew }) {
-  return (
-    <g transform={`translate(${x} ${y}) ${skew(s)}`}>
-      <rect width={w} height={h} fill="#4a3d2a" />
-      <rect width={w} height={h} fill="#000" opacity="0.45" />
-      <rect y={h * 0.32} width={w} height="3" fill="#000" opacity="0.4" />
-      <rect x={w * 0.14} y={h * 0.48} width={w * 0.72} height={h * 0.3} fill="#c9bd9e" opacity="0.26" />
-      <text
-        x={w / 2}
-        y={h * 0.68}
-        textAnchor="middle"
-        fontSize={h * 0.17}
-        fill="#e8dcc0"
-        opacity="0.5"
-        fontFamily="var(--font-jetbrains), monospace"
-        letterSpacing="1"
-      >
-        EVIDENCE
-      </text>
     </g>
   );
 }
@@ -225,285 +166,6 @@ function Book({ x, y, h, w, fill, s }: { x: number; y: number; h: number; w: num
       <rect width={w} height={h} fill="none" stroke="#000" strokeOpacity="0.5" />
       <rect x="1" y={h * 0.14} width={w - 2} height="2" fill="#000" opacity="0.35" />
     </g>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   THE OFFICER ROOM — 3200 x 1200
-   ------------------------------------------------------------------------- */
-
-const OID = "of";
-
-/** Far plane: the walls and everything hung on them. */
-export function OfficeBack({ w, h }: { w: number; h: number }) {
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="fg-art" aria-hidden>
-      <SceneDefs id={OID} />
-      <rect width={w} height={h} fill={`url(#${OID}-wall)`} />
-
-      {/* Ceiling plane and the one fluorescent tube that still works. */}
-      <rect width={w} height="120" fill="#08080b" />
-      <rect x="1150" y="60" width="560" height="16" rx="3" fill="#1c2026" />
-      <rect x="1170" y="64" width="520" height="8" fill="#93a6b8" opacity="0.28" />
-      <ellipse cx="1430" cy="150" rx="420" ry="120" fill={`url(#${OID}-cool)`} opacity="0.5" />
-
-      {/* Left: the ACTIVE CASES whiteboard. */}
-      <g transform="translate(180 250)">
-        <rect width="470" height="400" fill="#c6c3b8" opacity="0.12" stroke="#4a4a50" strokeWidth="3" />
-        <text x="32" y="58" fontSize="34" fill="#e6e2d4" opacity="0.55" fontFamily="var(--font-jetbrains), monospace" letterSpacing="2">
-          ACTIVE CASES
-        </text>
-        <line x1="32" y1="72" x2="290" y2="72" stroke="#e6e2d4" strokeOpacity="0.3" strokeWidth="2" />
-        {CASES.map((c, i) => (
-          <text
-            key={c.id}
-            x="32"
-            y={122 + i * 40}
-            fontSize="24"
-            fill="#dcd8ca"
-            opacity="0.4"
-            fontFamily="var(--font-jetbrains), monospace"
-          >
-            {`AMR-00${i + 1} — ${c.name[0]}${c.name.slice(1).toLowerCase()}`}
-          </text>
-        ))}
-        <text x="32" y="360" fontSize="21" fill="#cfcabb" opacity="0.32" fontStyle="italic" fontFamily="var(--font-serif), serif">
-          &ldquo;Same Person. Different Stories.&rdquo;
-        </text>
-      </g>
-
-      {/* The department shield and the motto plaque under it. */}
-      <g transform="translate(830 330)">
-        <circle r="78" fill="#15161b" stroke="#2e3038" strokeWidth="3" />
-        <circle r="58" fill="none" stroke="#3a3d47" strokeWidth="1.5" />
-        <path d="M0-44 L38-22 L38 22 L0 44 L-38 22 L-38-22 Z" fill="#23262e" opacity="0.8" />
-        <rect x="-96" y="118" width="192" height="58" fill="#0f1013" stroke="#2a2c33" strokeWidth="2" />
-        <text y="146" textAnchor="middle" fontSize="18" fill="#9aa2ae" opacity="0.45" fontFamily="var(--font-jetbrains), monospace">
-          TO PROTECT
-        </text>
-        <text y="166" textAnchor="middle" fontSize="18" fill="#9aa2ae" opacity="0.45" fontFamily="var(--font-jetbrains), monospace">
-          TO SERVE
-        </text>
-      </g>
-
-      {/* Framed certificates, deliberately not in a tidy grid. */}
-      <Frame x={1960} y={330} w={120} h={150} s={{ r: -1.2 }} />
-      <Frame x={2090} y={300} w={100} h={130} s={{ r: 0.8 }} />
-      <Frame x={1975} y={500} w={110} h={90} s={{ r: 1.5 }} />
-
-      {/* The window: blinds, and a city that has not gone to bed. */}
-      <g transform="translate(2200 250)">
-        <rect width="240" height="420" fill="#0a1018" />
-        <rect width="240" height="420" fill={`url(#${OID}-cool)`} opacity="0.7" />
-        {/* Distant lit windows across the street. */}
-        {[
-          [30, 210], [64, 250], [120, 190], [170, 270], [200, 230], [90, 300], [150, 330],
-        ].map(([cx, cy], i) => (
-          <rect key={i} x={cx} y={cy} width="9" height="12" fill="#c8a45e" opacity={0.25 + (i % 3) * 0.12} />
-        ))}
-        {/* Blind slats. */}
-        {Array.from({ length: 17 }, (_, i) => (
-          <rect key={i} y={i * 24} width="240" height="14" fill="#14171c" opacity="0.88" />
-        ))}
-        <rect width="240" height="420" fill="none" stroke="#23262c" strokeWidth="6" />
-      </g>
-
-      {/* The investigation corkboard: photographs, a map, and red string. */}
-      <g transform="translate(2600 200)">
-        <rect width="560" height="420" fill="#6b5433" opacity="0.3" stroke="#2a2016" strokeWidth="6" />
-        <rect x="40" y="60" width="180" height="150" fill="#2b3a2e" opacity="0.4" />
-        <text x="60" y="44" fontSize="19" fill="#d8cdb4" opacity="0.4" fontFamily="var(--font-serif), serif" fontStyle="italic">
-          Every file has a story.
-        </text>
-        <Pinned x={300} y={110} w={78} h={96} s={{ r: -3 }} />
-        <Pinned x={400} y={96} w={78} h={96} s={{ r: 2 }} />
-        <Pinned x={492} y={130} w={72} h={90} s={{ r: -1.5 }} />
-        <Pinned x={330} y={260} w={82} h={72} s={{ r: 3.5 }} fill="#9aa08c" />
-        <Pinned x={452} y={280} w={82} h={72} s={{ r: -2 }} fill="#9aa08c" />
-        <Pinned x={110} y={300} w={140} h={54} s={{ r: 1 }} fill="#c4b795" />
-        {/* The string. It connects the photographs to the map, not to nothing. */}
-        <g stroke="#8c2f2f" strokeWidth="2" opacity="0.55" fill="none">
-          <path d="M130 135 L300 110 L400 96 L492 130 L452 280 L330 260 Z" />
-          <path d="M300 110 L330 260" />
-          <path d="M110 300 L330 260" />
-        </g>
-      </g>
-
-      <Grain id={OID} w={w} h={h} />
-    </svg>
-  );
-}
-
-/** Middle plane: the shelf the whole room is really about, and the cabinets. */
-export function OfficeMid({ w, h }: { w: number; h: number }) {
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="fg-art" aria-hidden>
-      <SceneDefs id={`${OID}m`} />
-
-      {/* Filing cabinets under the whiteboard. */}
-      <g transform="translate(150 700)">
-        <rect width="230" height="360" fill={`url(#${OID}m-metal)`} stroke="#08090b" strokeWidth="2" />
-        {[0, 1, 2].map((i) => (
-          <Drawer key={i} x={8} y={12 + i * 114} w={214} h={104} id={`${OID}m`} />
-        ))}
-      </g>
-      <g transform="translate(400 730)">
-        <rect width="230" height="330" fill={`url(#${OID}m-metal)`} stroke="#08090b" strokeWidth="2" />
-        {[0, 1, 2].map((i) => (
-          <Drawer key={i} x={8} y={10 + i * 104} w={214} h={94} id={`${OID}m`} />
-        ))}
-      </g>
-
-      {/* Evidence boxes, stacked the way boxes actually stack. */}
-      <EvidenceBox x={140} y={880} w={190} h={130} s={{ r: -1.1 }} />
-      <EvidenceBox x={150} y={1010} w={190} h={130} s={{ r: 0.6 }} />
-      <EvidenceBox x={348} y={1010} w={180} h={130} s={{ r: -0.5 }} />
-
-      {/* THE SHELF. Six binders, and the room is lit so that this is what you
-          look at. The labels are drawn from the case list rather than typed
-          twice, so a seventh case cannot appear in one place and not the
-          other. */}
-      <g transform="translate(1180 330)">
-        <rect x="-40" y="-30" width="700" height="560" fill="#100c08" stroke="#241a11" strokeWidth="4" />
-        <rect x="-40" y="-30" width="700" height="560" fill={`url(#${OID}m-wood)`} opacity="0.5" />
-        {/* Shelf boards. */}
-        <rect x="-40" y="290" width="700" height="14" fill="#2a1e13" />
-        <rect x="-40" y="516" width="700" height="14" fill="#2a1e13" />
-
-        {CASES.map((c, i) => (
-          <g key={c.id} transform={`translate(${i * 104} 0) rotate(${[0.6, -0.4, 0.9, -0.8, 0.3, -0.6][i]} 40 150)`}>
-            <rect width="86" height="300" fill="#16110c" stroke="#2f2418" strokeWidth="2" />
-            <rect width="86" height="300" fill="#000" opacity="0.25" />
-            {/* Spine label block. */}
-            <rect x="9" y="18" width="68" height="52" fill="#cfc3a4" opacity="0.72" />
-            <text
-              x="43"
-              y="56"
-              textAnchor="middle"
-              fontSize="34"
-              fill="#15110b"
-              fontFamily="var(--font-jetbrains), monospace"
-              fontWeight="700"
-            >
-              {c.index}
-            </text>
-            <rect x="9" y="86" width="68" height="190" fill="#b9ad8e" opacity="0.5" />
-            <text
-              transform="translate(43 268) rotate(-90)"
-              fontSize="21"
-              fill="#12100c"
-              fontFamily="var(--font-jetbrains), monospace"
-              letterSpacing="3"
-            >
-              {c.name}
-            </text>
-            {/* Two ring-binder clips, and a worn bottom corner. */}
-            <rect x="0" y="120" width="8" height="26" fill="#3d3a33" />
-            <rect x="0" y="190" width="8" height="26" fill="#3d3a33" />
-            <path d="M0 300 L14 300 L0 286 Z" fill="#2a2119" />
-          </g>
-        ))}
-
-        {/* Lower shelves: loose files and a box, so the unit is not just the
-            six binders floating on a plank. */}
-        <Papers x={20} y={400} w={150} n={7} s={{ r: -1.4 }} />
-        <Papers x={210} y={406} w={140} n={5} s={{ r: 1.1 }} />
-        <g transform="translate(400 330)">
-          {["#5a4a30", "#3a4450", "#4a3a3a", "#3d4a3d"].map((f, i) => (
-            <Book key={i} x={i * 24} y={0} w={20} h={76} fill={f} s={{ r: i === 2 ? 4 : 0 }} />
-          ))}
-        </g>
-        <EvidenceBox x={370} y={430} w={160} h={100} s={{ r: 0.4 }} />
-      </g>
-
-      {/* The flag in the corner, mostly in shadow. */}
-      <g transform="translate(1900 560)">
-        <rect x="-6" y="-300" width="10" height="520" fill="#1c1812" />
-        <path d="M4-290 q70 30 0 60 q-70 30 0 60 q70 30 0 60 q-70 30 0 60 L4 20 Z" fill="#2a2732" opacity="0.5" />
-      </g>
-
-      <Grain id={`${OID}m`} w={w} h={h} />
-    </svg>
-  );
-}
-
-/** Near plane: the detective's own desk, between you and the room. */
-export function OfficeNear({ w, h }: { w: number; h: number }) {
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="fg-art" aria-hidden>
-      <SceneDefs id={`${OID}n`} />
-
-      {/* Lamp pool, painted under the objects it is supposed to be lighting. */}
-      <ellipse cx="2760" cy="880" rx="520" ry="300" fill={`url(#${OID}n-tung)`} />
-      <ellipse cx="2430" cy="760" rx="360" ry="200" fill={`url(#${OID}n-screen)`} opacity="0.5" />
-
-      {/* Monitors. */}
-      <g transform="translate(2280 560)">
-        <rect width="330" height="210" rx="6" fill="#0a0c0f" stroke="#23262c" strokeWidth="3" />
-        <rect x="10" y="10" width="310" height="190" fill="#16283d" />
-        <rect x="10" y="10" width="310" height="26" fill="#22384f" />
-        {Array.from({ length: 9 }, (_, i) => (
-          <rect key={i} x="24" y={50 + i * 16} width={70 + ((i * 53) % 190)} height="6" fill="#6f97c4" opacity="0.32" />
-        ))}
-        <rect x="150" y="210" width="30" height="34" fill="#1a1d22" />
-        <rect x="110" y="244" width="110" height="10" rx="3" fill="#1a1d22" />
-      </g>
-      <g transform="translate(2630 540)">
-        <rect width="300" height="200" rx="6" fill="#0a0c0f" stroke="#23262c" strokeWidth="3" />
-        <rect x="10" y="10" width="280" height="180" fill="#101c2b" />
-        {Array.from({ length: 7 }, (_, i) => (
-          <rect key={i} x="24" y={40 + i * 20} width={60 + ((i * 71) % 180)} height="7" fill="#5d82ad" opacity="0.26" />
-        ))}
-      </g>
-
-      {/* Desk slab. */}
-      <g transform="translate(2050 780)">
-        <rect width="1150" height="40" fill="#2e2318" />
-        <rect width="1150" height="40" fill={`url(#${OID}n-wood)`} opacity="0.7" />
-        <rect y="40" width="1150" height="280" fill="#150f0a" />
-        <rect width="1150" height="6" fill="#6a5334" opacity="0.35" />
-      </g>
-
-      {/* On the desk: keyboard, phone, lamp, a nameplate and paperwork. */}
-      <rect x="2300" y="800" width="260" height="70" rx="4" fill="#15171b" transform="rotate(-1 2430 835)" />
-      <g transform="translate(2880 740)">
-        <rect width="120" height="90" rx="6" fill="#16181d" />
-        <rect x="12" y="14" width="96" height="30" rx="3" fill="#0c0e11" />
-        <rect x="-14" y="-26" width="150" height="30" rx="14" fill="#1b1e23" transform="rotate(-4)" />
-      </g>
-      <g transform="translate(3050 620)">
-        {/* Desk lamp: the source of the pool above. */}
-        <rect x="-4" y="0" width="8" height="170" fill="#1d2026" />
-        <path d="M-52 0 L52 0 L34 -54 L-34 -54 Z" fill="#23272e" />
-        <ellipse cy="4" rx="48" ry="10" fill="#ffca86" opacity="0.5" />
-        <rect x="-44" y="166" width="88" height="10" rx="4" fill="#1d2026" />
-      </g>
-      <Papers x={2620} y={806} w={210} n={8} s={{ r: 1.6 }} />
-      <Papers x={2180} y={812} w={180} n={4} s={{ r: -2.2 }} />
-      <g transform="translate(2700 838) rotate(-0.8)">
-        <rect width="190" height="30" fill="#1a1c21" stroke="#3a3f47" strokeWidth="1" />
-        <text x="95" y="21" textAnchor="middle" fontSize="15" fill="#b9c0cb" opacity="0.5" fontFamily="var(--font-jetbrains), monospace" letterSpacing="2">
-          DET. R. CARTER
-        </text>
-      </g>
-      {/* Coffee, long cold. */}
-      <g transform="translate(2520 770)">
-        <rect width="52" height="58" rx="5" fill="#20242a" />
-        <ellipse cy="2" rx="26" ry="8" fill="#0d0f12" />
-        <path d="M52 16 q22 12 0 26" stroke="#20242a" strokeWidth="7" fill="none" />
-      </g>
-
-      {/* The chair, dead centre, backlit by the shelf. */}
-      <g transform="translate(1420 700)">
-        <rect x="-150" y="0" width="300" height="290" rx="34" fill="#0c0d10" />
-        <rect x="-150" y="0" width="300" height="290" rx="34" fill="#181a1f" opacity="0.55" />
-        <rect x="-132" y="30" width="264" height="120" rx="22" fill="#000" opacity="0.28" />
-        <rect x="-168" y="270" width="336" height="60" rx="22" fill="#0e1013" />
-        <rect x="-16" y="326" width="32" height="90" fill="#0a0b0e" />
-      </g>
-
-      <Grain id={`${OID}n`} w={w} h={h} />
-    </svg>
   );
 }
 

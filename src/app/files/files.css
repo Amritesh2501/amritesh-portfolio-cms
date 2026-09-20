@@ -220,6 +220,192 @@
   transform: translate(-50%, -50%);
 }
 
+/* ---------------------------------------------------------------------------
+   The photographic room
+   ------------------------------------------------------------------------- */
+
+.fg-plate-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* The front edge of the desk, clipped out of the same frame and pushed
+   nearer, so it tracks faster than the room behind it. The strip is almost
+   pure shadow, which is what keeps the doubling invisible. */
+.fg-office-fore {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(87% 0 0 0);
+}
+
+/* The lens. Fixed to the viewport, not to the room: it is the thing you are
+   looking THROUGH, so it must not slide when the camera pans. */
+.fg-lens {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  /* Cold at the top where the window is, warm at the bottom near the lamp,
+     and crushed into black at the corners. */
+  background:
+    radial-gradient(
+      120% 90% at 50% 45%,
+      transparent 40%,
+      rgba(0, 0, 0, 0.55) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(36, 60, 92, 0.16) 0%,
+      transparent 40%,
+      transparent 70%,
+      rgba(92, 56, 20, 0.14) 100%
+    );
+}
+
+.fg-lens-grain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+/* ---------------------------------------------------------------------------
+   Binder targets, registered to the binders in the photograph
+   ------------------------------------------------------------------------- */
+
+.fg-picker {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fg-spine {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  transform-origin: bottom center;
+  /* Reaching for a file lifts it out of the row. The photograph supplies the
+     binder; this supplies the hand. */
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fg-spine:disabled {
+  cursor: not-allowed;
+}
+
+.fg-spine.is-open:hover,
+.fg-spine.is-open:focus-visible,
+.fg-spine.is-solved:hover,
+.fg-spine.is-solved:focus-visible {
+  transform: translateY(-9px);
+}
+
+/* Warm light gathering on the spine, as if the desk lamp caught it. Never an
+   outline: the room is lit, and a neon rectangle would say "web page". */
+.fg-spine-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 1px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--amber) 34%, transparent),
+    color-mix(in srgb, var(--amber) 10%, transparent) 60%,
+    transparent
+  );
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--amber) 22%, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  mix-blend-mode: screen;
+}
+
+.fg-spine.is-open .fg-spine-glow {
+  opacity: 0.2;
+  animation: fg-breathe 3.6s ease-in-out infinite;
+}
+
+.fg-spine.is-open:hover .fg-spine-glow,
+.fg-spine.is-open:focus-visible .fg-spine-glow,
+.fg-spine.is-solved:hover .fg-spine-glow,
+.fg-spine.is-solved:focus-visible .fg-spine-glow {
+  opacity: 0.68;
+  animation: none;
+}
+
+.fg-spine.is-locked .fg-spine-glow,
+.fg-spine.is-pending .fg-spine-glow {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #7c8189 26%, transparent),
+    transparent
+  );
+  box-shadow: none;
+}
+
+.fg-spine:disabled:hover .fg-spine-glow {
+  opacity: 0.3;
+}
+
+/* The label sits UNDER the binder, on the shelf board, so it never covers the
+   printed spine it is describing. */
+.fg-spine-tag {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 3px 5px;
+  background: color-mix(in srgb, #000 86%, transparent);
+  border-top: 1px solid var(--amber);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.fg-spine:hover .fg-spine-tag,
+.fg-spine:focus-visible .fg-spine-tag {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.fg-spine.is-locked .fg-spine-tag,
+.fg-spine.is-pending .fg-spine-tag {
+  border-top-color: var(--dim);
+}
+
+.fg-spine-index {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+}
+
+.fg-spine-name {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text);
+}
+
+.fg-spine-state {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--amber);
+}
+
+.fg-spine.is-locked .fg-spine-state,
+.fg-spine.is-pending .fg-spine-state {
+  color: var(--dim);
+}
+
 /** The black plate a room comes up under. */
 .fg-plate {
   position: absolute;
@@ -1238,99 +1424,6 @@
    Folders
    ------------------------------------------------------------------------- */
 
-.fg-picker {
-  display: grid;
-  gap: 0.7rem;
-  justify-items: center;
-}
-
-.fg-picker-kicker {
-  margin: 0;
-  font-size: 0.6rem;
-  letter-spacing: 0.3em;
-  color: var(--amber);
-}
-
-.fg-folders {
-  display: flex;
-  gap: 0.55rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  align-items: flex-end;
-}
-
-/* A binder, stood on a shelf: a tall spine with a label block, leaning a
-   little, and lifting when you reach for it. */
-.fg-folder {
-  display: grid;
-  gap: 0.5rem;
-  width: 92px;
-  padding: 0.7rem 0.4rem 0.6rem;
-  border: 1px solid #2f2418;
-  border-radius: 1px 1px 3px 3px;
-  background: linear-gradient(90deg, #14100b, #221a11 35%, #171209);
-  color: var(--paper);
-  cursor: pointer;
-  transform: rotate(var(--lean, 0deg));
-  transform-origin: bottom center;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
-  box-shadow: 0 10px 22px -10px #000;
-}
-
-.fg-folder:hover:not(:disabled),
-.fg-folder:focus-visible:not(:disabled) {
-  transform: rotate(0deg) translateY(-16px);
-  box-shadow: 0 26px 40px -14px #000;
-}
-
-.fg-folder:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-
-.fg-folder-spine {
-  display: grid;
-  gap: 0.35rem;
-  justify-items: center;
-  padding: 0.5rem 0.3rem;
-  background: linear-gradient(180deg, rgba(207, 195, 164, 0.72), rgba(185, 173, 142, 0.5));
-  color: #15110b;
-}
-
-.fg-folder-index {
-  font-size: 1.3rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.fg-folder-name {
-  font-size: 0.5rem;
-  letter-spacing: 0.14em;
-  writing-mode: vertical-rl;
-  height: 86px;
-}
-
-.fg-folder-code {
-  font-size: 0.44rem;
-  letter-spacing: 0.1em;
-  opacity: 0.6;
-}
-
-.fg-folder-state {
-  font-size: 0.48rem;
-  letter-spacing: 0.14em;
-  color: var(--dim);
-}
-
-.fg-folder.is-open .fg-folder-state {
-  color: var(--amber);
-}
-
-.fg-folder.is-solved .fg-folder-state {
-  color: var(--amber);
-}
-
 /* The chosen binder, face on. */
 .fg-modal.is-folder {
   place-items: center;
@@ -1690,18 +1783,12 @@
     font-size: 0.85rem;
   }
 
-  .fg-folders {
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 82vw;
-  }
-
-  .fg-folder {
-    width: 74px;
-  }
-
-  .fg-folder-name {
-    height: 66px;
+  /* The binder targets are pinned to the photograph, so they cannot be
+     re-laid-out for a phone. What they get instead is a permanently visible
+     label — on a touch screen there is no hover to reveal it. */
+  .fg-spine-tag {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 
   .fg-search-grid,

@@ -269,51 +269,82 @@ export const caseById = (id: string) => CASES.find((c) => c.id === id);
  * centre as the one thing the room is really about, then the window, the
  * corkboard and the detective's own desk on the right.
  */
+/**
+ * The hub is a photograph, so every number in here is a pixel in that
+ * photograph. The scene box IS the image, which is what keeps the camera, the
+ * hotspots and the art in one coordinate system: move something in the
+ * picture and you move it here, with no mapping in between to get wrong.
+ *
+ * Stations run left to right across the frame, so scrolling reads as one
+ * continuous sweep of the room rather than as jumping around it.
+ */
 export const OFFICE: Scene = {
   id: "office",
   location: "INVESTIGATION ROOM",
-  world: { w: 3200, h: 1200 },
-  establish: { x: 1600, y: 620, z: 0.82 },
+  world: { w: 1672, h: 941 },
+  // Slightly over the cover ratio, so the establishing shot crops the edges
+  // instead of showing them.
+  establish: { x: 836, y: 470, z: 1.02 },
   stations: [
     {
       id: "board",
       name: "Active cases",
-      blurb: "Six open cases. One subject. Nothing on the board is closed yet.",
-      cam: { x: 420, y: 470, z: 1.5 },
+      blurb: "Six open cases. One subject. Only the first is ticked.",
+      cam: { x: 150, y: 335, z: 2.05 },
     },
     {
       id: "boxes",
       name: "Evidence boxes",
-      blurb: "Recovered evidence ends up in here. Empty, for now.",
-      cam: { x: 380, y: 930, z: 1.5 },
+      blurb: "Recovered evidence ends up in here. Both of them are empty.",
+      cam: { x: 200, y: 725, z: 2.9 },
     },
     {
       id: "shelf",
       name: "The file shelf",
-      blurb: "Six binders. Pull one to open the case.",
-      cam: { x: 1520, y: 560, z: 1.35 },
+      blurb: "Six binders, numbered and labelled. Pull one to open the case.",
+      cam: { x: 727, y: 300, z: 2.8 },
     },
     {
       id: "window",
       name: "The window",
-      blurb: "Third floor, and the city is still awake.",
-      cam: { x: 2300, y: 470, z: 1.45 },
-    },
-    {
-      id: "corkboard",
-      name: "Connections",
-      blurb: "People, places, connections. The string does not reach yet.",
-      cam: { x: 2780, y: 410, z: 1.45 },
+      blurb: "Third floor, and the city has not gone to bed either.",
+      cam: { x: 1232, y: 365, z: 2.45 },
     },
     {
       id: "desk",
       name: "The desk",
       blurb: "Somebody was working this case before you got here.",
-      cam: { x: 2480, y: 880, z: 1.35 },
+      cam: { x: 1400, y: 660, z: 2.55 },
+    },
+    {
+      id: "corkboard",
+      name: "Connections",
+      blurb: "People, places, connections. Every file has a story.",
+      cam: { x: 1495, y: 300, z: 2.25 },
     },
   ],
 };
 
+/**
+ * Where the six binders sit in the photograph, one rectangle each.
+ *
+ * Explicit rather than a start plus a pitch, because the shelf recedes: the
+ * binders get narrower and closer together toward the right, and a constant
+ * pitch drifts about a third of a spine out of register by the middle of the
+ * row. Measured off the frame, in the order CASES lists them, so the lift and
+ * the glow land on the binder the player is actually reaching for.
+ */
+export const OFFICE_BINDERS: ReadonlyArray<Hotspot2D> = [
+  { x: 588, y: 214, w: 46, h: 156 },
+  { x: 643, y: 215, w: 43, h: 155 },
+  { x: 694, y: 216, w: 40, h: 153 },
+  { x: 740, y: 217, w: 38, h: 170 },
+  { x: 783, y: 218, w: 38, h: 172 },
+  { x: 827, y: 219, w: 39, h: 170 },
+];
+
+/** A plain rectangle in scene space. */
+export type Hotspot2D = { x: number; y: number; w: number; h: number };
 /* ---------------------------------------------------------------------------
    Case 01: the residence
    ------------------------------------------------------------------------- */
@@ -322,7 +353,9 @@ export const RESIDENCE: Scene = {
   id: "residence",
   location: "SUBJECT'S RESIDENCE",
   world: { w: 3000, h: 1200 },
-  establish: { x: 1500, y: 640, z: 0.82 },
+  // At or above 1.0, or the shot is wider than the room it is establishing and
+  // the drawing runs out at the edges of the frame.
+  establish: { x: 1500, y: 620, z: 1.06 },
   stations: [
     {
       id: "wall",

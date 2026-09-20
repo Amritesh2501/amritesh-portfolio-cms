@@ -15,6 +15,7 @@ import {
   CASES,
   EVIDENCE,
   OFFICE,
+  OFFICE_BINDERS,
   RESIDENCE,
   SCENES,
   caseById,
@@ -208,11 +209,93 @@ function checkScene(scene: Scene) {
     inBox(scene.establish.x, scene.establish.y),
     `${scene.id} establishes outside the room`,
   );
+
+  /**
+   * No shot may run out of room.
+   *
+   * The camera clamps itself to the scene box, so a station near a wall slides
+   * off centre rather than showing empty stage — but clamping cannot save a
+   * shot that is simply WIDER than the room, which is what a zoom below 1
+   * produces. That one shows the edge of the world on every side, and the only
+   * place it would ever be noticed is in front of somebody.
+   *
+   * Checked across the viewport shapes the page actually meets, because the
+   * fit is computed from the viewport and a shot can be fine on a laptop and
+   * broken on an ultrawide.
+   */
+  const VIEWPORTS: Array<[number, number]> = [
+    [1920, 1080],
+    [1366, 768],
+    [2560, 1440],
+    [3440, 1440],
+    [820, 1180],
+    [390, 844],
+  ];
+
+  for (const [vw, vh] of VIEWPORTS) {
+    const fit = Math.max(vw / scene.world.w, vh / scene.world.h) * 1.08;
+    const shots = [...scene.stations, { id: "establish", cam: scene.establish }];
+
+    for (const s of shots) {
+      const z = fit * s.cam.z;
+      const halfW = vw / (2 * z);
+      const halfH = vh / (2 * z);
+      assert.ok(
+        halfW * 2 <= scene.world.w + 0.5 && halfH * 2 <= scene.world.h + 0.5,
+        `${scene.id}/${s.id} at ${vw}x${vh} frames more than the room exists — raise its zoom`,
+      );
+    }
+  }
 }
 
 checkScene(OFFICE);
 checkScene(RESIDENCE);
 assert.ok(SCENES.office && SCENES.residence, "scene registry is missing a room");
+
+{
+  // The binder targets are laid over binders in a photograph, and a photograph
+  // cannot grow a seventh binder. If the case list outruns the shelf the extra
+  // targets land on the wall beside it — still clickable, still invisible,
+  // and nothing would report it.
+  // One rectangle per case, or a binder in the picture has no target over it
+  // and a case has a target over empty wall.
+  assert.equal(
+    OFFICE_BINDERS.length,
+    CASES.length,
+    `${OFFICE_BINDERS.length} binder targets for ${CASES.length} cases`,
+  );
+
+  for (const [i, b] of OFFICE_BINDERS.entries()) {
+    assert.ok(
+      b.x >= 0 && b.x + b.w <= OFFICE.world.w && b.y >= 0 && b.y + b.h <= OFFICE.world.h,
+      `binder target ${i} falls outside the ${OFFICE.world.w}x${OFFICE.world.h} frame`,
+    );
+    assert.ok(b.w > 0 && b.h > 0, `binder target ${i} has no area`);
+  }
+
+  // Left to right, in the order the cases are listed, and never overlapping —
+  // two spines sharing a click is a case you cannot open.
+  for (let i = 1; i < OFFICE_BINDERS.length; i++) {
+    const prev = OFFICE_BINDERS[i - 1];
+    const now = OFFICE_BINDERS[i];
+    assert.ok(
+      now.x >= prev.x + prev.w,
+      `binder targets ${i - 1} and ${i} overlap`,
+    );
+  }
+
+  // And the camera has to actually be looking at them when they appear.
+  const shelf = OFFICE.stations.find((s) => s.id === "shelf");
+  assert.ok(shelf, "the office has no shelf station");
+  const first = OFFICE_BINDERS[0];
+  const last = OFFICE_BINDERS[OFFICE_BINDERS.length - 1];
+  const rowMid = (first.x + last.x + last.w) / 2;
+  assert.ok(
+    Math.abs(shelf!.cam.x - rowMid) < 80 &&
+      Math.abs(shelf!.cam.y - (first.y + first.h / 2)) < 120,
+    "the shelf station is not pointed at the binders it is supposed to show",
+  );
+}
 
 {
   // Every hotspot sits inside the room it belongs to, and every station an
