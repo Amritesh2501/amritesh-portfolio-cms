@@ -20,6 +20,7 @@
     "db:migrate:deploy": "node scripts/migrate.mjs",
     "check:world": "tsx scripts/check-world.ts",
     "check:styles": "tsx scripts/check-styles.ts",
+    "check:resources": "tsx scripts/check-resources.ts",
     "room": "tsx --tsconfig scripts/tsconfig.json scripts/render-room.ts"
   },
   "prisma": {

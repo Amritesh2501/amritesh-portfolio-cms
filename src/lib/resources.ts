@@ -48,6 +48,17 @@ export interface FieldDef {
   min?: number;
   max?: number;
   step?: number;
+  /**
+   * What an empty optional number means, for columns that cannot take a null.
+   *
+   * A blank optional number is `null` by default, which is right for a column
+   * declared `Int?` — clearing the field should clear the column. It is wrong
+   * for one declared `Int @default(0)`: Prisma treats an explicit null as a
+   * value rather than as an absence, so the default never applies and the
+   * write fails on NOT NULL. Set this to the number a blank field should mean
+   * and the column keeps its own shape.
+   */
+  whenEmpty?: number;
   wide?: boolean;
   section?: string;
 }
@@ -115,7 +126,14 @@ const orderField: FieldDef = {
   name: "displayOrder",
   label: "Display order",
   type: "number",
-  help: "Lower numbers appear first.",
+  // Every displayOrder column in the schema is `Int @default(0)` and none of
+  // them is nullable, so a blank field has to arrive as a number. Left as
+  // null, Prisma sends the null rather than omitting the key, the default
+  // never applies, and the create fails on NOT NULL — which is what happened
+  // to the first pin anybody added to the evidence board, and would have
+  // happened to a row of any of the twelve resources that share this field.
+  whenEmpty: 0,
+  help: "Lower numbers appear first. Blank counts as 0.",
   section: "Publishing",
 };
 
@@ -847,12 +865,14 @@ function baseSchemaFor(field: FieldDef): z.ZodTypeAny {
       let n = z.coerce.number();
       if (field.min !== undefined) n = n.min(field.min);
       if (field.max !== undefined) n = n.max(field.max);
-      return field.required
-        ? n
-        : z.preprocess(
-            (v) => (v === "" || v === null || v === undefined ? null : v),
-            n.nullable(),
-          );
+      if (field.required) return n;
+      // A column that cannot be null says what blank means; everything else
+      // means null, which is the honest answer for an `Int?`.
+      const blank = field.whenEmpty;
+      return z.preprocess(
+        (v) => (v === "" || v === null || v === undefined ? (blank ?? null) : v),
+        blank === undefined ? n.nullable() : n,
+      );
     }
     case "boolean":
       return z.coerce.boolean();
