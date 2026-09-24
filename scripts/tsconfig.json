@@ -1,0 +1,10 @@
+{
+  "//": "Next wants jsx:preserve, because it does its own transform. tsx does not, so a script that renders a component needs the automatic runtime spelled out or every component fails with `React is not defined`. Only render-room.ts needs this; the other scripts are plain TypeScript and run off the root config.",
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["../src/*"]
+    }
+  }
+}

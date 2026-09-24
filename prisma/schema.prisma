@@ -479,3 +479,40 @@ model RateLimit {
   @@index([expiresAt])
   @@map("rate_limits")
 }
+
+// ---------------------------------------------------------------------------
+// THE CASE ROOM  (/experiments)
+// ---------------------------------------------------------------------------
+
+/// One pin on the evidence board in the case room.
+///
+/// `linksTo` holds the `code` of the other pins this one is threaded to, rather
+/// than a self-relation. Two reasons, and both of them are about the board
+/// being editable by a person rather than by a join table: an editor wires two
+/// pins together by typing "EX-02" into a list, and deleting a pin leaves a
+/// code nothing resolves — which the board simply draws no thread for — instead
+/// of a foreign key that has to be cleaned up before the delete is allowed.
+///
+/// There are no coordinates here on purpose. Where a pin lands is decided by a
+/// force simulation from the threads themselves (see components/site/Board),
+/// so an editor never has to think in pixels, and adding a pin re-settles the
+/// board instead of overlapping whatever was already at those numbers.
+model CaseEvidence {
+  id           String   @id @default(cuid())
+  code         String   @unique /// EX-01. Inked on the pin, and what linksTo names.
+  title        String
+  description  String?  @db.Text
+  image        String?
+  kind         String   @default("PHOTO") /// PHOTO | NOTE | MAP | DOCUMENT
+  linksTo      String[] @default([])
+  displayOrder Int      @default(0)
+
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, displayOrder])
+  @@map("case_evidence")
+}

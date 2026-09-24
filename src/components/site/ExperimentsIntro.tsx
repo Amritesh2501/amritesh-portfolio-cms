@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import * as sound from "@/lib/sound";
+import type { CaseRoomData } from "@/lib/content";
 import { World } from "./World";
 
 const LINES = [
   "You have left the portfolio.",
   "",
   "What is through here is not finished, and some of it is not serious.",
-  "There is a room, a shelf, and four files on it. Three of them are",
-  "holding a piece of this site. Open one, solve what is inside, get the",
-  "piece back.",
+  "There is a room. A board with string on it, a window with a cord, a",
+  "machine somebody left running, and a shelf with six files. The files",
+  "are this portfolio, taken apart.",
   "",
   "It has sound. There is a switch for that in the corner.",
   "",
@@ -44,7 +45,7 @@ const BLACK_MS = 1900;
  * sound is supposed to arrive. The screen goes black, the hit lands, and the
  * room is built underneath while nobody can see it.
  */
-export function ExperimentsIntro() {
+export function ExperimentsIntro({ data }: { data: CaseRoomData }) {
   const reduce = useReducedMotion();
   const [typed, setTyped] = useState(reduce ? LINES.join("\n") : "");
   const [done, setDone] = useState(Boolean(reduce));
@@ -105,7 +106,7 @@ export function ExperimentsIntro() {
   if (started) {
     return (
       <div className="xp is-world">
-        <World onExit={leave} />
+        <World data={data} onExit={leave} />
       </div>
     );
   }

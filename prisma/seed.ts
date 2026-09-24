@@ -746,6 +746,83 @@ async function seedAchievements() {
   console.log(`  achievements ${items.length} (3 draft: metrics need sources)`);
 }
 
+/**
+ * The evidence board in the case room.
+ *
+ * Seeded with real pins rather than left empty, because an empty board is the
+ * one part of that room that reads as broken rather than as unfinished — the
+ * threads are the whole point of it, and no pins means no threads. Every one
+ * of these is editable in Admin > Evidence board, and none of them carries an
+ * image: the pictures are the one thing that has to come from whoever owns the
+ * screenshots.
+ */
+async function seedCaseEvidence() {
+  const pins = [
+    {
+      code: "EX-01",
+      title: "The subject",
+      kind: "PHOTO",
+      description:
+        "Builds things end to end and keeps the seams visible. Everything else on this board leads back here.",
+      linksTo: ["EX-02", "EX-03", "EX-06"],
+      displayOrder: 0,
+    },
+    {
+      code: "EX-02",
+      title: "The work",
+      kind: "DOCUMENT",
+      description:
+        "Shipped projects, with what each one was measured on. Filed in full on the shelf and on /projects.",
+      linksTo: ["EX-04"],
+      displayOrder: 1,
+    },
+    {
+      code: "EX-03",
+      title: "The record",
+      kind: "DOCUMENT",
+      description: "Roles and dates. Where the time actually went, in order.",
+      linksTo: ["EX-04"],
+      displayOrder: 2,
+    },
+    {
+      code: "EX-04",
+      title: "The tools",
+      kind: "NOTE",
+      description:
+        "The stack, grouped by how often it is reached for rather than by how impressive it looks in a list.",
+      linksTo: ["EX-05"],
+      displayOrder: 3,
+    },
+    {
+      code: "EX-05",
+      title: "The paper",
+      kind: "NOTE",
+      description: "Certifications, with the issuer and the date on each one.",
+      linksTo: [],
+      displayOrder: 4,
+    },
+    {
+      code: "EX-06",
+      title: "The room",
+      kind: "MAP",
+      description:
+        "Where you are standing. One drawing, one camera, and a synthesiser making every sound in it.",
+      linksTo: ["EX-02"],
+      displayOrder: 5,
+    },
+  ];
+
+  for (const pin of pins) {
+    const data = { ...pin, status: PUBLISHED, publishedAt: now };
+    await prisma.caseEvidence.upsert({
+      where: { code: pin.code },
+      update: data,
+      create: data,
+    });
+  }
+  console.log(`  evidence     ${pins.length} pins on the board`);
+}
+
 async function seedNavigation() {
   const items = [
     { label: "Work", href: "/#work", location: "HEADER" as const, displayOrder: 0 },
@@ -847,6 +924,7 @@ async function main() {
   await seedSkills();
   await seedCertifications();
   await seedAchievements();
+  await seedCaseEvidence();
   await seedNavigation();
   await seedSettings();
   console.log("\nDone. Sign in at /admin/login\n");

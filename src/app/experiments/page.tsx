@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSettings } from "@/lib/content";
+import { getCaseRoomData, getSettings } from "@/lib/content";
 import { ExperimentsIntro } from "@/components/site/ExperimentsIntro";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +38,11 @@ export async function generateMetadata(): Promise<Metadata> {
  * the portfolio. The wrapper pins its own tokens rather than touching
  * data-mode, so nothing is fighting the toggle.
  */
-export default function ExperimentsPage() {
-  return <ExperimentsIntro />;
+export default async function ExperimentsPage() {
+  // The room used to read nothing at all. It reads now — the files on the shelf
+  // are the site's own sections and the pins on the board are CMS rows — but
+  // every one of those queries is individually wrapped, so a database that is
+  // having a bad day costs a file its contents and not the page its existence.
+  const data = await getCaseRoomData();
+  return <ExperimentsIntro data={data} />;
 }
