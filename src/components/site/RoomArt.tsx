@@ -117,7 +117,7 @@ export function Room({
     >
       {/* Shell: back wall, floor, side walls, ceiling. One-point perspective
           with the vanishing point behind the shelf. */}
-      <g className="xw-line xw-shell">
+      <g className="xw-line">
         <path d="M480 292 L1980 288 L1978 930 L482 932 Z" />
         {/* Floor, splaying to the corners of the frame. */}
         <path d="M482 932 L2 1348" />
@@ -158,7 +158,6 @@ export function Room({
         onFile={onFile}
       />
 
-      <Chair />
       <Desk
         atDesk={atDesk}
         lamp={lamp}
@@ -347,7 +346,32 @@ function Window({
           <path d="M748 600 L748 556 L800 556 L800 600" />
           <path d="M818 600 L818 520 L884 520 L884 600" />
         </g>
-        <path d="M694 524 L712 524 L712 540 L694 540 Z" className="xw-fill xw-glow" />
+
+        {/* The lit windows.
+            A city at night is not a silhouette, it is a grid of other people's
+            rooms with the light on — and it is also where the light coming in
+            through this window has to come FROM. Two thirds of them are dark,
+            because a block where every window is lit reads as a wall of
+            squares rather than as a building at three in the morning. */}
+        <g className="xw-city">
+          {[
+            [620, 552], [640, 552], [620, 574], [648, 574],
+            [684, 517], [706, 517], [684, 542], [712, 542], [690, 566], [712, 566],
+            [756, 568], [778, 568], [756, 586],
+            [826, 532], [850, 532], [864, 532], [826, 556], [850, 556],
+            [838, 578], [864, 578],
+          ].map(([x, y], i) => (
+            <rect
+              key={`${x}-${y}`}
+              x={x}
+              y={y}
+              width={13}
+              height={15}
+              className={i % 3 === 0 ? "xw-city-lit is-warm" : "xw-city-lit"}
+            />
+          ))}
+        </g>
+
         <circle cx={846} cy={410} r={17} className="xw-line xw-thin" />
       </g>
 
@@ -451,7 +475,15 @@ function Window({
 function Daylight({ down }: { down: boolean }) {
   return (
     <g className={`xw-day ${down ? "" : "is-on"}`} aria-hidden>
+      {/* The slab through the glass and across the floor. */}
       <path d="M606 376 L896 376 L1490 1350 L360 1350 Z" className="xw-day-shaft" />
+      {/* And the pool where it lands, which is what makes it read as light
+          arriving rather than as a wedge drawn over the floorboards. */}
+      <ellipse cx={880} cy={1180} rx={430} ry={150} className="xw-day-pool" />
+      {/* A bloom on the glass itself. The light in this room at night comes
+          out of other people's windows, so it has to be brightest at the one
+          it is coming through. */}
+      <rect x={606} y={376} width={290} height={268} className="xw-day-glow" />
     </g>
   );
 }
@@ -749,55 +781,59 @@ function Desk({
 
       {/* The machine.
 
-          A workstation, not a television. The old one was a single rounded
-          rectangle standing on the desk, which is a shape, not an object: it
-          had no depth, no chassis under it and nothing holding it up. This is
-          drawn the way the rest of the room now is — a box with a side you can
-          see — and it is three pieces, because that is what a machine of this
-          era was: a horizontal chassis on the desk, the monitor sitting on top
-          of it, and a keyboard pulled forward of both. */}
-      <g className={`xw-crt ${atDesk ? "is-live" : ""}`}>
-        {/* The chassis the monitor stands on. */}
-        <g className="xw-line">
-          <path d="M986 828 L1250 824 L1250 878 L986 882 Z" className="xw-solid" />
-          <path d="M1250 824 L1290 806 L1290 858 L1250 878 Z" className="xw-solid" />
-          <path d="M986 828 L1026 810 L1290 806 L1250 824 Z" className="xw-solid" />
-          {/* A drive slot and a row of vents on the front. */}
-          <path d="M1010 846 L1096 845" className="xw-thin" />
-          <path d="M1010 856 L1096 855" className="xw-thin xw-faint" />
-          {[1130, 1146, 1162, 1178].map((x) => (
-            <path key={x} d={`M${x} 842 L${x} 866`} className="xw-thin xw-faint" />
-          ))}
-        </g>
-        <circle cx={1222} cy={856} r={5} className="xw-fill xw-crt-led" />
+          An all-in-one: one wedge with the screen built into it, rather than a
+          monitor balanced on a separate chassis. It is a different object, not
+          a restyled one — the silhouette is a single tapering block leaning
+          back from the reader, which is what a terminal of this kind actually
+          looked like and reads very differently in a room of boxes.
 
-        {/* The monitor: a box, tapering back, with the tube's own depth behind
-            the bezel rather than a flat pane drawn on the front. */}
+          The wedge is the whole idea: the case is deeper at the base than at
+          the top, so the side face is a trapezium rather than a rectangle and
+          the machine looks like it is sitting back on its heels. */}
+      <g className={`xw-crt ${atDesk ? "is-live" : ""}`}>
         <g className="xw-line">
-          <path d="M1014 686 L1232 682 L1232 820 L1014 824 Z" className="xw-solid" />
-          <path d="M1232 682 L1268 666 L1268 800 L1232 820 Z" className="xw-solid" />
-          <path d="M1014 686 L1050 670 L1268 666 L1232 682 Z" className="xw-solid" />
-          {/* The bezel, and the glass set back inside it. */}
-          <path d="M1030 700 L1216 697 L1216 800 L1030 804 Z" className="xw-thin" />
+          {/* Front, leaning back. */}
+          <path d="M1004 674 L1224 670 L1240 886 L996 890 Z" className="xw-solid" />
+          {/* Right side: the taper, which is the object. */}
+          <path d="M1224 670 L1258 652 L1282 858 L1240 886 Z" className="xw-solid" />
+          {/* The top, seen from below, so only a sliver of it. */}
+          <path d="M1004 674 L1038 656 L1258 652 L1224 670 Z" className="xw-solid" />
+
+          {/* The bezel, and the tube set back inside it. */}
+          <path d="M1022 692 L1208 688 L1216 816 L1018 820 Z" className="xw-thin" />
           <path
-            d="M1042 710 Q1124 705 1206 710 Q1210 752 1206 792 Q1124 797 1040 792 Q1036 752 1042 710 Z"
+            d="M1034 702 Q1120 697 1202 702 Q1208 754 1202 806 Q1120 811 1030 806 Q1026 754 1034 702 Z"
             className="xw-thin xw-faint"
           />
-          {/* Two knobs under the glass, because every one of these had them. */}
-          <circle cx={1052} cy={814} r={6} className="xw-thin" />
-          <circle cx={1074} cy={814} r={6} className="xw-thin" />
+
+          {/* Under the screen: a drive slot, a brand rule, and vents down the
+              side of the wedge where the heat actually went. */}
+          <path d="M1026 846 L1112 845" className="xw-thin" />
+          <path d="M1026 858 L1112 857" className="xw-thin xw-faint" />
+          <path d="M1136 840 L1216 838" className="xw-thin xw-faint" />
+          {/* Slots ACROSS the side face, not strokes down it. Run the other
+              way and they read as scratches on the case rather than as the
+              louvres the heat went out of. Each one spans the trapezium at its
+              own height, so they lean with the taper. */}
+          {[708, 736, 764, 792, 820].map((y) => {
+            const x1 = 1226 + (y - 670) * 0.074;
+            const x2 = 1256 + (y - 652) * 0.1165;
+            return (
+              <path key={y} d={`M${x1.toFixed(1)} ${y} L${x2.toFixed(1)} ${y - 12}`} className="xw-thin xw-faint" />
+            );
+          })}
         </g>
+        <circle cx={1196} cy={854} r={5} className="xw-fill xw-crt-led" />
 
         {/* What is on the glass: a prompt, and a line sweeping down it. */}
         <g className="xw-crt-glow">
-          <path d="M1060 730 L1104 729" className="xw-line xw-thin" />
-          <path d="M1060 748 L1160 747" className="xw-line xw-thin" />
-          <path d="M1060 766 L1122 765" className="xw-line xw-thin" />
-          <rect className="xw-crt-scan" x={1040} y={710} width={168} height={4} />
+          <path d="M1050 722 L1094 721" className="xw-line xw-thin" />
+          <path d="M1050 740 L1152 739" className="xw-line xw-thin" />
+          <path d="M1050 758 L1112 757" className="xw-line xw-thin" />
+          <rect className="xw-crt-scan" x={1032} y={702} width={168} height={4} />
         </g>
 
-        {/* Keyboard, pulled forward of the chassis and given a wedge, so it
-            reads as sloping toward whoever was sitting here. */}
+        {/* Keyboard, pulled forward and wedged the same way the case is. */}
         <g className="xw-line">
           <path d="M1006 918 L1178 915 L1192 958 L1016 962 Z" className="xw-thin xw-solid" />
           <path d="M1016 962 L1192 958 L1192 972 L1016 976 Z" className="xw-thin xw-solid" />
@@ -806,7 +842,7 @@ function Desk({
           <path d="M1030 952 L1140 949" className="xw-thin xw-faint" />
         </g>
 
-        {/* The machine's own target, tight around all three pieces.
+        {/* The machine's own target, tight around the case and the keyboard.
             Its own rather than part of the desk's, because the desk is wide
             enough that a rectangle covering both the desk and the machine
             standing on it would also cover the bottom-left corner of the
@@ -814,10 +850,10 @@ function Desk({
             kind of thing that makes a room feel like it is not listening. */}
         <rect
           className="xw-hit"
-          x={982}
-          y={664}
-          width={312}
-          height={316}
+          x={992}
+          y={648}
+          width={296}
+          height={332}
           onClick={atDesk ? onOpen : () => onStation("desk")}
         />
       </g>
@@ -837,61 +873,6 @@ function Desk({
   );
 }
 
-/**
- * The chair, pushed back from the desk and left there.
- *
- * It used to be tucked in behind the desk, where two thirds of it was hidden by
- * the desk top and the rest read as a dark slab — and where the machine now
- * stands. Out on the open floor every part of it is visible, so it is a chair
- * rather than a rectangle, and it says the thing the whole room is trying to
- * say: somebody got up from this desk and did not come back.
- */
-function Chair() {
-  return (
-    <g className="xw-line">
-      {/* Back: a padded panel, so it gets a front, a top and a side. */}
-      <path d="M488 892 L648 884 L656 1046 L482 1054 Z" className="xw-solid" />
-      <path d="M488 892 L522 872 L682 864 L648 884 Z" className="xw-solid" />
-      <path d="M648 884 L682 864 L690 1026 L656 1046 Z" className="xw-solid" />
-      <path d="M502 910 L636 903" className="xw-thin xw-faint" />
-      <path d="M502 934 L636 927" className="xw-thin xw-faint" />
-
-      {/* Seat: a slab, wider at the front, with its edge showing. */}
-      <path d="M470 1042 L672 1034 L692 1086 L454 1094 Z" className="xw-solid" />
-      <path d="M454 1094 L692 1086 L690 1110 L452 1118 Z" className="xw-solid" />
-
-      {/* Column and the gas lift inside it. */}
-      <path d="M556 1118 L578 1118 L578 1196 L556 1196 Z" className="xw-solid" />
-      <path d="M562 1130 L562 1190" className="xw-thin xw-faint" />
-
-      {/* Star base, three castors of five — the other two are behind. */}
-      <path d="M566 1196 L462 1236" />
-      <path d="M566 1196 L570 1250" />
-      <path d="M566 1196 L668 1230" />
-      <path d="M566 1204 L462 1244" className="xw-thin xw-faint" />
-      <path d="M566 1204 L570 1258" className="xw-thin xw-faint" />
-      <path d="M566 1204 L668 1238" className="xw-thin xw-faint" />
-      <circle cx={458} cy={1248} r={10} className="xw-thin" />
-      <circle cx={571} cy={1262} r={10} className="xw-thin" />
-      <circle cx={673} cy={1242} r={10} className="xw-thin" />
-    </g>
-  );
-}
-
-/**
- * The filing cabinet: a box, not a rectangle.
- *
- * Every solid in this room is now drawn the same way — a front face, one side
- * face receding along a shared depth vector, and a top where the top is above
- * eye level or a base where it is below. Nothing is shaded and nothing is
- * filled except to occlude; the volume is carried entirely by which edges are
- * drawn and which are left out, which is how a pen draws a box.
- *
- * The depth vector points back and up toward the room's vanishing region, and
- * every piece on this side of the room uses the same one. That consistency is
- * what makes a set of line drawings read as one room rather than as a
- * collection of objects each seen from its own angle.
- */
 function Cabinet() {
   return (
     <g className="xw-line">
@@ -917,10 +898,6 @@ function Cabinet() {
       <path d="M212 1152 L290 1168" className="xw-thin" />
       <path d="M212 1160 L290 1176" className="xw-thin xw-faint" />
 
-      {/* A box left on top, extruded the same way. */}
-      <path d="M190 796 L330 826 L330 872 L190 846 Z" className="xw-thin xw-solid" />
-      <path d="M330 826 L388 804 L388 852 L330 872 Z" className="xw-thin xw-solid" />
-      <path d="M190 796 L330 826 L388 804 L248 776 Z" className="xw-thin xw-solid" />
     </g>
   );
 }
