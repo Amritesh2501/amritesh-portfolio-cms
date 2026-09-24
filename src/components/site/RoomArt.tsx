@@ -75,21 +75,32 @@ export function Room({
   read,
   at,
   blindDown,
+  ceiling,
+  lamp,
+  pulling,
   onStation,
   onFile,
   onBoard,
   onDesk,
   onCord,
+  onCeiling,
+  onLamp,
 }: {
   read: string[];
   /** Where the camera is parked. Decides what a click on a thing MEANS. */
   at: string | null;
   blindDown: boolean;
+  ceiling: boolean;
+  lamp: boolean;
+  /** The id of the file currently coming off the shelf, if one is. */
+  pulling: string | null;
   onStation: (id: string) => void;
   onFile: (file: CaseFile) => void;
   onBoard: () => void;
   onDesk: () => void;
   onCord: () => void;
+  onCeiling: () => void;
+  onLamp: () => void;
 }) {
   const atBoard = at === "board";
   const atWindow = at === "window";
@@ -129,7 +140,7 @@ export function Room({
           window across the floor, clipped to nothing while the blind is down. */}
       <Daylight down={blindDown} />
 
-      <Ceiling />
+      <Ceiling on={ceiling} onToggle={onCeiling} />
       <BoardWall atBoard={atBoard} onStation={onStation} onOpen={onBoard} />
       <Window
         down={blindDown}
@@ -138,27 +149,80 @@ export function Room({
         onCord={onCord}
       />
       <Clock />
-      <Shelf read={read} atShelf={atShelf} onStation={onStation} onFile={onFile} />
+      <Shelf
+        read={read}
+        atShelf={atShelf}
+        pulling={pulling}
+        onStation={onStation}
+        onFile={onFile}
+      />
 
       <Chair />
-      <Desk atDesk={atDesk} onStation={onStation} onOpen={onDesk} />
+      <Desk
+        atDesk={atDesk}
+        lamp={lamp}
+        onStation={onStation}
+        onOpen={onDesk}
+        onLamp={onLamp}
+      />
       <Cabinet />
       <CoatStand />
     </svg>
   );
 }
 
-function Ceiling() {
+/**
+ * The fitting hanging over the desk, and what it throws.
+ *
+ * The light is three shapes stacked and nothing else: a filament in the shade,
+ * a cone under it, and a pool where the cone lands. Every one of them is
+ * filled with `var(--xw-bulb)`, a custom property set once on the room, so
+ * changing the bulb colour is one string changing on one element and none of
+ * these shapes needs to know it happened.
+ *
+ * The cone is a flat polygon rather than a gradient because the whole room is
+ * flat ink — a soft volumetric falloff in here would be the one thing in the
+ * drawing pretending to be lit rather than drawn.
+ */
+function Ceiling({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
-    <g className="xw-line">
-      {/* A hanging fitting, drawn as little as possible. */}
-      <path d="M1200 88 L1200 196" className="xw-thin" />
-      <path d="M1148 200 L1252 200" />
-      <path d="M1148 200 L1176 238 L1224 238 L1252 200" />
-      <g className="xw-glow">
+    <g className={`xw-pendant ${on ? "is-on" : ""}`}>
+      {/* What it throws. Before the fitting, so the shade covers the top of
+          the cone instead of the cone washing over the shade. */}
+      <g className="xw-bulb-light">
+        {/* Wide, and all the way to the bottom of the frame. A narrow cone
+            stopping at the skirting is a searchlight; a ceiling fitting fills
+            the room it is hanging in. Everything solid in the room is drawn
+            after this and punches its own shadow out of it. */}
+        <path d="M1160 236 L1240 236 L1760 1350 L640 1350 Z" className="xw-bulb-cone" />
+        <ellipse cx={1200} cy={1210} rx={560} ry={130} className="xw-bulb-pool" />
+      </g>
+
+      <g className="xw-line">
+        <path d="M1200 88 L1200 196" className="xw-thin" />
+        <path d="M1148 200 L1252 200" />
+        <path d="M1148 200 L1176 238 L1224 238 L1252 200" />
+      </g>
+
+      {/* The filament, which is the only part that is actually the bulb. */}
+      <circle cx={1200} cy={244} r={11} className="xw-bulb-core" />
+
+      <g className="xw-line xw-glow">
         <path d="M1176 240 L1112 330" className="xw-thin" />
         <path d="M1224 240 L1288 330" className="xw-thin" />
       </g>
+
+      <rect
+        className="xw-hit"
+        x={1132}
+        y={184}
+        width={136}
+        height={80}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+      />
     </g>
   );
 }
@@ -304,11 +368,26 @@ function Window({
         <path d="M588 664 L914 662" className="xw-thin" />
       </g>
 
-      {/* The cord.
-          Drawn once, at its short length, and the whole group is translated
-          down when the blind goes up — that is where the slack goes. A
-          translate rather than a longer line, because the `d` of a path is not
-          something a browser will reliably transition. */}
+      <rect
+        className="xw-hit"
+        x={584}
+        y={360}
+        width={340}
+        height={310}
+        onClick={() => onStation("window")}
+      />
+
+      {/* The cord, and it has to come AFTER the window's own target.
+          SVG has no z-index — the last thing drawn is the thing on top, and it
+          is also the thing that gets the click. With the cord above this rect
+          the bead sat under a 340x310 target that swallowed every press on it,
+          which is exactly what "the blind does not open" looks like from the
+          outside.
+
+          Drawn once at its short length; the whole group translates down when
+          the blind goes up, because that is where the slack goes. A translate
+          rather than a longer line, because the `d` of a path is not something
+          a browser will reliably transition. */}
       <g
         className={`xw-cord ${atWindow ? "is-live" : ""}`}
         style={{ transform: `translateY(${down ? 0 : 90}px)` }}
@@ -326,15 +405,6 @@ function Window({
           }}
         />
       </g>
-
-      <rect
-        className="xw-hit"
-        x={584}
-        y={360}
-        width={340}
-        height={310}
-        onClick={() => onStation("window")}
-      />
     </g>
   );
 }
@@ -382,11 +452,13 @@ function Clock() {
 function Shelf({
   read,
   atShelf,
+  pulling,
   onStation,
   onFile,
 }: {
   read: string[];
   atShelf: boolean;
+  pulling: string | null;
   onStation: (id: string) => void;
   onFile: (file: CaseFile) => void;
 }) {
@@ -418,13 +490,22 @@ function Shelf({
           <g
             key={f.id}
             className={`xw-file ${done ? "is-done" : ""} ${locked ? "is-locked" : ""}`}
+            // The lean, and nothing else. The pull lives on the group inside,
+            // because a CSS transform REPLACES an element's transform
+            // attribute rather than composing with it — put both on one
+            // element and a file snaps upright the instant it is picked.
             transform={`rotate(${tilt} ${x + w / 2} ${y + h})`}
           >
+            <g className={`xw-file-body ${pulling === f.id ? "is-pulled" : ""}`}>
             <g className="xw-line">
               <path d={`M${x} ${y} L${x + w} ${y - 2} L${x + w} ${y + h} L${x} ${y + h} Z`} className="xw-solid" />
-              {/* The label block down the spine. */}
+              {/* The label block down the spine.
+                  Taller than it was at both ends, because the number and the
+                  name have to live INSIDE it — the old block stopped 26 units
+                  short of the foot while the name ran to 14, so every label
+                  crossed its own border on the way down. */}
               <path
-                d={`M${x + 7} ${y + 22} L${x + w - 7} ${y + 20} L${x + w - 7} ${y + h - 28} L${x + 7} ${y + h - 26} Z`}
+                d={`M${x + 7} ${y + 16} L${x + w - 7} ${y + 14} L${x + w - 7} ${y + h - 14} L${x + 7} ${y + h - 12} Z`}
                 className="xw-thin"
               />
               {/* Two ring-binder clips, because a file has them. */}
@@ -434,7 +515,7 @@ function Shelf({
             <text
               className="xw-file-index"
               x={x + w / 2}
-              y={y + 34}
+              y={y + 40}
               textAnchor="middle"
             >
               {f.index}
@@ -453,13 +534,13 @@ function Shelf({
                 stay the shape they were drawn and only the gaps give. */}
             <text
               className="xw-file-name"
-              transform={`translate(${x + w / 2} ${y + h - 14}) rotate(-90)`}
+              transform={`translate(${x + w / 2} ${y + h - 24}) rotate(-90)`}
               // An inline style and not a fontSize attribute: the stylesheet
               // sets a size on .xw-file-name, and any CSS rule beats a
               // presentation attribute, so the attribute version of this line
               // is silently ignored and the long name still overflows.
-              style={{ fontSize: Math.min(14, (h - 70) / (f.name.length * 0.78)) }}
-              textLength={h - 70}
+              style={{ fontSize: Math.min(13, (h - 82) / (f.name.length * 0.78)) }}
+              textLength={h - 82}
               lengthAdjust="spacing"
             >
               {f.name}
@@ -476,6 +557,7 @@ function Shelf({
                 onClick={() => onFile(f)}
               />
             ) : null}
+            </g>
           </g>
         );
       })}
@@ -528,12 +610,16 @@ function Shelf({
  */
 function Desk({
   atDesk,
+  lamp,
   onStation,
   onOpen,
+  onLamp,
 }: {
   atDesk: boolean;
+  lamp: boolean;
   onStation: (id: string) => void;
   onOpen: () => void;
+  onLamp: () => void;
 }) {
   return (
     <g>
@@ -548,17 +634,49 @@ function Desk({
         {/* Modesty panel. */}
         <path d="M860 1046 L1430 1042" className="xw-thin xw-faint" />
 
-        {/* Lamp. */}
-        <path d="M872 900 L872 812" />
-        <path d="M872 812 L930 786" />
-        <path d="M906 760 L968 796 L936 818 Z" className="xw-solid" />
-        <path d="M846 900 L900 898" />
-
         {/* Papers, a mug, a phone off its cradle. */}
         <path d="M1372 928 L1468 926 L1470 958 L1374 960 Z" className="xw-thin xw-solid" />
         <path d="M1258 908 L1310 906 L1314 956 L1262 958 Z" className="xw-solid" />
         <path d="M1314 918 Q1338 930 1314 944" className="xw-thin" />
       </g>
+
+      {/* The lamp, and the only warm thing on this desk.
+          Drawn after the desk so its pool lands ON the surface, and BEFORE the
+          machine, so the monitor and the keyboard standing in the cone cut
+          their own shadows out of it rather than being washed over by it —
+          the same occlusion rule the ceiling cone follows.
+
+          Its own target, so that clicking the lamp is clicking the lamp rather
+          than walking to the desk. A gooseneck burns tungsten and nothing
+          else, so unlike the ceiling this one has no colours to choose from. */}
+      <g className={`xw-lamp ${lamp ? "is-on" : ""}`}>
+        <g className="xw-lamp-light">
+          {/* Out of the shade, down onto the desk in front of it. */}
+          <path d="M916 806 L964 828 L1128 962 L862 966 Z" className="xw-lamp-cone" />
+          <ellipse cx={984} cy={946} rx={168} ry={34} className="xw-lamp-pool" />
+        </g>
+
+        <g className="xw-line">
+          <path d="M872 900 L872 812" />
+          <path d="M872 812 L930 786" />
+          <path d="M906 760 L968 796 L936 818 Z" className="xw-solid" />
+          <path d="M846 900 L900 898" />
+        </g>
+        <circle cx={938} cy={800} r={7} className="xw-lamp-core" />
+
+        <rect
+          className="xw-hit"
+          x={890}
+          y={748}
+          width={92}
+          height={84}
+          onClick={(e) => {
+            e.stopPropagation();
+            onLamp();
+          }}
+        />
+      </g>
+
 
       {/* The machine. */}
       <g className={`xw-crt ${atDesk ? "is-live" : ""}`}>
