@@ -1,8 +1,8 @@
 /**
  * Render the case room to a PNG, so somebody can look at it.
  *
- *   npm run room                  both lighting states
- *   npm run room -- lit           blind up only
+ *   npm run room                  every lighting state
+ *   npm run room -- lamps         one of them: dark, lit, lamps
  *
  * The room only exists behind a terminal, a click and a camera, which makes
  * "is the monitor standing on the chair" a question that costs a dev server and
@@ -50,6 +50,15 @@ const INK = `
   .xw-outside { opacity: 0; }
   .xw-outside.is-open { opacity: 1; }
   .xw-cord-bead { fill: #d9a05b; stroke: none; }
+  .xw-bulb-light, .xw-lamp-light { opacity: 0; }
+  .xw-pendant.is-on .xw-bulb-light, .xw-lamp.is-on .xw-lamp-light { opacity: 1; }
+  .xw-bulb-cone, .xw-lamp-cone { fill: #ffc178; stroke: none; opacity: .09; }
+  .xw-bulb-pool, .xw-lamp-pool { fill: #ffc178; stroke: none; opacity: .14; }
+  .xw-lamp-cone { fill: #ffbe5c; }
+  .xw-lamp-pool { fill: #ffbe5c; opacity: .18; }
+  .xw-bulb-core, .xw-lamp-core { fill: #e4ddcb; stroke: none; opacity: .18; }
+  .xw-pendant.is-on .xw-bulb-core { fill: #ffc178; opacity: 1; }
+  .xw-lamp.is-on .xw-lamp-core { fill: #ffbe5c; opacity: 1; }
   .xw-crt-led { fill: #d9a05b; }
   .xw-crt-glow { opacity: .9; }
   .xw-crt-scan { fill: #d9a05b; stroke: none; opacity: .22; }
@@ -57,17 +66,26 @@ const INK = `
 
 const noop = () => {};
 
-async function shoot(name: string, blindDown: boolean, at: string | null) {
+type Shot = {
+  blindDown: boolean;
+  ceiling: boolean;
+  lamp: boolean;
+  at: string | null;
+};
+
+async function shoot(name: string, shot: Shot) {
   const body = renderToStaticMarkup(
     createElement(Room, {
       read: [],
-      at,
-      blindDown,
+      pulling: null,
+      ...shot,
       onStation: noop,
       onFile: noop,
       onBoard: noop,
       onDesk: noop,
       onCord: noop,
+      onCeiling: noop,
+      onLamp: noop,
     }),
   );
 
@@ -93,11 +111,26 @@ async function shoot(name: string, blindDown: boolean, at: string | null) {
   console.log(`  ${out}`);
 }
 
+/** One per lighting state, because each one is a different set of shapes. */
+const SHOTS: Record<string, Shot> = {
+  dark: { blindDown: true, ceiling: false, lamp: false, at: null },
+  lit: { blindDown: false, ceiling: false, lamp: false, at: "window" },
+  lamps: { blindDown: true, ceiling: true, lamp: true, at: "desk" },
+};
+
 async function main() {
   const only = process.argv[2];
+  const names = only ? [only] : Object.keys(SHOTS);
   console.log("\nRendering the case room\n");
-  if (only !== "lit") await shoot("dark", true, null);
-  if (only !== "dark") await shoot("lit", false, "window");
+  for (const name of names) {
+    const shot = SHOTS[name];
+    if (!shot) {
+      console.error(`  no shot called "${name}". Try: ${Object.keys(SHOTS).join(", ")}`);
+      process.exitCode = 1;
+      continue;
+    }
+    await shoot(name, shot);
+  }
   console.log("\nDone.\n");
 }
 

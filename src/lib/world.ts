@@ -484,3 +484,31 @@ export function buildBoard(
 
   return { pins, threads };
 }
+
+/* ---------------------------------------------------------------------------
+   The lights
+   ------------------------------------------------------------------------- */
+
+export type Bulb = { id: string; name: string; value: string };
+
+/**
+ * What the ceiling fitting can be made to burn.
+ *
+ * Five, and the first one is the one it starts on. They are real bulb colours
+ * rather than a rainbow: a pen drawing lit magenta stops being a room, so the
+ * range runs from tungsten to cold white and only then gets strange. The value
+ * goes straight into a CSS custom property on the room, so every glow in the
+ * drawing follows it without any of them knowing what colour is set.
+ */
+export const BULBS: Bulb[] = [
+  { id: "tungsten", name: "Tungsten", value: "#ffc178" },
+  { id: "cold", name: "Cold", value: "#cfe6ff" },
+  { id: "amber", name: "Amber", value: "#ff9d3d" },
+  { id: "green", name: "Green", value: "#8fe0a6" },
+  { id: "rose", name: "Rose", value: "#ff8fb1" },
+];
+
+export const bulbById = (id: string) => BULBS.find((b) => b.id === id);
+
+/** The desk lamp does not change colour. A gooseneck lamp burns tungsten. */
+export const DESK_BULB = "#ffbe5c";

@@ -44,8 +44,17 @@ import { buildBoard, type Pin, type Thread } from "@/lib/world";
 
 const BOARD = { w: 1440, h: 900 } as const;
 
-/** Half the collision box of a pin, in board units. Cards are ~190x150. */
+/** Half the collision box of a pin, in board units. Cards are ~210x240. */
 const PIN_R = 118;
+
+/**
+ * How far above a pin's centre its tack sits, in board units.
+ *
+ * The threads tie here rather than to the node the simulation moves, because
+ * a thread from the centre of a card runs under the photograph and out the
+ * other side. Half the card's height plus the tack's own overhang.
+ */
+const TACK_UP = 122;
 
 type Node = SimulationNodeDatum & { pin: Pin };
 type Link = SimulationLinkDatum<Node>;
@@ -267,8 +276,11 @@ export function Board({
   const paths = useMemo(() => {
     if (places.length !== pins.length) return [];
     return threads.map((t) => {
-      const a = places[t.source];
-      const b = places[t.target];
+      // Tied to the TACK, not to the middle of the card. A thread that starts
+      // at a pin's centre passes under its own photograph and comes out the
+      // other side, which is the one thing string on a board never does.
+      const a = { x: places[t.source].x, y: places[t.source].y - TACK_UP };
+      const b = { x: places[t.target].x, y: places[t.target].y - TACK_UP };
       const span = Math.hypot(b.x - a.x, b.y - a.y);
       const sag = Math.min(70, span * 0.13);
       return {

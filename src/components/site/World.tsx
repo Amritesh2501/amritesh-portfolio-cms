@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import {
   ARRIVAL,
+  BULBS,
   ESTABLISH,
   FILES,
   FILE_COUNT,
@@ -43,7 +44,19 @@ import { CaseFilePages } from "./CaseFilePages";
  *    why it costs almost nothing to move a camera over.
  */
 
-type Phase = "room" | "cover" | "turning" | "open";
+/**
+ * A file, from the shelf to its contents.
+ *
+ * `pulling` is the beat the shelf itself owns: the spine comes out of the row
+ * and turns, in the drawing, where it is still a thing standing on a shelf.
+ * Only once it is out does `cover` hand it to a card face-on. Going straight
+ * from the row to the card — which is what this did — means the file is never
+ * seen leaving the shelf, and a file that teleports off a shelf is a dialog.
+ */
+type Phase = "room" | "pulling" | "cover" | "turning" | "open";
+
+/** How long the spine takes to come out and turn. Matches `xw-pull` in CSS. */
+const PULL_MS = 760;
 
 export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void }) {
   const reduce = useReducedMotion();
@@ -65,6 +78,10 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   const [deskOpen, setDeskOpen] = useState(false);
   /** The blind. Down on arrival: it is the middle of the night out there. */
   const [blindDown, setBlindDown] = useState(true);
+  /** The two lights, both off. A room somebody left in a hurry is a dark one. */
+  const [ceiling, setCeiling] = useState(false);
+  const [lamp, setLamp] = useState(false);
+  const [bulb, setBulb] = useState(BULBS[0]);
 
   const view = useViewport();
   const timers = useRef<number[]>([]);
@@ -140,11 +157,22 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   const pick = useCallback(
     (file: CaseFile) => {
       if (!isUnlocked(file, read)) return;
+      // One file off the shelf at a time. Without this, clicking a second
+      // spine while the first is still coming out swaps the file underneath a
+      // running animation and the pull restarts from halfway.
+      if (phase !== "room") return;
       sound.latch();
       setPicked(file);
-      setPhase("cover");
+      if (reduce) {
+        // The file is still taken off the shelf; it simply does not perform
+        // being taken off the shelf.
+        setPhase("cover");
+        return;
+      }
+      setPhase("pulling");
+      after(PULL_MS, () => setPhase("cover"));
     },
-    [read],
+    [read, reduce, phase, after],
   );
 
   /** Cover → pages → what is inside. */
@@ -180,6 +208,26 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   const pullCord = useCallback(() => {
     setBlindDown((down) => !down);
     sound.latch();
+  }, []);
+
+  /* The lights ------------------------------------------------------------- */
+
+  const toggleCeiling = useCallback(() => {
+    setCeiling((on) => !on);
+    sound.latch();
+  }, []);
+
+  const toggleLamp = useCallback(() => {
+    setLamp((on) => !on);
+    sound.latch();
+  }, []);
+
+  /** Picking a colour also turns the fitting on: nobody picks a bulb to
+   *  leave it off, and a swatch that appears to do nothing reads as broken. */
+  const pickBulb = useCallback((next: (typeof BULBS)[number]) => {
+    setBulb(next);
+    setCeiling(true);
+    sound.settle();
   }, []);
 
   /* Sound ------------------------------------------------------------------- */
@@ -246,7 +294,14 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   const got = read.filter((id) => id !== "dossier").length;
 
   return (
-    <div className={`xw ${blindDown ? "" : "is-lit"}`}>
+    <div
+      // Lit by any of the three, because the room getting brighter is about
+      // how much light is in it and not about where the light came from.
+      className={`xw ${!blindDown || ceiling || lamp ? "is-lit" : ""}`}
+      // One property, read by every glow in the drawing. Changing the bulb is
+      // this string changing; nothing downstream knows it happened.
+      style={{ ["--xw-bulb" as string]: bulb.value }}
+    >
       <div className="xw-viewport">
         <div
           className="xw-stage"
@@ -261,11 +316,16 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
             read={read}
             at={at}
             blindDown={blindDown}
+            ceiling={ceiling}
+            lamp={lamp}
+            pulling={phase === "pulling" ? (picked?.id ?? null) : null}
             onStation={goto}
             onFile={pick}
             onBoard={() => setBoardOpen(true)}
             onDesk={() => setDeskOpen(true)}
             onCord={pullCord}
+            onCeiling={toggleCeiling}
+            onLamp={toggleLamp}
           />
         </div>
       </div>
@@ -280,9 +340,45 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
           <p className="xw-count">
             {got} / {FILE_COUNT} read
           </p>
-          <button type="button" className="xw-mute" onClick={toggleMute}>
-            {muted ? "SOUND OFF" : "SOUND ON"}
-          </button>
+          {/* The lights.
+              The fittings themselves take the click in the drawing; this is
+              the same two switches somewhere a keyboard can reach them, plus
+              the only way to change the bulb — a colour is not something a
+              shade can be clicked into telling you about. */}
+          <div className="xw-lights">
+            <button
+              type="button"
+              className={`xw-mute ${ceiling ? "is-on" : ""}`}
+              onClick={toggleCeiling}
+              aria-pressed={ceiling}
+            >
+              CEILING
+            </button>
+            <div className="xw-bulbs" role="group" aria-label="Bulb colour">
+              {BULBS.map((b) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  className={`xw-bulb-swatch ${bulb.id === b.id ? "is-on" : ""}`}
+                  style={{ ["--swatch" as string]: b.value }}
+                  onClick={() => pickBulb(b)}
+                  aria-label={`${b.name} bulb`}
+                  aria-pressed={bulb.id === b.id}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              className={`xw-mute ${lamp ? "is-on" : ""}`}
+              onClick={toggleLamp}
+              aria-pressed={lamp}
+            >
+              LAMP
+            </button>
+            <button type="button" className="xw-mute" onClick={toggleMute}>
+              {muted ? "SOUND OFF" : "SOUND ON"}
+            </button>
+          </div>
         </div>
 
         <div className="xw-hud-bottom">
@@ -447,7 +543,17 @@ function Cover({
 }) {
   return (
     <div className="xw-cover">
-      <article className="xw-cover-card" role="dialog" aria-modal="true" aria-label={file.name}>
+      {/* The cover itself opens the file, because that is what a cover is for.
+          The button stays: it carries the keyboard and it says out loud what
+          clicking the card does. "Put it back" stops the event, or putting it
+          back would open it on the way out. */}
+      <article
+        className="xw-cover-card"
+        role="dialog"
+        aria-modal="true"
+        aria-label={file.name}
+        onClick={onOpen}
+      >
         <div className="xw-cover-rule" aria-hidden />
         <p className="xw-cover-n">FILE {file.index}</p>
         <h2 className="xw-cover-title">{file.name}</h2>
@@ -467,10 +573,17 @@ function Cover({
         </dl>
 
         <div className="xw-cover-actions">
-          <button type="button" className="btn btn-solid" onClick={onOpen} autoFocus>
+          <button type="button" className="btn btn-solid" autoFocus>
             Open the file
           </button>
-          <button type="button" className="btn btn-sm" onClick={onBack}>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onBack();
+            }}
+          >
             Put it back
           </button>
         </div>

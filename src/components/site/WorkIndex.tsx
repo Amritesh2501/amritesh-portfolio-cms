@@ -72,9 +72,9 @@ export function WorkIndex({ projects }: { projects: CardProject[] }) {
      */
     const tick = () => {
       have = { x: have.x + (want.x - have.x) * 0.1, y: have.y + (want.y - have.y) * 0.1 };
-      stage.style.setProperty("--tilt-y", `${have.x * 13}deg`);
-      stage.style.setProperty("--tilt-x", `${-have.y * 9}deg`);
-      stage.style.setProperty("--slide", `${have.x * 14}px`);
+      stage.style.setProperty("--tilt-y", `${have.x * 17}deg`);
+      stage.style.setProperty("--tilt-x", `${-have.y * 12}deg`);
+      stage.style.setProperty("--slide", `${have.x * 16}px`);
 
       raf =
         Math.abs(want.x - have.x) > 0.0005 || Math.abs(want.y - have.y) > 0.0005
@@ -126,6 +126,17 @@ export function WorkIndex({ projects }: { projects: CardProject[] }) {
 
       <div className="wi-stage" ref={stageRef} aria-hidden>
         <div className="wi-slab">
+          {/* The back of the slab, standing off behind the face.
+
+              Depth has to be built out of SIBLINGS here, not out of nesting.
+              The face is `overflow: hidden` — it has to be, to clip the
+              picture to the rounded corner — and an element that clips is
+              forced to `transform-style: flat`, so anything given a translateZ
+              INSIDE it is quietly squashed back onto its plane. That is why
+              the first version of this looked flat: the depth was all nested
+              inside the one box that cannot have any. */}
+          <div className="wi-slab-back" />
+
           <div className="wi-slab-face">
             {live === current.slug ? (
               <LiveFrame

@@ -653,6 +653,43 @@ body {
   letter-spacing: 0.2em;
 }
 
+/* --- A file coming off the shelf ------------------------------------------
+
+   The beat between clicking a spine and getting a cover. The file leans out of
+   the row, turns, and lifts clear before anything else happens — without it a
+   file is never seen LEAVING the shelf, and a file that teleports off a shelf
+   is a dialog with a serif on it.
+
+   transform-box: fill-box so the origin is the file's own bottom edge rather
+   than the corner of the 2400x1350 room, which would swing it across the
+   floor instead of tipping it out of the row.
+   ------------------------------------------------------------------------- */
+
+.xw-file-body {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.xw-file-body.is-pulled {
+  animation: xw-pull 760ms cubic-bezier(0.34, 0.9, 0.3, 1) both;
+}
+
+@keyframes xw-pull {
+  0% {
+    transform: none;
+  }
+  /* Out of the row first — a file is gripped and tipped forward before it can
+     go anywhere. */
+  40% {
+    transform: translateY(-14px) rotate(-9deg) scale(1.04);
+  }
+  /* Then it turns to face out, and lifts clear as the cover takes over. */
+  100% {
+    transform: translate(26px, -132px) rotate(-26deg) scale(1.5);
+    opacity: 0;
+  }
+}
+
 /* --- The file, off the shelf and face on ---------------------------------- */
 
 .xw-cover {
@@ -667,9 +704,12 @@ body {
   perspective: 1500px;
 }
 
-/* It arrives from roughly where its spine was standing, turned away, and
-   settles square to the camera. That is the whole difference between a file
-   being picked up and a dialog being opened. */
+/* It picks up where the spine left off: edge-on, turned away, at roughly the
+   angle the file was lifted to, and it rotates round to face the camera. The
+   two animations are one move — the SVG hands over to this mid-turn.
+
+   preserve-3d and a real edge, so what turns is an object with a thickness
+   rather than a rectangle being skewed. */
 .xw-cover-card {
   position: relative;
   width: min(46ch, 100%);
@@ -677,19 +717,38 @@ body {
   border: 2px solid color-mix(in srgb, var(--xp-fg) 55%, transparent);
   border-radius: 2px;
   background: #05060a;
+  transform-style: preserve-3d;
   transform-origin: 20% 50%;
-  animation: xw-take 0.62s cubic-bezier(0.18, 0.9, 0.24, 1) both;
+  animation: xw-take 0.72s cubic-bezier(0.18, 0.9, 0.24, 1) both;
+  cursor: pointer;
+}
+
+/* The board of the file, standing off the back of the cover. It is what makes
+   the turn read as a thing with a spine rather than a page. */
+.xw-cover-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  border-radius: 2px;
+  background: #05060a;
+  transform: translateZ(-13px);
+  pointer-events: none;
 }
 
 @keyframes xw-take {
   from {
     opacity: 0;
-    transform: translate3d(16vw, -8vh, 0) rotateY(-64deg) rotate(-5deg) scale(0.3);
+    transform: translate3d(14vw, -10vh, 0) rotateY(-82deg) rotate(-24deg) scale(0.42);
   }
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0) rotateY(0deg) rotate(-0.6deg) scale(1);
   }
+}
+
+.xw-cover-card:hover {
+  border-color: var(--xp-hot);
 }
 
 /* A second rule inside the border, the way a case file is printed. */
@@ -949,6 +1008,132 @@ body {
 @keyframes xw-bead {
   0%, 100% { r: 9; }
   50% { r: 11.5; }
+}
+
+/* --- The two lights -------------------------------------------------------
+
+   Every glow in the drawing fills with var(--xw-bulb), which World sets once
+   on .xw. Changing the bulb is that one string changing; the cone, the pool
+   and the filament never learn what colour they are.
+
+   The cones are flat polygons rather than gradients on purpose. The room is
+   flat ink, and a soft volumetric falloff would be the one thing in it
+   pretending to be lit rather than drawn.
+   ------------------------------------------------------------------------- */
+
+.xw {
+  /* The fallback matters: BULBS[0] is tungsten, and a room whose lights go
+     black because a custom property did not arrive is worse than one lit the
+     wrong colour. */
+  --xw-bulb: #ffc178;
+}
+
+.xw-bulb-light,
+.xw-lamp-light {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.xw-pendant.is-on .xw-bulb-light,
+.xw-lamp.is-on .xw-lamp-light {
+  opacity: 1;
+}
+
+.xw-bulb-cone,
+.xw-lamp-cone {
+  fill: var(--xw-bulb);
+  stroke: none;
+  opacity: 0.09;
+}
+
+.xw-bulb-pool,
+.xw-lamp-pool {
+  fill: var(--xw-bulb);
+  stroke: none;
+  opacity: 0.14;
+}
+
+.xw-lamp-cone {
+  fill: var(--xw-lamp-bulb, #ffbe5c);
+}
+
+.xw-lamp-pool {
+  fill: var(--xw-lamp-bulb, #ffbe5c);
+  opacity: 0.18;
+}
+
+/* The filament. Dark and dead until it is switched on, and then it is the
+   brightest thing in the room — which is the whole feedback for the click. */
+.xw-bulb-core,
+.xw-lamp-core {
+  fill: var(--xp-fg);
+  stroke: none;
+  opacity: 0.18;
+  transition: fill 0.4s ease, opacity 0.4s ease, filter 0.4s ease;
+}
+
+.xw-pendant.is-on .xw-bulb-core {
+  fill: var(--xw-bulb);
+  opacity: 1;
+  filter: drop-shadow(0 0 14px var(--xw-bulb));
+}
+
+.xw-lamp.is-on .xw-lamp-core {
+  fill: var(--xw-lamp-bulb, #ffbe5c);
+  opacity: 1;
+  filter: drop-shadow(0 0 10px var(--xw-lamp-bulb, #ffbe5c));
+}
+
+/* Both fittings are things you press, so both say so. */
+.xw-pendant,
+.xw-lamp {
+  cursor: pointer;
+}
+
+/* --- The light switches in the HUD ---------------------------------------- */
+
+.xw-lights {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.xw-mute.is-on {
+  border-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+.xw-bulbs {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0 0.2rem;
+}
+
+.xw-bulb-swatch {
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 26%, transparent);
+  border-radius: 50%;
+  background: var(--swatch);
+  opacity: 0.45;
+  cursor: pointer;
+  transition: opacity 0.3s ease, transform 0.3s var(--ease-out), box-shadow 0.3s ease;
+}
+
+.xw-bulb-swatch:hover,
+.xw-bulb-swatch:focus-visible {
+  opacity: 0.85;
+  transform: scale(1.12);
+}
+
+.xw-bulb-swatch.is-on {
+  opacity: 1;
+  border-color: var(--xp-fg);
+  box-shadow: 0 0 12px var(--swatch);
 }
 
 /* --- Daylight ------------------------------------------------------------- */
@@ -1238,6 +1423,13 @@ body {
     animation: none;
   }
 
+  /* The file still comes off the shelf, it just does not perform it. World
+     skips straight to the cover under reduced motion, so this only guards the
+     case where the class lands anyway. */
+  .xw-file-body.is-pulled {
+    animation-duration: 0.01ms;
+  }
+
   .xw-blind,
   .xw-blind-rail,
   .xw-cord {
@@ -1316,24 +1508,57 @@ body {
   color: var(--xp-hot);
 }
 
+/* The one perspective on this screen. Long, because the board is wide and a
+   short perspective turns a gentle lift into a fisheye. Everything on the
+   sheet — the string, the cards, the tacks — is at its own depth inside it,
+   so picking a pin up is a lift rather than a scale. */
 .xb-frame {
   position: relative;
   align-self: center;
+  perspective: 2200px;
+  perspective-origin: 50% 42%;
 }
 
-/* The cork itself: a wash and a grid of pinholes, both faint enough to be
-   substrate rather than pattern. */
+/* The sheet itself.
+
+   Paper, not cork: a warm off-white ground, a fine grid ruled over it, and a
+   heavier line every fifth one, the way engineering paper is printed. The
+   fibre is two very low-contrast gradients crossing at an angle nothing else
+   in the layout uses, which is enough to stop a flat fill reading as a flat
+   fill without costing an image.
+
+   Everything on this sheet is dark-on-light, which is the opposite of the room
+   it came out of. That is the point: taking the board down and putting it
+   under a light is meant to feel like leaving the dark. */
 .xb-board {
+  --paper: #e8e1cf;
+  --paper-rule: rgba(90, 76, 52, 0.16);
+  --paper-rule-major: rgba(90, 76, 52, 0.3);
+  --paper-ink: #241d12;
+  --paper-dim: #6b5c44;
+  --string: #a8352b;
+
   position: absolute;
   top: 0;
   left: 0;
   transform-origin: 0 0;
+  transform-style: preserve-3d;
   background:
-    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--xp-hot) 7%, transparent), transparent 70%),
-    repeating-linear-gradient(0deg, transparent 0 39px, color-mix(in srgb, var(--xp-fg) 3%, transparent) 39px 40px),
-    repeating-linear-gradient(90deg, transparent 0 39px, color-mix(in srgb, var(--xp-fg) 3%, transparent) 39px 40px),
-    #07080d;
-  border: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+    /* The fibre. */
+    repeating-linear-gradient(64deg, transparent 0 3px, rgba(120, 100, 70, 0.035) 3px 4px),
+    repeating-linear-gradient(-27deg, transparent 0 5px, rgba(120, 100, 70, 0.03) 5px 6px),
+    /* A light thrown across it, so the sheet is lit rather than printed. */
+    radial-gradient(130% 100% at 50% -10%, rgba(255, 248, 226, 0.85), transparent 62%),
+    /* The major rule, every fifth line. */
+    repeating-linear-gradient(0deg, transparent 0 99px, var(--paper-rule-major) 99px 100px),
+    repeating-linear-gradient(90deg, transparent 0 99px, var(--paper-rule-major) 99px 100px),
+    /* The minor rule. */
+    repeating-linear-gradient(0deg, transparent 0 19px, var(--paper-rule) 19px 20px),
+    repeating-linear-gradient(90deg, transparent 0 19px, var(--paper-rule) 19px 20px),
+    var(--paper);
+  box-shadow:
+    0 0 0 1px rgba(60, 48, 30, 0.35),
+    0 40px 90px -30px rgba(0, 0, 0, 0.9);
 }
 
 .xb-threads {
@@ -1341,28 +1566,37 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  /* Behind the cards it ties to, which is where string goes: a thread that
+     paints over its own photographs looks drawn on rather than tied on. */
+  transform: translateZ(-8px);
   pointer-events: none;
 }
 
 .xb-thread {
   fill: none;
-  stroke: var(--xp-hot);
-  stroke-width: 2;
+  stroke: var(--string, #a8352b);
+  stroke-width: 2.4;
   stroke-linecap: round;
-  opacity: 0.32;
+  opacity: 0.55;
   transition: opacity 0.35s ease, stroke-width 0.35s ease;
 }
 
 .xb-thread.is-lit {
-  opacity: 0.95;
-  stroke-width: 3;
+  opacity: 1;
+  stroke-width: 3.4;
 }
 
-/* --- One pin -------------------------------------------------------------- */
+/* --- One pin --------------------------------------------------------------
+
+   A photographic print, pinned. The card is a real object on the sheet: it
+   sits a few pixels off it in Z, lifts further when it is picked up, and the
+   whole board is under a perspective so that lift is visible as a lift rather
+   than as a scale. */
 
 .xb-pin {
   position: absolute;
   width: 210px;
+  transform-style: preserve-3d;
   /* The simulation writes left/top every frame, so those two cannot be part of
      a transition or the pin would lag its own physics. Everything else can. */
   transition: opacity 0.35s ease, filter 0.35s ease;
@@ -1375,40 +1609,53 @@ body {
 }
 
 .xb-pin.is-dim {
-  opacity: 0.26;
+  opacity: 0.4;
   filter: grayscale(1);
 }
 
+/* The tack. A dome with a highlight on it and a shadow under it, because a
+   flat circle at the top of a card reads as a bullet point. */
 .xb-tack {
   position: absolute;
-  top: -7px;
+  top: -9px;
   left: 50%;
-  z-index: 2;
-  width: 13px;
-  height: 13px;
-  margin-left: -6.5px;
+  z-index: 3;
+  width: 17px;
+  height: 17px;
+  margin-left: -8.5px;
   border-radius: 50%;
-  background: var(--xp-hot);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+  background:
+    radial-gradient(circle at 34% 30%, #fff8f2 0 14%, transparent 60%),
+    radial-gradient(circle at 50% 45%, #d2483a, #7d1f16 78%);
+  box-shadow: 0 3px 7px rgba(40, 24, 10, 0.55);
+  transform: translateZ(22px);
 }
 
 .xb-pin-hit {
   display: block;
   width: 100%;
-  padding: 10px 10px 8px;
-  border: 1px solid color-mix(in srgb, var(--xp-fg) 26%, transparent);
-  background: color-mix(in srgb, #05060a 72%, var(--xp-fg));
-  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.95);
+  /* Bottom-heavy, the way a print with a caption under it is. */
+  padding: 11px 11px 9px;
+  border: 0;
+  background: #fbf8f0;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 10px 22px -10px rgba(40, 28, 12, 0.65);
   font: inherit;
   text-align: left;
-  color: var(--xp-fg);
+  color: var(--paper-ink, #241d12);
   cursor: inherit;
+  transform: translateZ(8px);
+  transition: box-shadow 0.35s ease, transform 0.35s var(--ease-out);
 }
 
 .xb-pin.is-open .xb-pin-hit,
 .xb-pin-hit:focus-visible {
-  border-color: var(--xp-hot);
-  box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.95), 0 0 0 1px var(--xp-hot);
+  outline: none;
+  transform: translateZ(46px);
+  box-shadow:
+    0 0 0 2px var(--string, #a8352b),
+    0 26px 44px -16px rgba(40, 28, 12, 0.7);
 }
 
 .xb-pin-shot {
@@ -1416,57 +1663,63 @@ body {
   place-items: center;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: #07080d;
+  background: #ddd6c6;
+  box-shadow: 0 0 0 1px rgba(60, 48, 30, 0.18) inset;
 }
 
 .xb-pin-shot img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* The board is a room lit by one bulb, so the photographs on it are not
-     going to be colour-accurate. Desaturating them is what makes a CMS
-     screenshot sit on this wall instead of on top of it. */
-  filter: grayscale(0.7) contrast(1.1) brightness(0.85);
+  /* A print pinned to a board under one light is not colour-accurate, and
+     knocking the saturation down is what makes a CMS screenshot sit ON this
+     sheet instead of on top of it. */
+  filter: grayscale(0.55) contrast(1.06) sepia(0.12);
 }
 
 .xb-pin-blank {
   font-size: 0.5625rem;
   letter-spacing: 0.24em;
-  color: var(--xp-dim);
+  color: var(--paper-dim, #6b5c44);
 }
 
 .xb-pin-foot {
   display: grid;
   gap: 2px;
-  padding-top: 8px;
+  padding-top: 9px;
 }
 
 .xb-pin-code {
   font-size: 0.5625rem;
   letter-spacing: 0.22em;
-  color: var(--xp-hot);
+  color: var(--string, #a8352b);
 }
 
 .xb-pin-title {
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   line-height: 1.35;
+  color: var(--paper-ink, #241d12);
 }
 
-/* Kinds. A note is paper torn off a pad, a map is squared, a document is
-   typed. Enough difference to tell them apart at a glance across a board. */
+/* Kinds. A note is torn off a pad, a map is squared, a document is typed.
+   Enough difference to tell them apart at a glance across a board. */
 .xb-pin.is-note .xb-pin-hit {
-  background: color-mix(in srgb, #05060a 62%, var(--xp-hot));
-  border-color: color-mix(in srgb, var(--xp-hot) 40%, transparent);
+  background: #f6ebc4;
 }
 
 .xb-pin.is-map .xb-pin-hit {
-  background-image: repeating-linear-gradient(0deg, transparent 0 13px, color-mix(in srgb, var(--xp-fg) 7%, transparent) 13px 14px),
-    repeating-linear-gradient(90deg, transparent 0 13px, color-mix(in srgb, var(--xp-fg) 7%, transparent) 13px 14px);
+  background-color: #eef2ea;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 13px, rgba(60, 80, 55, 0.14) 13px 14px),
+    repeating-linear-gradient(90deg, transparent 0 13px, rgba(60, 80, 55, 0.14) 13px 14px);
 }
 
 .xb-pin.is-document .xb-pin-hit {
-  border-style: dashed;
+  background: #fdfdfa;
+  box-shadow:
+    0 0 0 1px rgba(60, 48, 30, 0.25) inset,
+    0 10px 22px -10px rgba(40, 28, 12, 0.65);
 }
 
 /* --- The pin, picked up --------------------------------------------------- */
@@ -2255,6 +2508,8 @@ body {
   transform: none;
 }
 
+:root[data-perf="low"] .wi-slab-back,
+:root[data-perf="low"] .wi-slab-face,
 :root[data-perf="low"] .wi-slab-face img,
 :root[data-perf="low"] .wi-slab-plate,
 :root[data-perf="low"] .wi-slab-peek {
@@ -4382,6 +4637,24 @@ html {
     will-change: transform;
   }
 
+  /* The back of the slab, standing off behind the face so the thing has a
+     thickness. When it turns, this is the edge that comes into view — which is
+     the difference between an object being rotated and a rectangle being
+     skewed. Inset slightly, so it reads as the body of the slab rather than as
+     a second card behind it. */
+  .wi-slab-back {
+    position: absolute;
+    inset: 12px 10px -14px;
+    border-radius: var(--r-lg);
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--surface) 92%, var(--fg)),
+      var(--scene-ink)
+    );
+    box-shadow: 0 50px 90px -40px rgba(0, 0, 0, 0.9);
+    transform: translateZ(-38px);
+  }
+
   .wi-slab-face {
     position: relative;
     aspect-ratio: 4 / 5;
@@ -4392,6 +4665,9 @@ html {
       radial-gradient(80% 60% at 50% 0%, var(--scene-wash-a), transparent 70%),
       var(--scene-ink);
     box-shadow: var(--shadow-lg);
+    /* Its own plane in the stack. It cannot hold depth INSIDE it — it clips —
+       so it holds a position in Z instead. */
+    transform: translateZ(0);
   }
 
   .wi-slab-face img {
@@ -4400,9 +4676,11 @@ html {
     height: 100%;
     object-fit: cover;
     object-position: top;
-    /* Pushed back behind the frame, so the picture sits INSIDE the slab rather
-       than on its surface. This one line is most of the depth. */
-    transform: translateZ(-28px) scale(1.06);
+    /* A 2D slide, deliberately. A translateZ here is discarded by the clipping
+       parent, so the picture parallaxes WITHIN its own plane: overscaled a
+       little and shifted against the turn, which buys the same read at the
+       one depth this box is allowed to have. */
+    transform: scale(1.12) translateX(calc(var(--slide) * -0.9));
   }
 
   .wi-slab-blank {
@@ -4445,7 +4723,7 @@ html {
     border-radius: var(--r-md);
     background: color-mix(in srgb, var(--bg) 82%, transparent);
     backdrop-filter: blur(14px);
-    transform: translateZ(42px) translateX(calc(var(--slide) * 0.5));
+    transform: translateZ(64px) translateX(calc(var(--slide) * 0.5));
     box-shadow: var(--shadow-md);
   }
 
@@ -4470,7 +4748,7 @@ html {
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--muted);
-    transform: translateZ(58px);
+    transform: translateZ(86px);
     cursor: pointer;
     transition: color 0.35s ease, border-color 0.35s ease;
   }
