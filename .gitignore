@@ -26,5 +26,7 @@ skills-lock.json
 
 .env.netlify
 
-# Previews written by scripts/render-room.ts. Look at them, do not commit them.
-scratch-room-*.png
+# Previews and crops written while checking the case room drawing. Look at
+# them, do not commit them. The glob is deliberately wider than render-room.ts
+# writes, because the one that slipped through was a hand-made crop.
+scratch-*.png
