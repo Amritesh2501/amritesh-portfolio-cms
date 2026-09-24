@@ -653,167 +653,318 @@ body {
   letter-spacing: 0.2em;
 }
 
-/* --- A file coming off the shelf ------------------------------------------
+/* --- A gap in the row ----------------------------------------------------
 
-   The beat between clicking a spine and getting a cover. The file leans out of
-   the row, turns, and lifts clear before anything else happens — without it a
-   file is never seen LEAVING the shelf, and a file that teleports off a shelf
-   is a dialog with a serif on it.
-
-   transform-box: fill-box so the origin is the file's own bottom edge rather
-   than the corner of the 2400x1350 room, which would swing it across the
-   floor instead of tipping it out of the row.
+   The file that is currently out is simply not drawn. There used to be a
+   keyframe here that tipped the spine out of the row and faded it, handing
+   over to a card that flew in from elsewhere; ShelfBook does the whole move
+   as one object now, starting at this spine position, so anything animating
+   here would be a second copy of the same file moving differently.
    ------------------------------------------------------------------------- */
 
-.xw-file-body {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
+.xw-file-body.is-out {
+  opacity: 0;
+  /* The book takes the click from here on. */
+  pointer-events: none;
 }
 
-.xw-file-body.is-pulled {
-  animation: xw-pull 760ms cubic-bezier(0.34, 0.9, 0.3, 1) both;
-}
+/* ---------------------------------------------------------------------------
+   A file, off the shelf
 
-@keyframes xw-pull {
-  0% {
-    transform: none;
-  }
-  /* Out of the row first — a file is gripped and tipped forward before it can
-     go anywhere. */
-  40% {
-    transform: translateY(-14px) rotate(-9deg) scale(1.04);
-  }
-  /* Then it turns to face out, and lifts clear as the cover takes over. */
-  100% {
-    transform: translate(26px, -132px) rotate(-26deg) scale(1.5);
-    opacity: 0;
-  }
-}
+   One box in three dimensions, not a stack of panels. A book on a shelf shows
+   its spine, so the box starts a quarter turn away from the camera and turns to
+   face it — which is the move a hand makes, and is why the faces are laid out
+   as a box rather than cross-faded.
 
-/* --- The file, off the shelf and face on ---------------------------------- */
+   The layout is the standard one for a solid: each face is placed in the plane
+   it belongs to and turned to point out of it.
 
-.xw-cover {
+       cover   translateZ(t/2)                     normal +Z
+       spine   translateX(-w/2) rotateY(-90deg)    normal -X
+       edge    translateX(+w/2) rotateY(90deg)     normal +X
+
+   With the whole box at rotateY(90deg) the spine's -X normal swings round to +Z
+   and faces you; at rotateY(0) the cover does. That one number is the entire
+   animation.
+   ------------------------------------------------------------------------- */
+
+.xk {
   position: absolute;
   inset: 0;
-  z-index: 10;
+  z-index: 12;
   display: grid;
   place-items: center;
-  padding: clamp(1rem, 4vw, 2.5rem);
-  overflow-y: auto;
-  background: color-mix(in srgb, #05060a 82%, transparent);
-  perspective: 1500px;
+  align-content: center;
+  gap: clamp(1.25rem, 4vh, 2.5rem);
+  background: color-mix(in srgb, #05060a 84%, transparent);
+  /* Long. A short perspective turns a quarter turn into a fisheye and the
+     cover arrives visibly stretched. */
+  perspective: 2400px;
+  perspective-origin: 50% 46%;
+  font-family: var(--font-mono);
+  animation: xk-dim 0.5s ease both;
 }
 
-/* It picks up where the spine left off: edge-on, turned away, at roughly the
-   angle the file was lifted to, and it rotates round to face the camera. The
-   two animations are one move — the SVG hands over to this mid-turn.
+@keyframes xk-dim {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
-   preserve-3d and a real edge, so what turns is an object with a thickness
-   rather than a rectangle being skewed. */
-.xw-cover-card {
+.xk-book {
   position: relative;
-  width: min(46ch, 100%);
-  padding: clamp(1.5rem, 4vw, 2.4rem);
-  border: 2px solid color-mix(in srgb, var(--xp-fg) 55%, transparent);
-  border-radius: 2px;
-  background: #05060a;
   transform-style: preserve-3d;
-  transform-origin: 20% 50%;
-  animation: xw-take 0.72s cubic-bezier(0.18, 0.9, 0.24, 1) both;
-  cursor: pointer;
+  /* Every one of these is written from ShelfBook: --dx/--dy is where the drawn
+     spine was standing on screen, --s0 the scale that makes this box's spine
+     face exactly the size that one was, --tilt the lean it was drawn with, and
+     --t the thickness taken from its own proportions on the shelf. */
+  animation: xk-take 1500ms cubic-bezier(0.33, 0.9, 0.28, 1) both;
 }
 
-/* The board of the file, standing off the back of the cover. It is what makes
-   the turn read as a thing with a spine rather than a page. */
-.xw-cover-card::before {
-  content: "";
+/* Out of the row, then round.
+
+   The two are deliberately not blended. A book does not begin rotating while it
+   is still between its neighbours — it comes clear first and only then turns.
+   So the whole of the first third is travel at a fixed rotateY(90deg) and the
+   quarter turn happens after it, which is also why the turn reads as slow
+   without the whole move being slow. */
+@keyframes xk-take {
+  0% {
+    transform:
+      translate3d(var(--dx), var(--dy), 0)
+      scale(var(--s0))
+      rotateZ(var(--tilt))
+      rotateY(90deg);
+  }
+  /* Clear of the shelf: pulled toward the camera and lifted, still edge-on. */
+  32% {
+    transform:
+      translate3d(calc(var(--dx) * 0.82), calc(var(--dy) * 0.82 - 3vh), 140px)
+      scale(calc(var(--s0) + (1 - var(--s0)) * 0.34))
+      rotateZ(var(--tilt))
+      rotateY(90deg);
+  }
+  /* Most of the quarter turn, travelling in to centre as it goes. */
+  76% {
+    transform:
+      translate3d(calc(var(--dx) * 0.16), calc(var(--dy) * 0.16), 90px)
+      scale(calc(var(--s0) + (1 - var(--s0)) * 0.88))
+      rotateZ(calc(var(--tilt) * 0.3))
+      rotateY(14deg);
+  }
+  /* Square on. The last few degrees are where the ease spends its time. */
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotateZ(0deg) rotateY(0deg);
+  }
+}
+
+.xk-book.is-still {
+  animation: none;
+}
+
+.xk-face {
   position: absolute;
+  backface-visibility: hidden;
+}
+
+/* --- The cover ------------------------------------------------------------ */
+
+.xk-cover {
   inset: 0;
-  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
-  border-radius: 2px;
-  background: #05060a;
-  transform: translateZ(-13px);
-  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: clamp(1.1rem, 3.5vh, 2rem);
+  border: 0;
+  border-radius: 2px 5px 5px 2px;
+  /* Board, not paper: a case binder, lit from the top left. */
+  background:
+    linear-gradient(118deg, color-mix(in srgb, var(--xp-fg) 13%, #0b0c11), #05060a 62%),
+    #05060a;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--xp-fg) 34%, transparent),
+    inset 5px 0 14px -8px rgba(0, 0, 0, 0.9);
+  font: inherit;
+  text-align: left;
+  color: var(--xp-fg);
+  cursor: pointer;
+  transform: translateZ(calc(var(--t) / 2));
 }
 
-@keyframes xw-take {
-  from {
-    opacity: 0;
-    transform: translate3d(14vw, -10vh, 0) rotateY(-82deg) rotate(-24deg) scale(0.42);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) rotateY(0deg) rotate(-0.6deg) scale(1);
-  }
-}
-
-.xw-cover-card:hover {
-  border-color: var(--xp-hot);
-}
-
-/* A second rule inside the border, the way a case file is printed. */
-.xw-cover-rule {
+/* The printed rule inside the edge, the way a case file cover is set. */
+.xk-cover-rule {
   position: absolute;
-  inset: 7px;
-  border: 1px solid color-mix(in srgb, var(--xp-fg) 20%, transparent);
+  inset: 9px;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
   pointer-events: none;
 }
 
-.xw-cover-n {
-  margin: 0;
+.xk-cover:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 2px var(--xp-hot),
+    inset 5px 0 14px -8px rgba(0, 0, 0, 0.9);
+}
+
+.xk-n {
   font-size: 0.625rem;
   letter-spacing: 0.32em;
   color: var(--xp-hot);
 }
 
-.xw-cover-title {
-  margin: 0.4rem 0 0.2rem;
-  font-family: var(--font-mono);
-  font-size: clamp(1.5rem, 5vw, 2.1rem);
-  font-weight: 400;
-  letter-spacing: 0.18em;
+.xk-name {
+  font-size: clamp(1.25rem, 3.4vh, 2rem);
+  line-height: 1.05;
+  letter-spacing: 0.14em;
   color: var(--xp-fg);
 }
 
-.xw-cover-sub {
-  margin: 0 0 1.2rem;
-  padding-bottom: 1rem;
+.xk-sub {
+  padding-bottom: 0.7rem;
   border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
   color: var(--xp-dim);
 }
 
-.xw-cover-brief {
-  margin: 0 0 1.4rem;
-  font-size: 0.9375rem;
-  line-height: 1.65;
-  color: var(--xp-fg);
-  opacity: 0.88;
+.xk-brief {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--xp-fg) 88%, transparent);
 }
 
-.xw-cover-meta {
-  display: flex;
-  gap: 2.2rem;
-  margin: 0 0 1.6rem;
-}
-
-.xw-cover-meta dt {
+/* Pushed to the foot of the cover, where the instruction belongs. */
+.xk-open {
+  margin-top: auto;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--xp-hot) 55%, transparent);
   font-size: 0.5625rem;
-  letter-spacing: 0.24em;
-  color: var(--xp-dim);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--xp-hot);
+  transition: background-color 0.3s ease;
 }
 
-.xw-cover-meta dd {
-  margin: 0.3rem 0 0;
-  font-size: 0.8125rem;
+.xk-cover:hover .xk-open,
+.xk-cover:focus-visible .xk-open {
+  background: color-mix(in srgb, var(--xp-hot) 16%, transparent);
+}
+
+/* Stamped across the corner, at the angle a stamp lands. */
+.xk-stamp {
+  position: absolute;
+  top: 16%;
+  right: -6%;
+  padding: 0.3rem 1.4rem;
+  border: 2px solid color-mix(in srgb, var(--xp-hot) 65%, transparent);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  color: color-mix(in srgb, var(--xp-hot) 85%, transparent);
+  transform: rotate(-11deg);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* --- The spine ------------------------------------------------------------ */
+
+.xk-spine {
+  top: 0;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  width: var(--t);
+  height: 100%;
+  margin-left: calc(var(--t) / -2);
+  padding: 1rem 0;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(90deg, #05060a, color-mix(in srgb, var(--xp-fg) 16%, #0b0c11) 55%, #05060a);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  /* Rotated first, then moved out to the left edge, so the face ends up in
+     the plane x = -w/2 with its normal pointing out along -X.
+
+     calc against --w and NOT translateX(-50%): a percentage in translateX
+     resolves against the elements OWN width, which here is the thickness, so
+     the percentage version parks both edge faces a few dozen pixels either
+     side of the middle of the book instead of on its edges. */
+  transform: translateX(calc(var(--w) / -2)) rotateY(-90deg);
+}
+
+.xk-spine-n {
+  font-size: 0.75rem;
   letter-spacing: 0.1em;
   color: var(--xp-hot);
 }
 
-.xw-cover-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+.xk-spine-name {
+  font-size: 0.6875rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-fg);
+  white-space: nowrap;
+  /* Read from the foot up, which is how a spine on a shelf is read. */
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* --- The paper block ------------------------------------------------------ */
+
+.xk-edge {
+  top: 0;
+  left: 50%;
+  width: var(--t);
+  height: 100%;
+  margin-left: calc(var(--t) / -2);
+  border-radius: 0 3px 3px 0;
+  /* Ruled, because a stack of cut paper is exactly that: a lot of fine lines. */
+  background:
+    repeating-linear-gradient(90deg,
+      color-mix(in srgb, var(--xp-fg) 22%, #0b0c11) 0 1px,
+      #08090e 1px 3px);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  transform: translateX(calc(var(--w) / 2)) rotateY(90deg);
+}
+
+/* --- Putting it back ------------------------------------------------------ */
+
+.xk-back {
+  padding: 0.5rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  background: transparent;
+  font: inherit;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--xp-fg);
+  cursor: pointer;
+  /* Out of the way until the book has arrived. A control fading in underneath
+     a turning object is something to misclick. */
+  opacity: 0;
+  transition: opacity 0.4s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.xk-book.is-settled ~ .xk-back,
+.xk-book.is-still ~ .xk-back {
+  opacity: 1;
+}
+
+.xk-back:hover,
+.xk-back:focus-visible {
+  border-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xk {
+    animation-duration: 0.01ms;
+  }
+
+  /* The book is still taken off the shelf; it does not perform being taken off
+     the shelf. ShelfBook skips its timer too, so the cover is focusable from
+     the first frame rather than a second and a half in. */
+  .xk-book {
+    animation: none;
+  }
 }
 
 /* --- Pages turning -------------------------------------------------------- */
@@ -1408,10 +1559,6 @@ body {
     transition-duration: 400ms !important;
   }
 
-  .xw-cover-card {
-    animation-duration: 0.01ms;
-  }
-
   .xw-turn-stack,
   .xw-turn-page {
     animation: xw-turn-fade 0.3s ease both;
@@ -1423,13 +1570,6 @@ body {
   .xw-cord.is-live .xw-cord-bead,
   .xw-crt-scan {
     animation: none;
-  }
-
-  /* The file still comes off the shelf, it just does not perform it. World
-     skips straight to the cover under reduced motion, so this only guards the
-     case where the class lands anyway. */
-  .xw-file-body.is-pulled {
-    animation-duration: 0.01ms;
   }
 
   .xw-blind,

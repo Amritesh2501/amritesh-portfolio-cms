@@ -77,7 +77,7 @@ export function Room({
   blindDown,
   ceiling,
   lamp,
-  pulling,
+  taken,
   onStation,
   onFile,
   onBoard,
@@ -92,8 +92,9 @@ export function Room({
   blindDown: boolean;
   ceiling: boolean;
   lamp: boolean;
-  /** The id of the file currently coming off the shelf, if one is. */
-  pulling: string | null;
+  /** The id of the file that is currently out of the row, if any. Its spine
+   *  is not drawn: the book on screen IS that spine. */
+  taken: string | null;
   onStation: (id: string) => void;
   onFile: (file: CaseFile) => void;
   onBoard: () => void;
@@ -152,7 +153,7 @@ export function Room({
       <Shelf
         read={read}
         atShelf={atShelf}
-        pulling={pulling}
+        taken={taken}
         onStation={onStation}
         onFile={onFile}
       />
@@ -452,13 +453,13 @@ function Clock() {
 function Shelf({
   read,
   atShelf,
-  pulling,
+  taken,
   onStation,
   onFile,
 }: {
   read: string[];
   atShelf: boolean;
-  pulling: string | null;
+  taken: string | null;
   onStation: (id: string) => void;
   onFile: (file: CaseFile) => void;
 }) {
@@ -496,7 +497,11 @@ function Shelf({
             // element and a file snaps upright the instant it is picked.
             transform={`rotate(${tilt} ${x + w / 2} ${y + h})`}
           >
-            <g className={`xw-file-body ${pulling === f.id ? "is-pulled" : ""}`}>
+            {/* Hidden outright while the book is out, not animated out of the
+                row. The animation moved to ShelfBook, which starts at exactly
+                this spine's position on screen — so there is nothing here to
+                perform, only a gap to leave where the file used to be. */}
+            <g className={`xw-file-body ${taken === f.id ? "is-out" : ""}`}>
             <g className="xw-line">
               <path d={`M${x} ${y} L${x + w} ${y - 2} L${x + w} ${y + h} L${x} ${y + h} Z`} className="xw-solid" />
               {/* The label block down the spine.
