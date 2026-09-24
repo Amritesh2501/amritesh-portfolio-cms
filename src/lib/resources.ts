@@ -85,6 +85,14 @@ export const STATUS_OPTIONS: FieldOption[] = [
   { value: "ARCHIVED", label: "Archived" },
 ];
 
+/** How a pin on the evidence board is drawn. */
+export const EVIDENCE_KIND_OPTIONS: FieldOption[] = [
+  { value: "PHOTO", label: "Photograph" },
+  { value: "NOTE", label: "Handwritten note" },
+  { value: "MAP", label: "Map fragment" },
+  { value: "DOCUMENT", label: "Typed document" },
+];
+
 export const LIFECYCLE_OPTIONS: FieldOption[] = [
   { value: "LIVE", label: "Live" },
   { value: "IN_DEVELOPMENT", label: "In Development" },
@@ -660,6 +668,69 @@ export const RESOURCES: ResourceDef[] = [
       },
       { name: "description", label: "Description", type: "text", wide: true },
       { name: "icon", label: "Icon slug", type: "text" },
+      statusField,
+      orderField,
+    ],
+  },
+
+  {
+    key: "case-evidence",
+    model: "caseEvidence",
+    label: "Evidence board",
+    singular: "Pin",
+    description:
+      "The pinned board in the case room at /experiments. Where a pin lands is worked out from the threads, so there is nothing to position by hand.",
+    group: "content",
+    hasStatus: true,
+    hasOrder: true,
+    searchFields: ["code", "title", "description"],
+    orderBy: [{ displayOrder: "asc" }],
+    listColumns: [
+      { field: "image", label: "", type: "image", width: "56px" },
+      { field: "code", label: "Code", width: "88px" },
+      { field: "title", label: "Title" },
+      { field: "kind", label: "Kind", type: "badge" },
+      { field: "status", label: "State", type: "badge" },
+      { field: "displayOrder", label: "Order", type: "order", width: "84px" },
+    ],
+    fields: [
+      {
+        name: "code",
+        label: "Code",
+        type: "text",
+        required: true,
+        placeholder: "EX-01",
+        help: "Inked on the pin, and what other pins name to thread themselves to this one. Has to be unique.",
+        section: "The pin",
+      },
+      { name: "title", label: "Title", type: "text", required: true, section: "The pin" },
+      {
+        name: "kind",
+        label: "Kind",
+        type: "select",
+        options: EVIDENCE_KIND_OPTIONS,
+        required: true,
+        help: "Decides how the pin is drawn: a photograph, a torn note, a map fragment or a typed document.",
+        section: "The pin",
+      },
+      {
+        name: "description",
+        label: "Description",
+        type: "textarea",
+        wide: true,
+        help: "Shown when the pin is picked up off the board.",
+        section: "The pin",
+      },
+      { name: "image", label: "Image", type: "media", section: "The pin" },
+      {
+        name: "linksTo",
+        label: "Threaded to",
+        type: "list",
+        wide: true,
+        placeholder: "EX-02",
+        help: "One code per line. A thread is drawn once, from either end, so there is no need to write it on both pins. A code nothing matches is ignored.",
+        section: "Threads",
+      },
       statusField,
       orderField,
     ],

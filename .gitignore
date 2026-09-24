@@ -25,3 +25,6 @@ Thumbs.db
 skills-lock.json
 
 .env.netlify
+
+# Previews written by scripts/render-room.ts. Look at them, do not commit them.
+scratch-room-*.png

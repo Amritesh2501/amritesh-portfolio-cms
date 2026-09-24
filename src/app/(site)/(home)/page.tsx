@@ -5,7 +5,7 @@ import { getGitHubActivity } from "@/lib/github";
 import { Hero } from "@/components/site/Hero";
 import { Empty, Section } from "@/components/site/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
-import { WorkStack } from "@/components/site/WorkStack";
+import { WorkIndex } from "@/components/site/WorkIndex";
 import { About } from "@/components/site/About";
 import { Experience } from "@/components/site/Experience";
 import { Stack } from "@/components/site/Stack";
@@ -136,7 +136,7 @@ export default async function HomePage() {
 
       <Section id="work" label="Selected work">
         {shown.length > 0 ? (
-          <WorkStack projects={shown} />
+          <WorkIndex projects={shown} />
         ) : (
           <Empty>No published projects yet. Publish one from the CMS.</Empty>
         )}

@@ -171,6 +171,65 @@ export const getAchievements = cache(async () => {
   });
 });
 
+export const getCaseEvidence = cache(async () => {
+  return prisma.caseEvidence.findMany({
+    where: PUBLISHED,
+    orderBy: { displayOrder: "asc" },
+  });
+});
+
+/**
+ * Projects with the WHOLE gallery, not the one shot `getProjects` takes.
+ *
+ * Its own query rather than widening that one: the home page renders a single
+ * thumbnail per project and has no use for twenty rows of image it will not
+ * draw. The Gallery on the desk machine is the only screen that wants them all.
+ */
+const getCaseProjects = cache(async () => {
+  return prisma.project.findMany({
+    where: PUBLISHED,
+    orderBy: [{ displayOrder: "asc" }, { createdAt: "desc" }],
+    include: {
+      technologies: { orderBy: { displayOrder: "asc" } },
+      metrics: { orderBy: { displayOrder: "asc" } },
+      gallery: { orderBy: { displayOrder: "asc" }, select: { url: true, caption: true } },
+    },
+  });
+});
+
+/**
+ * Everything the case room at /experiments puts on screen.
+ *
+ * Wrapped, because that page used to read nothing at all and losing the
+ * database should not cost the whole room. Anything that fails comes back
+ * empty and the room draws the parts of itself that do not need a row — which
+ * is most of it.
+ */
+export async function getCaseRoomData() {
+  const settle = async <T>(work: Promise<T>, fallback: T): Promise<T> => {
+    try {
+      return await work;
+    } catch {
+      return fallback;
+    }
+  };
+
+  const [profile, projects, experience, education, skillGroups, certifications, evidence] =
+    await Promise.all([
+      settle(getProfile(), null),
+      settle(getCaseProjects(), [] as Awaited<ReturnType<typeof getCaseProjects>>),
+      settle(getExperience(), [] as Awaited<ReturnType<typeof getExperience>>),
+      settle(getEducation(), [] as Awaited<ReturnType<typeof getEducation>>),
+      settle(getSkillGroups(), [] as Awaited<ReturnType<typeof getSkillGroups>>),
+      settle(getCertifications(), [] as Awaited<ReturnType<typeof getCertifications>>),
+      settle(getCaseEvidence(), [] as Awaited<ReturnType<typeof getCaseEvidence>>),
+    ]);
+
+  return { profile, projects, experience, education, skillGroups, certifications, evidence };
+}
+
+export type CaseRoomData = Awaited<ReturnType<typeof getCaseRoomData>>;
+
 /** Everything the home page needs, in one round trip fan-out. */
 export async function getHomeData() {
   const [

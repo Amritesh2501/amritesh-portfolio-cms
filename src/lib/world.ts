@@ -8,10 +8,12 @@
  * game, it is a broken one, and every one of those shows up as a player giving
  * up rather than as an error anyone would ever see. See scripts/check-world.ts.
  *
- * Nothing here touches the database. The experiments page is deliberately
- * DB-free, so the puzzles are about the SHAPE of a portfolio, which is
- * knowledge the visitor already has by the time they get here, rather than
- * about rows that would have to be fetched and could be empty.
+ * Nothing here touches the database, but the page above it now does: the files
+ * on the shelf are the portfolio's own sections and the pins on the board are
+ * CMS rows. What stays in this file is the part that is true whatever the rows
+ * say — where the camera stands, where a spine is drawn, which file is sealed,
+ * and how a list of pins becomes a graph that a force simulation will not
+ * divide by zero on.
  */
 
 export type GameId = "untangle" | "order" | "recall";
@@ -62,20 +64,20 @@ export const STATIONS: Station[] = [
   {
     id: "window",
     name: "The window",
-    blurb: "Blinds half drawn. It is the middle of the night out there.",
+    blurb: "A blind, down. The cord is still hanging there.",
     cam: { x: 760, y: 520, z: 1.7 },
   },
   {
     id: "desk",
     name: "The desk",
-    blurb: "A lamp still on, a cold cup, and a phone off its cradle.",
-    cam: { x: 1120, y: 960, z: 1.35 },
+    blurb: "A lamp still on, a cold cup, and a machine nobody shut down.",
+    cam: { x: 1120, y: 940, z: 1.45 },
   },
   {
     id: "shelf",
     name: "The shelf",
-    blurb: "Four files, standing upright. Names down the spines.",
-    cam: { x: 1550, y: 640, z: 2.1 },
+    blurb: "Six files, standing upright. Names down the spines.",
+    cam: { x: 1440, y: 620, z: 2.3 },
   },
 ];
 
@@ -84,6 +86,22 @@ export const stationById = (id: string) => STATIONS.find((s) => s.id === id);
 /* ---------------------------------------------------------------------------
    The files on the shelf
    ------------------------------------------------------------------------- */
+
+/**
+ * Which part of the portfolio a file holds.
+ *
+ * The room does not carry its own copy of any of this. A topic is a pointer at
+ * a table that the CMS already fills, so a file cannot go stale against the
+ * site it is a file about — and the one file that is not a topic, `dossier`,
+ * is the index over the other five.
+ */
+export type FileTopic =
+  | "about"
+  | "experience"
+  | "projects"
+  | "stack"
+  | "certifications"
+  | "dossier";
 
 export type CaseFile = {
   id: string;
@@ -95,11 +113,9 @@ export type CaseFile = {
   subject: string;
   /** What the cover says is inside, before you open it. */
   brief: string;
-  /** The puzzle inside. null means there is nothing to solve, only to read. */
-  game: GameId | null;
-  /** The piece of the portfolio solving it hands back. */
-  reward: string;
-  /** Files that must be solved before this one comes off the shelf. */
+  /** Which part of the portfolio the pages hold. */
+  topic: FileTopic;
+  /** Files that must be read before this one comes off the shelf. */
   needs?: string[];
   /**
    * Where the spine stands, in world units, on the upper shelf board.
@@ -112,65 +128,81 @@ export type CaseFile = {
 };
 
 /**
- * Four files. Three carry a puzzle; the fourth is what the other three add up
- * to, and it cannot be opened until they are done.
+ * Six files: the portfolio, taken apart and put on a shelf.
  *
- * The rewards are pieces of this site, not points. That is the whole
- * conceit of the room — you are not scoring, you are getting the portfolio
- * back one piece at a time.
+ * The shelf used to hold four puzzles. It does not any more — a visitor who
+ * has come this far wants the work, not a second lock — and the puzzles moved
+ * intact to the machine on the desk, where being optional is the point. What
+ * is left here is the site itself, one section per spine, in the order the
+ * page reads.
+ *
+ * Only the last one is gated, and on having READ the others rather than on
+ * having solved anything: it is the summary, and a summary handed over before
+ * the thing it summarises is just the site with extra steps.
  */
 export const FILES: CaseFile[] = [
   {
-    id: "access",
+    id: "about",
     index: "01",
-    name: "ACCESS",
-    subject: "A lock, and the wiring behind it",
-    brief:
-      "The panel was opened once already and put back badly. Pull the nodes apart until no two lines cross.",
-    game: "untangle",
-    reward: "the way in",
-    spine: { x: 1252, y: 492, w: 58, h: 176, tilt: -1.6 },
+    name: "ABOUT",
+    subject: "Who the room belongs to",
+    brief: "The short version, the long version, and what he is currently into.",
+    topic: "about",
+    spine: { x: 1188, y: 492, w: 62, h: 178, tilt: -1.6 },
   },
   {
-    id: "page",
+    id: "experience",
     index: "02",
-    name: "THE PAGE",
-    subject: "A site, in the wrong order",
-    brief:
-      "Somebody photocopied the whole portfolio and dropped it down the stairs. Put the sections back in the order the page reads.",
-    game: "order",
-    reward: "selected work",
-    spine: { x: 1338, y: 488, w: 62, h: 182, tilt: 0.9 },
+    name: "EXPERIENCE",
+    subject: "Where the time went",
+    brief: "Roles, dates, and what each one was actually for. Education at the back.",
+    topic: "experience",
+    spine: { x: 1272, y: 488, w: 64, h: 184, tilt: 0.9 },
   },
   {
-    id: "signal",
+    id: "projects",
     index: "03",
-    name: "THE SIGNAL",
-    subject: "Four pads, still transmitting",
-    brief:
-      "Something in this building is still sending. Watch what it plays and repeat it back.",
-    game: "recall",
-    reward: "the contact line",
-    spine: { x: 1430, y: 494, w: 56, h: 174, tilt: -0.7 },
+    name: "PROJECTS",
+    subject: "The things that shipped",
+    brief: "Everything published, with what it was built out of and where it lives.",
+    topic: "projects",
+    spine: { x: 1358, y: 494, w: 60, h: 176, tilt: -0.7 },
+  },
+  {
+    id: "stack",
+    index: "04",
+    name: "STACK",
+    subject: "The tools, by how often they are reached for",
+    brief: "Languages, frameworks and infrastructure, grouped the way they are used.",
+    topic: "stack",
+    spine: { x: 1442, y: 490, w: 58, h: 180, tilt: 1.4 },
+  },
+  {
+    id: "certifications",
+    index: "05",
+    name: "CERTIFICATIONS",
+    subject: "Paper, and who issued it",
+    brief: "The credentials, with the issuer and the date on each one.",
+    topic: "certifications",
+    spine: { x: 1522, y: 492, w: 62, h: 178, tilt: -1.1 },
   },
   {
     id: "dossier",
-    index: "04",
+    index: "06",
     name: "THE FILE",
-    subject: "Everything recovered, in one place",
+    subject: "Everything above, in one place",
     brief:
-      "Empty until the other three are done. Whatever you get back out of this room ends up in here.",
-    game: null,
-    reward: "the whole thing",
-    needs: ["access", "page", "signal"],
-    spine: { x: 1516, y: 490, w: 60, h: 180, tilt: 1.4 },
+      "Sealed until the other five have been read. It is the index, and an index is no use before the thing it indexes.",
+    topic: "dossier",
+    needs: ["about", "experience", "projects", "stack", "certifications"],
+    spine: { x: 1608, y: 488, w: 60, h: 182, tilt: 1.8 },
   },
 ];
 
 export const fileById = (id: string) => FILES.find((f) => f.id === id);
 
-/** Files that carry a puzzle, which is what the HUD counts. */
-export const PUZZLE_COUNT = FILES.filter((f) => f.game).length;
+/** What the HUD counts: the files that are content rather than the index. */
+export const FILE_COUNT = FILES.filter((f) => f.topic !== "dossier").length;
 
 /** Can this file be taken off the shelf yet? */
 export function isUnlocked(file: CaseFile, solved: readonly string[]) {
@@ -280,4 +312,175 @@ export function buildSequence(
     out.push(next);
   }
   return out;
+}
+
+/* ---------------------------------------------------------------------------
+   The window
+   ------------------------------------------------------------------------- */
+
+/**
+ * How far the blind is pulled down, as a fraction of the opening.
+ *
+ * Two named positions rather than a free slider: the cord is a switch, and the
+ * whole point of pulling it is that the room changes. Halfway would change
+ * nothing anybody could see.
+ */
+export const BLIND = { down: 0.96, up: 0.08 } as const;
+
+/** The opening the blind covers, in world units. Shared by the drawing and the
+ *  cord, so a blind can never be drawn stopping somewhere the cord did not. */
+export const WINDOW_GLASS = { x: 606, y: 376, w: 290, h: 268 } as const;
+
+/**
+ * How far the blind travels when the cord is pulled, in world units.
+ *
+ * Derived rather than typed, so the drawing and the animation cannot drift:
+ * moving the window moves both.
+ */
+export const blindHeight = (down: boolean) =>
+  WINDOW_GLASS.h * (down ? BLIND.down : BLIND.up);
+
+/* ---------------------------------------------------------------------------
+   The machine on the desk
+   ------------------------------------------------------------------------- */
+
+export type AppId =
+  | "gallery"
+  | "reviews"
+  | "suggestions"
+  | "diagnostics"
+  | "readme";
+
+export type DesktopApp = {
+  id: AppId;
+  /** Under the icon, and in the title bar of the window it opens. */
+  name: string;
+  /** One line in the status bar while the icon is selected. */
+  hint: string;
+};
+
+/**
+ * What is on the machine.
+ *
+ * Five, which is as many as a desktop can hold before it stops reading as
+ * somebody's actual computer and starts reading as a menu. The order is the
+ * order they sit in down the left edge of the screen.
+ */
+export const DESKTOP_APPS: DesktopApp[] = [
+  {
+    id: "gallery",
+    name: "Gallery",
+    hint: "Every screenshot from every project, at full size.",
+  },
+  {
+    id: "reviews",
+    name: "Reviews",
+    hint: "What the work was measured on, and what it measured.",
+  },
+  {
+    id: "suggestions",
+    name: "Suggestions",
+    hint: "Leave a note. It goes to the same inbox as the contact form.",
+  },
+  {
+    id: "diagnostics",
+    name: "Diagnostics",
+    hint: "Three things that are broken. Whether you fix them is up to you.",
+  },
+  {
+    id: "readme",
+    name: "Readme",
+    hint: "How this room was built, and why it is not the portfolio.",
+  },
+];
+
+export const appById = (id: string) => DESKTOP_APPS.find((a) => a.id === id);
+
+/** The three puzzles, now behind the Diagnostics icon rather than on the shelf. */
+export const DIAGNOSTICS: { id: GameId; name: string; brief: string }[] = [
+  {
+    id: "untangle",
+    name: "ROUTING",
+    brief: "The panel was opened once and put back badly. Pull the nodes apart until no two lines cross.",
+  },
+  {
+    id: "order",
+    name: "PAGINATION",
+    brief: "Somebody photocopied the portfolio and dropped it down the stairs. Put the sections back in the order the page reads.",
+  },
+  {
+    id: "recall",
+    name: "BEACON",
+    brief: "Something in this building is still sending. Watch what it plays and repeat it back.",
+  },
+];
+
+export const PUZZLE_COUNT = DIAGNOSTICS.length;
+
+/* ---------------------------------------------------------------------------
+   The evidence board
+   ------------------------------------------------------------------------- */
+
+/** One pin, as the board needs it: the CMS row with the noise taken off. */
+export type Pin = {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  image: string | null;
+  kind: string;
+};
+
+/** One thread, by pin index. Undirected: a thread has no arrow on it. */
+export type Thread = { source: number; target: number };
+
+/**
+ * Turn what the CMS holds into what the simulation runs on.
+ *
+ * Three things happen here and all three are the difference between a board
+ * and a crash:
+ *
+ *  - a code that names nothing is dropped, because deleting a pin must not
+ *    take the board down with it;
+ *  - a thread from a pin to itself is dropped, because a force link with the
+ *    same node at both ends has zero length and the simulation divides by it;
+ *  - A→B and B→A are the same thread and are drawn once, because two threads
+ *    between the same pair pull twice as hard and the pair collapses together.
+ */
+export function buildBoard(
+  rows: readonly {
+    id: string;
+    code: string;
+    title: string;
+    description?: string | null;
+    image?: string | null;
+    kind?: string | null;
+    linksTo?: readonly string[] | null;
+  }[],
+): { pins: Pin[]; threads: Thread[] } {
+  const pins: Pin[] = rows.map((r) => ({
+    id: r.id,
+    code: r.code,
+    title: r.title,
+    description: r.description ?? "",
+    image: r.image ?? null,
+    kind: (r.kind ?? "PHOTO").toUpperCase(),
+  }));
+
+  const indexOf = new Map(pins.map((p, i) => [p.code, i]));
+  const seen = new Set<string>();
+  const threads: Thread[] = [];
+
+  rows.forEach((row, from) => {
+    for (const code of row.linksTo ?? []) {
+      const to = indexOf.get(code);
+      if (to === undefined || to === from) continue;
+      const key = from < to ? `${from}-${to}` : `${to}-${from}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      threads.push({ source: from, target: to });
+    }
+  });
+
+  return { pins, threads };
 }

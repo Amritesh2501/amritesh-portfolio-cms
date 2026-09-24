@@ -8,15 +8,23 @@
 import assert from "node:assert/strict";
 import {
   ARRIVAL,
+  BLIND,
+  DESKTOP_APPS,
+  DIAGNOSTICS,
   ESTABLISH,
   FILES,
+  FILE_COUNT,
   PAGE_ORDER,
   PUZZLE_COUNT,
   RECALL_ROUNDS,
   SIGNALS,
   STATIONS,
+  WINDOW_GLASS,
   WORLD,
   allFilesReachable,
+  appById,
+  blindHeight,
+  buildBoard,
   buildSequence,
   fileById,
   isOrdered,
@@ -103,7 +111,7 @@ function rng(seed: number) {
     assert.ok(fileById(f.id), `${f.id} cannot be looked up by its own id`);
     assert.ok(f.name.trim().length > 0, `${f.id} has no name on its spine`);
     assert.ok(f.brief.trim().length > 0, `${f.id} has a blank cover`);
-    assert.ok(f.reward.trim().length > 0, `${f.id} gives nothing back`);
+    assert.ok(f.subject.trim().length > 0, `${f.id} has nothing under its title`);
 
     // Every dependency names a file that exists, and nothing waits on itself.
     for (const need of f.needs ?? []) {
@@ -133,12 +141,123 @@ function rng(seed: number) {
     );
   }
 
+  // Exactly one file per section of the portfolio, and no two files claiming
+  // the same one — a duplicate topic is two spines opening onto identical
+  // pages, which reads as the shelf being broken rather than as a shortcut.
+  const topics = FILES.map((f) => f.topic);
+  assert.equal(new Set(topics).size, topics.length, "two files hold the same section");
+
   assert.equal(
-    PUZZLE_COUNT,
-    FILES.filter((f) => f.game).length,
-    "the HUD counts a different number of puzzles than the shelf holds",
+    FILE_COUNT,
+    FILES.filter((f) => f.topic !== "dossier").length,
+    "the HUD counts a different number of files than the shelf holds",
   );
-  assert.ok(PUZZLE_COUNT > 0, "no file carries a puzzle");
+  assert.ok(FILE_COUNT > 0, "the shelf holds nothing but the index");
+
+  // The index is gated on every other file, or it can be read first and the
+  // five it indexes become optional.
+  const index = FILES.find((f) => f.topic === "dossier");
+  assert.ok(index, "there is no index file");
+  assert.equal(
+    (index.needs ?? []).length,
+    FILE_COUNT,
+    "the index does not wait for every other file",
+  );
+}
+
+/* The machine on the desk ------------------------------------------------- */
+
+{
+  const ids = DESKTOP_APPS.map((a) => a.id);
+  assert.equal(new Set(ids).size, ids.length, "two icons share an id");
+  assert.ok(DESKTOP_APPS.length > 0, "the machine has nothing on it");
+
+  for (const a of DESKTOP_APPS) {
+    assert.ok(appById(a.id), `${a.id} cannot be looked up by its own id`);
+    assert.ok(a.name.trim().length > 0, `${a.id} has no name under its icon`);
+    assert.ok(a.hint.trim().length > 0, `${a.id} says nothing in the status bar`);
+  }
+
+  // Diagnostics is the one icon that has to be there, because it is where the
+  // three puzzles went when they came off the shelf.
+  assert.ok(appById("diagnostics"), "the puzzles have nowhere to live");
+  assert.equal(PUZZLE_COUNT, DIAGNOSTICS.length, "the puzzle count is wrong");
+  assert.ok(PUZZLE_COUNT > 0, "no puzzle survived the move off the shelf");
+
+  const games = DIAGNOSTICS.map((d) => d.id);
+  assert.equal(new Set(games).size, games.length, "the same puzzle is listed twice");
+}
+
+/* The window -------------------------------------------------------------- */
+
+{
+  // The cord has to CHANGE something, and the two positions have to be far
+  // enough apart to read as a blind going up rather than as it twitching.
+  assert.ok(BLIND.down > BLIND.up, "the blind is further down when it is up");
+  assert.ok(BLIND.down - BLIND.up > 0.5, "pulling the cord barely moves the blind");
+  assert.ok(BLIND.down <= 1, "the blind covers more than the window");
+  assert.ok(BLIND.up >= 0, "the blind rolls up past the top of the frame");
+
+  const shut = blindHeight(true);
+  const open = blindHeight(false);
+  assert.ok(shut > open, "the blind is taller when it is up");
+  assert.ok(shut <= WINDOW_GLASS.h, "the blind hangs below the glass");
+
+  // And the glass has to be inside the window the drawing puts around it.
+  assert.ok(WINDOW_GLASS.w > 0 && WINDOW_GLASS.h > 0, "the window has no glass in it");
+  const win = stationById("window");
+  assert.ok(win, "there is no window station, so the cord can never be reached");
+  assert.ok(
+    win.cam.x > WINDOW_GLASS.x - 300 && win.cam.x < WINDOW_GLASS.x + WINDOW_GLASS.w + 300,
+    "the window station is not pointed at the window",
+  );
+}
+
+/* The evidence board ------------------------------------------------------ */
+
+{
+  assert.ok(
+    STATIONS.some((s) => s.id === "board"),
+    "there is no board station, so the board can never be opened",
+  );
+
+  const rows = [
+    { id: "a", code: "EX-01", title: "One", linksTo: ["EX-02", "EX-02", "EX-01"] },
+    { id: "b", code: "EX-02", title: "Two", linksTo: ["EX-01", "EX-03"] },
+    { id: "c", code: "EX-03", title: "Three", linksTo: ["NOPE"] },
+    { id: "d", code: "EX-04", title: "Four" },
+  ];
+  const { pins, threads } = buildBoard(rows);
+
+  assert.equal(pins.length, rows.length, "the board lost a pin");
+  assert.deepEqual(
+    threads.map((t) => `${t.source}-${t.target}`).sort(),
+    ["0-1", "1-2"],
+    "the board drew the wrong threads",
+  );
+
+  // Each of these is a real failure mode of a force simulation, not a tidiness
+  // rule: a self-link has zero length and the solver divides by it, and a
+  // duplicated link between the same pair pulls twice as hard and collapses
+  // the two pins into one another.
+  for (const t of threads) {
+    assert.notEqual(t.source, t.target, "a pin is threaded to itself");
+    assert.ok(
+      t.source >= 0 && t.source < pins.length && t.target >= 0 && t.target < pins.length,
+      "a thread names a pin that is not on the board",
+    );
+  }
+  const pairs = threads.map((t) => (t.source < t.target ? `${t.source}:${t.target}` : `${t.target}:${t.source}`));
+  assert.equal(new Set(pairs).size, pairs.length, "the same pair is threaded twice");
+
+  // An empty board is a board with nothing pinned to it, not a crash.
+  assert.deepEqual(buildBoard([]), { pins: [], threads: [] });
+
+  // Missing optionals come back as the empty values the renderer expects,
+  // never as undefined reaching a template.
+  assert.equal(pins[3].description, "");
+  assert.equal(pins[3].image, null);
+  assert.equal(pins[3].kind, "PHOTO");
 }
 
 /* The spines, as drawn ---------------------------------------------------- */
@@ -274,5 +393,6 @@ function rng(seed: number) {
 
 console.log(
   `check-world: OK — ${STATIONS.length} places to stand, ${FILES.length} files ` +
-    `(${PUZZLE_COUNT} with a puzzle), room ${WORLD.w}x${WORLD.h}.`,
+    `(${FILE_COUNT} of them a section), ${DESKTOP_APPS.length} icons on the machine ` +
+    `(${PUZZLE_COUNT} puzzles), room ${WORLD.w}x${WORLD.h}.`,
 );
