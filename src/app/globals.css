@@ -1600,9 +1600,11 @@ body {
   /* width and height are written from Board, because the thread anchor is
      derived from the height. */
   transform-style: preserve-3d;
-  /* The simulation writes left/top every frame, so those two cannot be part of
-     a transition or the pin would lag its own physics. Everything else can. */
-  transition: opacity 0.35s ease, filter 0.35s ease;
+  /* Nothing transitions here. The simulation writes left/top every frame, so
+     those cannot be animated without the pin lagging its own physics, and the
+     dim moved down to the children — a transition left on this element would
+     be watching two properties that no longer change on it, which is how the
+     fade got lost in the first place. */
   touch-action: none;
   cursor: grab;
 }
@@ -1641,6 +1643,7 @@ body {
     radial-gradient(circle at 50% 45%, #d2483a, #7d1f16 78%);
   box-shadow: 0 3px 7px rgba(40, 24, 10, 0.55);
   transform: translateZ(22px);
+  transition: opacity 0.35s ease, filter 0.35s ease;
 }
 
 .xb-pin-hit {
@@ -1663,7 +1666,14 @@ body {
   color: var(--paper-ink, #241d12);
   cursor: inherit;
   transform: translateZ(8px);
-  transition: box-shadow 0.35s ease, transform 0.35s var(--ease-out);
+  /* opacity and filter are here because the dim is applied here. They used to
+     be declared on .xb-pin, which no longer changes either one, so the fade
+     silently became a snap. */
+  transition:
+    box-shadow 0.35s ease,
+    transform 0.35s var(--ease-out),
+    opacity 0.35s ease,
+    filter 0.35s ease;
 }
 
 .xb-pin.is-open .xb-pin-hit,
