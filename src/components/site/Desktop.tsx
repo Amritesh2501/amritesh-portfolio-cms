@@ -99,65 +99,59 @@ export function Desktop({
           </div>
         ) : (
           <>
-            {/* The menu bar. Nothing in it is a menu — there is nothing on
-                this machine worth a File menu — but the strip is what tells
-                you at a glance that you are looking at a system rather than at
-                a panel with icons on it. */}
-            <div className="xd-menubar">
-              <span className="xd-logo" aria-hidden />
-              <span className="xd-menubar-name">CASE ROOM WORKSTATION</span>
-              <span className="xd-menubar-sp" />
-              <span className="xd-menubar-meta">{DESKTOP_APPS.length} VOLUMES</span>
-              <button type="button" className="xd-shutdown" onClick={onClose}>
+            {/* One application, five tabs.
+
+                The desktop metaphor is gone. Icons on a ground with a window
+                floating over them is a lot of chrome for a machine that holds
+                five things and can only ever show one of them — every pixel of
+                it was frame rather than content. A tab strip says the same
+                thing in one row: here is what is on this machine, here is
+                which one you are in. */}
+            <div className="xd-head">
+              <span className="xd-mark" aria-hidden />
+              <span className="xd-machine">CASE ROOM WORKSTATION</span>
+              <span className="xd-sp" />
+              <button type="button" className="xd-quit" onClick={onClose}>
                 Shut down
               </button>
             </div>
 
-            <div className="xd-desk">
-              {/* The icons live ON the desktop now, in a grid, rather than in
-                  a rail down the side. A rail is a navigation bar; a grid of
-                  things sitting on a ground is a desktop. */}
-              <nav className="xd-icons" aria-label="Files on this machine">
-                {DESKTOP_APPS.map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    className={`xd-icon ${app === a.id ? "is-open" : ""}`}
-                    onClick={() => setApp((cur) => (cur === a.id ? null : a.id))}
-                    onPointerEnter={() => setHover(a.id)}
-                    onPointerLeave={() => setHover(null)}
-                    onFocus={() => setHover(a.id)}
-                    onBlur={() => setHover(null)}
-                  >
-                    <FolderGlyph />
-                    <span className="xd-icon-name">{a.name}</span>
-                  </button>
-                ))}
-              </nav>
+            <nav className="xd-tabs" aria-label="Files on this machine">
+              {DESKTOP_APPS.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  className={`xd-tab ${app === a.id ? "is-on" : ""}`}
+                  onClick={() => setApp(a.id)}
+                  onPointerEnter={() => setHover(a.id)}
+                  onPointerLeave={() => setHover(null)}
+                  onFocus={() => setHover(a.id)}
+                  onBlur={() => setHover(null)}
+                  aria-current={app === a.id ? "page" : undefined}
+                >
+                  {a.name}
+                </button>
+              ))}
+            </nav>
 
-              {/* The window, over the desktop rather than beside it. It is
-                  still one at a time and still not draggable: overlapping
-                  windows would be a week of work to build something nobody
-                  would drag. It just looks like what it is now. */}
+            <div className="xd-view">
               {app ? (
-                <section className="xd-window">
-                  <header className="xd-titlebar">
-                    <button
-                      type="button"
-                      className="xd-close"
-                      onClick={() => setApp(null)}
-                      aria-label="Close"
-                    />
-                    <span className="xd-title">
-                      {DESKTOP_APPS.find((a) => a.id === app)?.name}
-                    </span>
-                    <span className="xd-grip" aria-hidden />
-                  </header>
-                  <div className="xd-window-body">
-                    <App id={app} data={data} />
-                  </div>
-                </section>
-              ) : null}
+                <App id={app} data={data} />
+              ) : (
+                <div className="xd-welcome">
+                  <p className="xd-welcome-line">Somebody left this logged in.</p>
+                  <ul className="xd-welcome-list">
+                    {DESKTOP_APPS.map((a) => (
+                      <li key={a.id}>
+                        <button type="button" onClick={() => setApp(a.id)}>
+                          <span className="xd-welcome-n">{a.name}</span>
+                          <span className="xd-welcome-hint">{a.hint}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <p className="xd-status" role="status">
@@ -370,13 +364,4 @@ function Readme() {
 
 function Nothing({ children }: { children: React.ReactNode }) {
   return <p className="xd-idle">{children}</p>;
-}
-
-function FolderGlyph() {
-  return (
-    <svg viewBox="0 0 32 26" aria-hidden className="xd-folder">
-      <path d="M1 25V3h11l3 4h16v18Z" />
-      <path d="M1 9h29" />
-    </svg>
-  );
 }

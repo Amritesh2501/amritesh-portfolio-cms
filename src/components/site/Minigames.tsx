@@ -68,7 +68,7 @@ export function OrderGame({ onSolved }: { onSolved: () => void }) {
             <span className="mg-floor-n tabular-nums" aria-hidden>
               {String(i + 1).padStart(2, "0")}
             </span>
-            <span className="mg-floor-name">{label}</span>
+            <span>{label}</span>
             <span className="mg-floor-arrows">
               <button
                 type="button"

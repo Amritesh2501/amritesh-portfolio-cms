@@ -44,10 +44,16 @@ const INK = `
   .xw-file-name { font-size: 14px; letter-spacing: .16em; }
   .xw-file.is-locked .xw-line, .xw-file.is-locked .xw-file-index, .xw-file.is-locked .xw-file-name { opacity: .3; }
   .xw-blind-face { fill: #1a1c22; stroke: none; }
-  .xw-day-shaft { fill: #e4ddcb; stroke: none; opacity: .055; }
+  .xw-day-shaft { fill: #cfe0ff; stroke: none; opacity: .06; }
   .xw-day { opacity: 0; }
   .xw-day.is-on { opacity: 1; }
   .xw-outside { opacity: 0; }
+  .xw-day-pool { fill: #cfe0ff; stroke: none; opacity: .05; }
+  .xw-day-glow { fill: #cfe0ff; stroke: none; opacity: .09; }
+  .xw-city { opacity: 0; }
+  .xw-outside.is-open .xw-city { opacity: 1; }
+  .xw-city-lit { fill: #cfe0ff; stroke: none; opacity: .32; }
+  .xw-city-lit.is-warm { fill: #ffcf8a; opacity: .5; }
   .xw-outside.is-open { opacity: 1; }
   .xw-cord-bead { fill: #d9a05b; stroke: none; }
   .xw-bulb-light, .xw-lamp-light { opacity: 0; }
