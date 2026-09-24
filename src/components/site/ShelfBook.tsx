@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
-import type { CaseFile } from "@/lib/world";
+import { FILES, type CaseFile } from "@/lib/world";
 import type { CaseRoomData } from "@/lib/content";
 import * as sound from "@/lib/sound";
 import { CaseFilePages } from "./CaseFilePages";
@@ -36,9 +36,11 @@ import { CaseFilePages } from "./CaseFilePages";
 
 type Stage = "take" | "open" | "spread";
 
-/** Out of the row and round to the cover. Matches `xk-take` in CSS. */
-export const TURN_MS = 1500;
-/** The cover swinging back. Matches `xk-swing`. */
+/** Out of the row and round to the cover. Matches `xk-take` in CSS.
+ *  Slow on purpose: the pull and the turn are two separate things a hand
+ *  does, and at a second and a half they ran together into one swoop. */
+export const TURN_MS = 2300;
+/** The cover swinging back on its hinge. Matches the transition on .xk-cover. */
 const OPEN_MS = 900;
 
 /** The book, in its own pixels. Written onto the element, because the opening
@@ -211,13 +213,57 @@ export function ShelfBook({
           book rather than the book being swapped for a panel. */}
       {spread ? (
         <div className="xk-spread" ref={spreadRef} tabIndex={-1}>
+          {/* The verso is the docket: the typed cover sheet a case file opens
+              with, not a title page. Everything on it is a field with a rule
+              under it, because that is what makes a sheet read as having been
+              filled in rather than designed. */}
           <div className="xk-page is-left">
-            <p className="xk-page-n">FILE {file.index}</p>
-            <h2 className="xk-page-title">{file.name}</h2>
-            <p className="xk-page-sub">{file.subject}</p>
-            <p className="xk-page-brief">{file.brief}</p>
+            <div className="xk-docket">
+              <p className="xk-docket-org">
+                CASE ROOM — RECORDS DIVISION
+                <span aria-hidden>AMR/{file.index}</span>
+              </p>
+              <h2 className="xk-page-title">{file.name}</h2>
+
+              <dl className="xk-fields">
+                <div>
+                  <dt>Subject</dt>
+                  <dd>{file.subject}</dd>
+                </div>
+                <div>
+                  <dt>File no.</dt>
+                  <dd>AMR-001-{file.index}</dd>
+                </div>
+                <div>
+                  <dt>Classification</dt>
+                  <dd>{file.needs?.length ? "RESTRICTED" : "OPEN"}</dd>
+                </div>
+                <div>
+                  <dt>Status</dt>
+                  <dd>{done ? "REVIEWED" : "PENDING REVIEW"}</dd>
+                </div>
+              </dl>
+
+              <p className="xk-page-brief">{file.brief}</p>
+
+              {/* The photograph that is not here. Every case file has one of
+                  these boxes and most of them are empty. */}
+              <div className="xk-plate" aria-hidden>
+                <span>NO PHOTOGRAPH ON FILE</span>
+              </div>
+
+              <p className="xk-sign" aria-hidden>
+                <span className="xk-sign-rule" />
+                Filed by
+              </p>
+            </div>
+
             <span className="xk-page-foot" aria-hidden>
-              {file.index} / {done ? "READ" : "OPEN"}
+              SHEET {file.index} OF {String(FILES.length).padStart(2, "0")}
+            </span>
+
+            <span className="xk-confidential" aria-hidden>
+              Confidential
             </span>
           </div>
 

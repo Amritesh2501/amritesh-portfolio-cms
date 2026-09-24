@@ -717,7 +717,7 @@ body {
      spine was standing on screen, --s0 the scale that makes this box's spine
      face exactly the size that one was, --tilt the lean it was drawn with, and
      --t the thickness taken from its own proportions on the shelf. */
-  animation: xk-take 1500ms cubic-bezier(0.33, 0.9, 0.28, 1) both;
+  animation: xk-take 2300ms cubic-bezier(0.33, 0.9, 0.28, 1) both;
 }
 
 /* Out of the row, then round.
@@ -736,15 +736,24 @@ body {
       rotateY(90deg);
   }
   /* Clear of the shelf: pulled toward the camera and lifted, still edge-on. */
-  32% {
+  34% {
     transform:
       translate3d(calc(var(--dx) * 0.82), calc(var(--dy) * 0.82 - 3vh), 140px)
       scale(calc(var(--s0) + (1 - var(--s0)) * 0.34))
       rotateZ(var(--tilt))
       rotateY(90deg);
   }
+  /* Held there a beat, out of the row and not yet turning. This is the
+     pause that makes the two moves read as two moves. */
+  46% {
+    transform:
+      translate3d(calc(var(--dx) * 0.78), calc(var(--dy) * 0.78 - 3.4vh), 160px)
+      scale(calc(var(--s0) + (1 - var(--s0)) * 0.38))
+      rotateZ(var(--tilt))
+      rotateY(90deg);
+  }
   /* Most of the quarter turn, travelling in to centre as it goes. */
-  76% {
+  82% {
     transform:
       translate3d(calc(var(--dx) * 0.16), calc(var(--dy) * 0.16), 90px)
       scale(calc(var(--s0) + (1 - var(--s0)) * 0.88))
@@ -1096,20 +1105,11 @@ body {
 .xk-page-title {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: clamp(1.4rem, 4vh, 2.4rem);
+  font-size: clamp(1.1rem, 2.6vh, 1.6rem);
   font-weight: 400;
-  line-height: 1.05;
-  letter-spacing: 0.12em;
+  line-height: 1.1;
+  letter-spacing: 0.16em;
   color: var(--page-ink);
-}
-
-.xk-page-sub {
-  margin: 0 0 0.6rem;
-  padding-bottom: 0.8rem;
-  border-bottom: 1px solid rgba(90, 76, 52, 0.4);
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--page-dim);
 }
 
 .xk-page-brief {
@@ -1126,6 +1126,110 @@ body {
   font-size: 0.5625rem;
   letter-spacing: 0.26em;
   color: var(--page-dim);
+}
+
+/* --- The docket ------------------------------------------------------------
+
+   The verso is a cover sheet, not a title page. Everything on it is a field
+   with a rule under it, because a filled-in form is what makes a sheet read as
+   a record rather than as a design — a name in 40px over a subtitle is a book
+   jacket, and this is supposed to be paperwork.
+   --------------------------------------------------------------------------- */
+
+.xk-docket {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.xk-docket-org {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(90, 76, 52, 0.55);
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  color: var(--page-dim);
+}
+
+/* --- Fields ---------------------------------------------------------------
+
+   A label above a rule, and the value sitting ON the rule rather than under
+   it, the way a typewriter lands a line into a printed form. */
+
+.xk-fields {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.xk-fields > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.xk-fields dt {
+  font-size: 0.5rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--page-dim);
+}
+
+.xk-fields dd {
+  margin: 0;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid rgba(90, 76, 52, 0.45);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: var(--page-ink);
+}
+
+/* The photograph that is not here. Every case file has one of these boxes and
+   most of them are empty. */
+.xk-plate {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  max-height: 11rem;
+  border: 1px dashed rgba(90, 76, 52, 0.55);
+  font-size: 0.5rem;
+  letter-spacing: 0.22em;
+  color: var(--page-dim);
+}
+
+/* A signature line with nothing on it. */
+.xk-sign {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  font-size: 0.5rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--page-dim);
+}
+
+.xk-sign-rule {
+  height: 1px;
+  margin-top: 1.3rem;
+  background: rgba(90, 76, 52, 0.55);
+}
+
+/* Stamped across the sheet at the angle a stamp lands, and bled to the edge
+   of the page so it reads as ink on paper rather than as a label. */
+.xk-confidential {
+  position: absolute;
+  right: -0.4rem;
+  bottom: 14%;
+  padding: 0.35rem 1.1rem;
+  border: 2px solid rgba(157, 52, 39, 0.55);
+  border-radius: 2px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(157, 52, 39, 0.62);
+  transform: rotate(-9deg);
+  pointer-events: none;
 }
 
 /* The seam: the shadow where two leaves meet at the binding. */
@@ -1576,6 +1680,68 @@ body {
   opacity: 0.94;
 }
 
+/* --- The mug ---------------------------------------------------------------
+
+   The one thing in the room to fiddle with. Hovering it makes it steam;
+   clicking it turns it on the spot. Neither does anything, which is the
+   point — a room where every object is a control is a menu, and a room with
+   nothing to touch that is not a control is a diagram.
+   ------------------------------------------------------------------------- */
+
+.xw-mug {
+  cursor: pointer;
+}
+
+.xw-steam path {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+/* Held at zero until hovered: a mug that steams all the time is a mug nobody
+   will ever think to touch. */
+.xw-mug:hover .xw-steam path,
+.xw-mug:focus-within .xw-steam path {
+  opacity: 0.4;
+  animation: xw-steam 3.4s ease-in-out infinite;
+}
+
+.xw-mug:hover .xw-steam path:nth-child(2) { animation-delay: -1.1s; }
+.xw-mug:hover .xw-steam path:nth-child(3) { animation-delay: -2.2s; }
+
+@keyframes xw-steam {
+  0% { transform: translateY(6px) scaleX(0.9); opacity: 0; }
+  35% { opacity: 0.45; }
+  100% { transform: translateY(-26px) scaleX(1.15); opacity: 0; }
+}
+
+/* One turn, restarted by the key changing rather than by a class toggling —
+   so it can be clicked again the moment it has finished. */
+.xw-mug-body {
+  transform-box: fill-box;
+  transform-origin: 50% 72%;
+  animation: xw-mug-turn 900ms cubic-bezier(0.3, 0.9, 0.3, 1) both;
+}
+
+@keyframes xw-mug-turn {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xw-mug-body {
+    animation: none;
+  }
+
+  .xw-mug:hover .xw-steam path {
+    animation: none;
+    opacity: 0.4;
+  }
+}
+
 /* --- The machine on the desk ---------------------------------------------- */
 
 .xw-crt-led {
@@ -1847,15 +2013,15 @@ body {
   z-index: 14;
   display: grid;
   grid-template-rows: auto 1fr auto;
+  /* Two perspectives, nested on purpose: this one is what the whole sheet
+     swings round in, and .xb-frame has its own for the pins standing on it. */
+  perspective: 1900px;
+  perspective-origin: 38% 50%;
   justify-items: center;
   background: #05060a;
   font-family: var(--font-mono);
-  animation: xb-in 0.5s ease both;
-}
-
-@keyframes xb-in {
-  from { opacity: 0; transform: scale(1.02); }
-  to { opacity: 1; transform: none; }
+  /* No entrance here: .xb-frame does the arriving. Two animations on the
+     same event read as the thing arriving twice. */
 }
 
 .xb-top {
@@ -1908,6 +2074,27 @@ body {
   align-self: center;
   perspective: 2200px;
   perspective-origin: 50% 42%;
+  transform-style: preserve-3d;
+  /* Coming round to the front.
+
+     On the wall the board is seen down its own length, at roughly the angle
+     the left wall is drawn at. This starts there and turns square to the
+     reader, so opening it reads as walking round to look at it rather than as
+     a panel appearing. The angle is matched to the drawing by eye, which is
+     the only way to match a one-point perspective sketch — there is no camera
+     to ask. */
+  animation: xb-swing 1100ms cubic-bezier(0.25, 0.9, 0.25, 1) both;
+}
+
+@keyframes xb-swing {
+  from {
+    opacity: 0;
+    transform: rotateY(-36deg) translate3d(-8%, 0, -420px);
+  }
+  to {
+    opacity: 1;
+    transform: rotateY(0deg) translate3d(0, 0, 0);
+  }
 }
 
 /* The sheet itself.
@@ -2234,7 +2421,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .xb,
+  .xb-frame,
   .xb-read {
     animation-duration: 0.01ms;
   }
