@@ -21,6 +21,7 @@ import { Board } from "./Board";
 import { Room } from "./RoomArt";
 import { Desktop } from "./Desktop";
 import { CaseFilePages } from "./CaseFilePages";
+import { ShelfBook, type BookFrom } from "./ShelfBook";
 
 /**
  * An officer's room, drawn in ink, with four things in it worth walking to.
@@ -48,16 +49,37 @@ import { CaseFilePages } from "./CaseFilePages";
 /**
  * A file, from the shelf to its contents.
  *
- * `pulling` is the beat the shelf itself owns: the spine comes out of the row
- * and turns, in the drawing, where it is still a thing standing on a shelf.
- * Only once it is out does `cover` hand it to a card face-on. Going straight
- * from the row to the card — which is what this did — means the file is never
- * seen leaving the shelf, and a file that teleports off a shelf is a dialog.
+ * There is no separate beat for coming off the shelf any more. ShelfBook is a
+ * single object that starts where the drawn spine was standing, pulls out,
+ * turns its quarter turn and settles — so "cover" covers the whole of it. The
+ * shelf's own spine is hidden for as long as the book is out, because the book
+ * IS that spine: two objects handing over to each other is what the old
+ * version did, and it never looked like one file.
  */
-type Phase = "room" | "pulling" | "cover" | "turning" | "open";
+type Phase = "room" | "cover" | "turning" | "open";
 
-/** How long the spine takes to come out and turn. Matches `xw-pull` in CSS. */
-const PULL_MS = 760;
+/**
+ * Where a file's spine is on screen, so the book can start exactly there.
+ *
+ * The stage is one transform — `scale(z) translate(-x, -y)` about the middle
+ * of the viewport — so projecting a world point through it is the same two
+ * lines the camera itself uses. Getting this right is the whole reason the
+ * book reads as leaving the shelf rather than as appearing near it: a hand-off
+ * that is forty pixels out looks like two different objects.
+ */
+function bookFrom(
+  file: CaseFile,
+  shot: { x: number; y: number; z: number },
+  view: { w: number; h: number },
+): BookFrom {
+  const s = file.spine;
+  return {
+    dx: (s.x + s.w / 2 - shot.x) * shot.z,
+    dy: (s.y + s.h / 2 - shot.y) * shot.z,
+    h: s.h * shot.z,
+    tilt: s.tilt,
+  };
+}
 
 export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void }) {
   const reduce = useReducedMotion();
@@ -185,16 +207,11 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
       if (phase !== "room") return;
       sound.latch();
       setPicked(file);
-      if (reduce) {
-        // The file is still taken off the shelf; it simply does not perform
-        // being taken off the shelf.
-        setPhase("cover");
-        return;
-      }
-      setPhase("pulling");
-      after(PULL_MS, () => setPhase("cover"));
+      // Straight to "cover". The book does its own coming-off-the-shelf, and
+      // it does it from the spine's real position on screen.
+      setPhase("cover");
     },
-    [read, reduce, phase, after],
+    [read, phase],
   );
 
   /** Cover → pages → what is inside. */
@@ -346,7 +363,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
             blindDown={blindDown}
             ceiling={ceiling}
             lamp={lamp}
-            pulling={phase === "pulling" ? (picked?.id ?? null) : null}
+            taken={picked && phase !== "room" ? picked.id : null}
             onStation={goto}
             onFile={pick}
             onBoard={() => setBoardOpen(true)}
@@ -504,8 +521,10 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
       {/* The file: cover, pages, contents ------------------------------------ */}
 
       {picked && phase === "cover" ? (
-        <Cover
+        <ShelfBook
           file={picked}
+          from={bookFrom(picked, shot, view)}
+          view={view}
           done={read.includes(picked.id)}
           onOpen={open}
           onBack={closeFile}
@@ -547,78 +566,6 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   );
 }
 
-/* ---------------------------------------------------------------------------
-   The cover, and the pages
-   ------------------------------------------------------------------------- */
-
-/**
- * The file, out of the shelf and face on.
- *
- * It arrives rotated and small, from roughly where its spine was standing, and
- * settles square to the camera. That is the whole difference between a file
- * being picked up and a dialog being opened.
- */
-function Cover({
-  file,
-  done,
-  onOpen,
-  onBack,
-}: {
-  file: CaseFile;
-  done: boolean;
-  onOpen: () => void;
-  onBack: () => void;
-}) {
-  return (
-    <div className="xw-cover">
-      {/* The cover itself opens the file, because that is what a cover is for.
-          The button stays: it carries the keyboard and it says out loud what
-          clicking the card does. "Put it back" stops the event, or putting it
-          back would open it on the way out. */}
-      <article
-        className="xw-cover-card"
-        role="dialog"
-        aria-modal="true"
-        aria-label={file.name}
-        onClick={onOpen}
-      >
-        <div className="xw-cover-rule" aria-hidden />
-        <p className="xw-cover-n">FILE {file.index}</p>
-        <h2 className="xw-cover-title">{file.name}</h2>
-        <p className="xw-cover-sub">{file.subject}</p>
-
-        <p className="xw-cover-brief">{file.brief}</p>
-
-        <dl className="xw-cover-meta">
-          <div>
-            <dt>STATUS</dt>
-            <dd>{done ? "READ" : "UNREAD"}</dd>
-          </div>
-          <div>
-            <dt>SECTION</dt>
-            <dd>{file.subject}</dd>
-          </div>
-        </dl>
-
-        <div className="xw-cover-actions">
-          <button type="button" className="btn btn-solid" autoFocus>
-            Open the file
-          </button>
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onBack();
-            }}
-          >
-            Put it back
-          </button>
-        </div>
-      </article>
-    </div>
-  );
-}
 
 /** Sheets going over, one after another, and the camera going with them. */
 function PageTurn({ reduce }: { reduce: boolean }) {

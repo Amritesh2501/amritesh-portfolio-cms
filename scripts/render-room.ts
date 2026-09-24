@@ -77,7 +77,7 @@ async function shoot(name: string, shot: Shot) {
   const body = renderToStaticMarkup(
     createElement(Room, {
       read: [],
-      pulling: null,
+      taken: null,
       ...shot,
       onStation: noop,
       onFile: noop,
