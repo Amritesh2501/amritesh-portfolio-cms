@@ -249,27 +249,52 @@ function BoardWall({
   return (
     <g>
       <g className="xw-line">
-        <path d="M96 330 L424 402 L424 726 L96 702 Z" className="xw-solid" />
-        <path d="M104 340 L416 410 L416 716 L104 692 Z" className="xw-thin xw-faint" />
-        {/* Pinned scraps. Each one is a quad, each one at its own angle. */}
-        <path d="M134 386 L206 402 L202 470 L130 456 Z" className="xw-thin" />
-        <path d="M232 408 L302 424 L298 490 L228 476 Z" className="xw-thin" />
-        <path d="M326 430 L392 444 L388 506 L322 494 Z" className="xw-thin" />
-        <path d="M140 510 L214 522 L210 592 L136 582 Z" className="xw-thin" />
-        <path d="M244 528 L330 546 L326 612 L240 596 Z" className="xw-thin" />
-        {/* String between them. */}
+        {/* The face of the board, and the frame standing off the wall behind
+            it. A pinboard is a slab hung on a wall, so it has a visible edge
+            all the way round — and on a wall seen this obliquely that edge is
+            most of what says the board is not painted on. */}
+        <path d="M70 300 L470 388 L470 800 L70 772 Z" className="xw-solid" />
+        {/* The frame's own thickness: the same quad, pushed back to the wall. */}
+        <path d="M94 318 L470 400 L470 788 L94 758 Z" className="xw-thin xw-faint" />
+        <path d="M70 300 L94 318" className="xw-thin" />
+        <path d="M70 772 L94 758" className="xw-thin" />
+        {/* The cork inside the frame. */}
+        <path d="M100 338 L440 412 L440 766 L100 742 Z" className="xw-thin xw-faint" />
+
+        {/* Pinned scraps. Each one is a quad and each one at its own angle,
+            and each gets a curled corner so it reads as paper rather than as
+            a hole in the board. */}
+        <path d="M124 380 L226 402 L222 496 L120 478 Z" className="xw-thin" />
+        <path d="M226 402 L214 414 L222 420" className="xw-thin xw-faint" />
+        <path d="M262 414 L356 434 L350 524 L256 508 Z" className="xw-thin" />
+        <path d="M386 446 L432 456 L428 540 L382 532 Z" className="xw-thin" />
+        <path d="M128 546 L232 566 L228 664 L124 648 Z" className="xw-thin" />
+        <path d="M232 566 L220 578 L228 584" className="xw-thin xw-faint" />
+        <path d="M268 574 L378 596 L372 694 L262 676 Z" className="xw-thin" />
+
+        {/* String between them, and a pin at each turn. */}
         <g className="xw-hot-line">
-          <path d="M168 420 L266 444 L358 464 L286 570 L174 546 Z" />
+          <path d="M174 424 L306 462 L408 486 L296 612 L176 592 Z" />
+        </g>
+        <g className="xw-fill xw-glow">
+          <circle cx={174} cy={424} r={5} />
+          <circle cx={306} cy={462} r={5} />
+          <circle cx={408} cy={486} r={5} />
+          <circle cx={296} cy={612} r={5} />
+          <circle cx={176} cy={592} r={5} />
         </g>
       </g>
-      <Hatch x={96} y={640} w={330} h={70} gap={13} className="xw-hatch xw-faint" />
+      <Hatch x={100} y={700} w={340} h={64} gap={13} className="xw-hatch xw-faint" />
       <rect
         className="xw-hit"
-        x={90}
-        y={324}
-        width={340}
-        height={408}
-        onClick={atBoard ? onOpen : () => onStation("board")}
+        x={64}
+        y={294}
+        width={412}
+        height={512}
+        // One click, wherever it is made from. Clicking a thing is using the
+        // thing; walking to it and then having to click it again was a step
+        // that only ever existed because the camera got there first.
+        onClick={onOpen}
       />
     </g>
   );
@@ -466,13 +491,37 @@ function Shelf({
   return (
     <g className={`xw-shelf ${atShelf ? "is-near" : ""}`}>
       <g className="xw-line">
-        {/* Carcass. */}
+        {/* The opening, and the box behind it.
+
+            A shelf is a cavity, so the depth has to be on the INSIDE: the
+            front frame, a smaller back plane, and the four corners joined.
+            Standing left of it we see its left inner cheek and the underside
+            of nothing, which is exactly the four lines below. Drawn as a
+            recess rather than as a rectangle with a line across it, the thing
+            stops being a picture of a shelf and becomes one. */}
         <path d="M1150 422 L1950 418 L1950 862 L1150 866 Z" className="xw-solid" />
-        <path d="M1160 432 L1940 428 L1940 852 L1160 856 Z" className="xw-thin xw-faint" />
-        {/* Boards. */}
+        {/* The back plane, pulled in toward the room's centre. */}
+        <path d="M1196 452 L1904 449 L1904 832 L1196 836 Z" className="xw-thin xw-faint" />
+        {/* The four inside corners. Only the left cheek gets a full-weight
+            line: it is the one actually turned toward us. */}
+        <path d="M1150 422 L1196 452" className="xw-thin" />
+        <path d="M1150 866 L1196 836" className="xw-thin" />
+        <path d="M1950 418 L1904 449" className="xw-thin xw-faint" />
+        <path d="M1950 862 L1904 832" className="xw-thin xw-faint" />
+
+        {/* The middle board, with a thickness and a top surface running back
+            to the cavity wall. */}
         <path d="M1152 676 L1948 672" />
-        <path d="M1156 686 L1944 682" className="xw-thin" />
+        <path d="M1156 688 L1944 684" className="xw-thin" />
+        <path d="M1152 676 L1196 662" className="xw-thin" />
+        <path d="M1196 662 L1904 659" className="xw-thin xw-faint" />
+        <path d="M1948 672 L1904 659" className="xw-thin xw-faint" />
+
+        {/* The bottom board, same treatment. */}
         <path d="M1152 862 L1948 858" />
+        <path d="M1152 862 L1196 836" className="xw-thin" />
+        <path d="M1196 836 L1904 832" className="xw-thin xw-faint" />
+
         {/* Uprights, and the little overshoot a pen leaves at a corner. */}
         <path d="M1150 414 L1150 872" className="xw-thin" />
         <path d="M1950 410 L1950 868" className="xw-thin" />
@@ -629,15 +678,30 @@ function Desk({
   return (
     <g>
       <g className="xw-line">
-        {/* Top, in perspective: narrower at the back. */}
+        {/* Top, in perspective: narrower at the back, and with a real edge
+            under it rather than a line pretending to be one. */}
         <path d="M812 872 L1468 870 L1596 1004 L690 1008 Z" className="xw-solid" />
-        <path d="M690 1008 L1596 1004 L1596 1038 L690 1042 Z" className="xw-solid" />
-        {/* Legs. */}
-        <path d="M704 1042 L712 1256" />
-        <path d="M1582 1038 L1568 1252" />
+        <path d="M690 1008 L1596 1004 L1596 1042 L690 1046 Z" className="xw-solid" />
+        {/* The lip under the front edge, so the top has a thickness you can
+            see the underside of. */}
+        <path d="M694 1046 L1592 1042" className="xw-thin xw-faint" />
+
+        {/* Legs, as boxes. Two faces each: the one facing us and the one
+            turned inward, which is the whole difference between a leg and a
+            line drawn where a leg would be. */}
+        <path d="M700 1046 L728 1046 L734 1262 L706 1262 Z" className="xw-solid" />
+        <path d="M728 1046 L748 1034 L754 1250 L734 1262 Z" className="xw-solid" />
+        <path d="M1556 1042 L1584 1042 L1576 1258 L1548 1258 Z" className="xw-solid" />
+        <path d="M1556 1042 L1536 1030 L1528 1246 L1548 1258 Z" className="xw-solid" />
+
+        {/* The back edge of the top, seen because the desk sits below eye
+            level — and the right return, which is the side of the slab. */}
+        <path d="M1468 870 L1596 1004" className="xw-thin xw-faint" />
         <path d="M842 886 L846 1010" className="xw-thin xw-faint" />
-        {/* Modesty panel. */}
-        <path d="M860 1046 L1430 1042" className="xw-thin xw-faint" />
+
+        {/* Modesty panel, set back from the front edge. */}
+        <path d="M860 1050 L1430 1046" className="xw-thin xw-faint" />
+        <path d="M872 1062 L1418 1058" className="xw-thin xw-faint" />
 
         {/* Papers, a mug, a phone off its cradle. */}
         <path d="M1372 928 L1468 926 L1470 958 L1374 960 Z" className="xw-thin xw-solid" />
@@ -683,38 +747,66 @@ function Desk({
       </g>
 
 
-      {/* The machine. */}
+      {/* The machine.
+
+          A workstation, not a television. The old one was a single rounded
+          rectangle standing on the desk, which is a shape, not an object: it
+          had no depth, no chassis under it and nothing holding it up. This is
+          drawn the way the rest of the room now is — a box with a side you can
+          see — and it is three pieces, because that is what a machine of this
+          era was: a horizontal chassis on the desk, the monitor sitting on top
+          of it, and a keyboard pulled forward of both. */}
       <g className={`xw-crt ${atDesk ? "is-live" : ""}`}>
+        {/* The chassis the monitor stands on. */}
         <g className="xw-line">
-          {/* Case, deeper at the top than the bottom the way a CRT is. */}
-          <path d="M1014 700 L1240 698 L1246 872 L1008 874 Z" className="xw-solid" />
-          {/* Glass, inset and with the corners taken off. */}
-          <path
-            d="M1032 716 Q1128 710 1226 716 Q1232 790 1226 852 Q1128 858 1030 852 Q1024 790 1032 716 Z"
-            className="xw-thin"
-          />
-          {/* Vents and a power light on the chin. */}
-          <path d="M1036 864 L1084 863" className="xw-thin" />
-          <path d="M1096 863 L1144 862" className="xw-thin" />
+          <path d="M986 828 L1250 824 L1250 878 L986 882 Z" className="xw-solid" />
+          <path d="M1250 824 L1290 806 L1290 858 L1250 878 Z" className="xw-solid" />
+          <path d="M986 828 L1026 810 L1290 806 L1250 824 Z" className="xw-solid" />
+          {/* A drive slot and a row of vents on the front. */}
+          <path d="M1010 846 L1096 845" className="xw-thin" />
+          <path d="M1010 856 L1096 855" className="xw-thin xw-faint" />
+          {[1130, 1146, 1162, 1178].map((x) => (
+            <path key={x} d={`M${x} 842 L${x} 866`} className="xw-thin xw-faint" />
+          ))}
         </g>
-        <circle cx={1214} cy={864} r={5} className="xw-fill xw-crt-led" />
+        <circle cx={1222} cy={856} r={5} className="xw-fill xw-crt-led" />
+
+        {/* The monitor: a box, tapering back, with the tube's own depth behind
+            the bezel rather than a flat pane drawn on the front. */}
+        <g className="xw-line">
+          <path d="M1014 686 L1232 682 L1232 820 L1014 824 Z" className="xw-solid" />
+          <path d="M1232 682 L1268 666 L1268 800 L1232 820 Z" className="xw-solid" />
+          <path d="M1014 686 L1050 670 L1268 666 L1232 682 Z" className="xw-solid" />
+          {/* The bezel, and the glass set back inside it. */}
+          <path d="M1030 700 L1216 697 L1216 800 L1030 804 Z" className="xw-thin" />
+          <path
+            d="M1042 710 Q1124 705 1206 710 Q1210 752 1206 792 Q1124 797 1040 792 Q1036 752 1042 710 Z"
+            className="xw-thin xw-faint"
+          />
+          {/* Two knobs under the glass, because every one of these had them. */}
+          <circle cx={1052} cy={814} r={6} className="xw-thin" />
+          <circle cx={1074} cy={814} r={6} className="xw-thin" />
+        </g>
 
         {/* What is on the glass: a prompt, and a line sweeping down it. */}
         <g className="xw-crt-glow">
-          <path d="M1052 748 L1096 747" className="xw-line xw-thin" />
-          <path d="M1052 768 L1150 767" className="xw-line xw-thin" />
-          <path d="M1052 788 L1118 787" className="xw-line xw-thin" />
-          <rect className="xw-crt-scan" x={1030} y={716} width={196} height={5} />
+          <path d="M1060 730 L1104 729" className="xw-line xw-thin" />
+          <path d="M1060 748 L1160 747" className="xw-line xw-thin" />
+          <path d="M1060 766 L1122 765" className="xw-line xw-thin" />
+          <rect className="xw-crt-scan" x={1040} y={710} width={168} height={4} />
         </g>
 
-        {/* Keyboard, pushed back against the case. */}
+        {/* Keyboard, pulled forward of the chassis and given a wedge, so it
+            reads as sloping toward whoever was sitting here. */}
         <g className="xw-line">
-          <path d="M1008 920 L1180 918 L1192 962 L1018 964 Z" className="xw-thin xw-solid" />
-          <path d="M1030 934 L1160 932" className="xw-thin xw-faint" />
-          <path d="M1030 946 L1128 944" className="xw-thin xw-faint" />
+          <path d="M1006 918 L1178 915 L1192 958 L1016 962 Z" className="xw-thin xw-solid" />
+          <path d="M1016 962 L1192 958 L1192 972 L1016 976 Z" className="xw-thin xw-solid" />
+          <path d="M1022 930 L1168 927" className="xw-thin xw-faint" />
+          <path d="M1026 941 L1172 938" className="xw-thin xw-faint" />
+          <path d="M1030 952 L1140 949" className="xw-thin xw-faint" />
         </g>
 
-        {/* The monitor's own target, tight around the case.
+        {/* The machine's own target, tight around all three pieces.
             Its own rather than part of the desk's, because the desk is wide
             enough that a rectangle covering both the desk and the machine
             standing on it would also cover the bottom-left corner of the
@@ -722,10 +814,10 @@ function Desk({
             kind of thing that makes a room feel like it is not listening. */}
         <rect
           className="xw-hit"
-          x={1000}
-          y={690}
-          width={256}
-          height={286}
+          x={982}
+          y={664}
+          width={312}
+          height={316}
           onClick={atDesk ? onOpen : () => onStation("desk")}
         />
       </g>
@@ -757,36 +849,78 @@ function Desk({
 function Chair() {
   return (
     <g className="xw-line">
-      {/* Back. */}
+      {/* Back: a padded panel, so it gets a front, a top and a side. */}
       <path d="M488 892 L648 884 L656 1046 L482 1054 Z" className="xw-solid" />
-      <path d="M502 908 L636 901" className="xw-thin" />
-      <path d="M502 926 L636 919" className="xw-thin" />
-      {/* Seat, in perspective: wider at the front. */}
-      <path d="M470 1050 L672 1042 L692 1094 L454 1102 Z" className="xw-solid" />
-      {/* Column. */}
-      <path d="M566 1102 L566 1192" />
-      {/* Star base, three castors of five — the rest are behind it. */}
-      <path d="M566 1192 L462 1236" />
-      <path d="M566 1192 L570 1250" />
-      <path d="M566 1192 L668 1230" />
-      <circle cx={458} cy={1244} r={9} className="xw-thin" />
-      <circle cx={571} cy={1258} r={9} className="xw-thin" />
-      <circle cx={673} cy={1238} r={9} className="xw-thin" />
+      <path d="M488 892 L522 872 L682 864 L648 884 Z" className="xw-solid" />
+      <path d="M648 884 L682 864 L690 1026 L656 1046 Z" className="xw-solid" />
+      <path d="M502 910 L636 903" className="xw-thin xw-faint" />
+      <path d="M502 934 L636 927" className="xw-thin xw-faint" />
+
+      {/* Seat: a slab, wider at the front, with its edge showing. */}
+      <path d="M470 1042 L672 1034 L692 1086 L454 1094 Z" className="xw-solid" />
+      <path d="M454 1094 L692 1086 L690 1110 L452 1118 Z" className="xw-solid" />
+
+      {/* Column and the gas lift inside it. */}
+      <path d="M556 1118 L578 1118 L578 1196 L556 1196 Z" className="xw-solid" />
+      <path d="M562 1130 L562 1190" className="xw-thin xw-faint" />
+
+      {/* Star base, three castors of five — the other two are behind. */}
+      <path d="M566 1196 L462 1236" />
+      <path d="M566 1196 L570 1250" />
+      <path d="M566 1196 L668 1230" />
+      <path d="M566 1204 L462 1244" className="xw-thin xw-faint" />
+      <path d="M566 1204 L570 1258" className="xw-thin xw-faint" />
+      <path d="M566 1204 L668 1238" className="xw-thin xw-faint" />
+      <circle cx={458} cy={1248} r={10} className="xw-thin" />
+      <circle cx={571} cy={1262} r={10} className="xw-thin" />
+      <circle cx={673} cy={1242} r={10} className="xw-thin" />
     </g>
   );
 }
 
+/**
+ * The filing cabinet: a box, not a rectangle.
+ *
+ * Every solid in this room is now drawn the same way — a front face, one side
+ * face receding along a shared depth vector, and a top where the top is above
+ * eye level or a base where it is below. Nothing is shaded and nothing is
+ * filled except to occlude; the volume is carried entirely by which edges are
+ * drawn and which are left out, which is how a pen draws a box.
+ *
+ * The depth vector points back and up toward the room's vanishing region, and
+ * every piece on this side of the room uses the same one. That consistency is
+ * what makes a set of line drawings read as one room rather than as a
+ * collection of objects each seen from its own angle.
+ */
 function Cabinet() {
   return (
     <g className="xw-line">
-      <path d="M150 846 L404 892 L404 1252 L150 1170 Z" className="xw-solid" />
-      <path d="M156 962 L400 998" className="xw-thin" />
-      <path d="M156 1078 L400 1104" className="xw-thin" />
-      <path d="M250 918 L300 926" className="xw-thin" />
-      <path d="M250 1032 L300 1038" className="xw-thin" />
-      <path d="M250 1144 L300 1148" className="xw-thin" />
-      {/* A box left on top. */}
-      <path d="M186 800 L360 832 L360 890 L186 850 Z" className="xw-thin xw-solid" />
+      {/* Front. */}
+      <path d="M150 858 L352 900 L352 1268 L150 1186 Z" className="xw-solid" />
+      {/* Right side, receding. */}
+      <path d="M352 900 L430 872 L430 1216 L352 1268 Z" className="xw-solid" />
+      {/* Top, seen from below the cabinet's height — so only a sliver. */}
+      <path d="M150 858 L352 900 L430 872 L228 832 Z" className="xw-solid" />
+
+      {/* Three drawers, each with its own face and a returned edge on the
+          side panel, so the divisions carry round the corner. */}
+      <path d="M150 980 L352 1022" className="xw-thin" />
+      <path d="M352 1022 L430 992" className="xw-thin xw-faint" />
+      <path d="M150 1102 L352 1144" className="xw-thin" />
+      <path d="M352 1144 L430 1112" className="xw-thin xw-faint" />
+
+      {/* Handles: a recessed pull, which is two lines and a shadow. */}
+      <path d="M212 908 L290 924" className="xw-thin" />
+      <path d="M212 916 L290 932" className="xw-thin xw-faint" />
+      <path d="M212 1030 L290 1046" className="xw-thin" />
+      <path d="M212 1038 L290 1054" className="xw-thin xw-faint" />
+      <path d="M212 1152 L290 1168" className="xw-thin" />
+      <path d="M212 1160 L290 1176" className="xw-thin xw-faint" />
+
+      {/* A box left on top, extruded the same way. */}
+      <path d="M190 796 L330 826 L330 872 L190 846 Z" className="xw-thin xw-solid" />
+      <path d="M330 826 L388 804 L388 852 L330 872 Z" className="xw-thin xw-solid" />
+      <path d="M190 796 L330 826 L388 804 L248 776 Z" className="xw-thin xw-solid" />
     </g>
   );
 }

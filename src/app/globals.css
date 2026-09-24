@@ -925,6 +925,195 @@ body {
   transform: translateX(calc(var(--w) / 2)) rotateY(90deg);
 }
 
+/* --- Opening --------------------------------------------------------------
+
+   The cover swings back on the spine, which is the left edge of the box — so
+   the hinge is transform-origin: left, and the rotation is the same rotateY
+   the book has been using all along, just about a different axis position.
+   Past ninety degrees it keeps going to a hundred and sixty, because a cover
+   laid open does not stop square, it falls past the spine and rests there.
+   --------------------------------------------------------------------------- */
+
+.xk-cover {
+  transform-origin: left center;
+  transition: transform 900ms cubic-bezier(0.42, 0.02, 0.2, 1);
+}
+
+.xk-book.is-open .xk-cover {
+  transform: translateZ(calc(var(--t) / 2)) rotateY(-162deg);
+  /* Once it is past square the reader is looking at the BACK of the cover,
+     and a board has no printing on its back. */
+  pointer-events: none;
+}
+
+.xk-book.is-open .xk-cover > * {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* The first page, sitting just under the cover. Drawn before the swing, not
+   after, because a cover that opens onto nothing reads as a lid. */
+.xk-leaf {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: clamp(1.1rem, 3.5vh, 2rem);
+  border-radius: 2px 4px 4px 2px;
+  background: linear-gradient(100deg, #12131a, #0a0b10 70%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--xp-fg) 16%, transparent);
+  /* A hair behind the cover, so it is hidden until the cover moves. */
+  transform: translateZ(calc(var(--t) / 2 - 3px));
+}
+
+.xk-leaf-rule {
+  height: 1px;
+  background: color-mix(in srgb, var(--xp-fg) 16%, transparent);
+}
+
+.xk-leaf-rule.is-short {
+  width: 55%;
+}
+
+/* --- The spread -----------------------------------------------------------
+
+   The pages, arrived. It grows out of roughly where the open book was
+   standing — that is the zoom, and it is why it is a scale from small rather
+   than a panel fading up: the reader goes INTO the book instead of the book
+   being swapped for a dialog.
+   --------------------------------------------------------------------------- */
+
+.xk-spread {
+  position: absolute;
+  inset: clamp(0.75rem, 3vh, 2.5rem) clamp(0.75rem, 4vw, 3rem);
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) auto minmax(0, 1.18fr);
+  overflow: hidden;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #14151c, #0b0c11);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--xp-fg) 26%, transparent),
+    0 60px 120px -40px rgba(0, 0, 0, 1);
+  animation: xk-zoom 700ms cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+@keyframes xk-zoom {
+  from {
+    opacity: 0;
+    /* Roughly the open book's footprint, coming at the camera. */
+    transform: scale(0.34) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+  }
+}
+
+.xk-page {
+  min-height: 0;
+  padding: clamp(1.25rem, 4vh, 2.75rem);
+  overflow-y: auto;
+}
+
+.xk-page.is-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  /* The verso catches less light than the recto on a book lying open. */
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.35), transparent 45%);
+}
+
+.xk-page-n {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.32em;
+  color: var(--xp-hot);
+}
+
+.xk-page-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(1.4rem, 4vh, 2.4rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.14em;
+  color: var(--xp-fg);
+}
+
+.xk-page-sub {
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--xp-dim);
+}
+
+.xk-page-brief {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--xp-fg) 88%, transparent);
+}
+
+/* Pinned to the foot of the verso, the way a folio number is. */
+.xk-page-foot {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.26em;
+  color: var(--xp-dim);
+}
+
+/* The seam: two shadows meeting, which is what the inside of a bound spine
+   looks like from directly above it. */
+.xk-gutter {
+  width: clamp(14px, 2.4vw, 34px);
+  background:
+    linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.75) 46%, rgba(0, 0, 0, 0.75) 54%, transparent),
+    linear-gradient(90deg, transparent 48%, color-mix(in srgb, var(--xp-fg) 14%, transparent) 50%, transparent 52%);
+}
+
+@media (max-width: 860px) {
+  /* One page at this width. A spread whose gutter is a third of the screen is
+     not a book, it is two narrow columns. */
+  .xk-spread {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .xk-page.is-left {
+    background: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  }
+
+  .xk-page-foot {
+    display: none;
+  }
+
+  .xk-gutter {
+    display: none;
+  }
+}
+
+/* Once the pages are up the book behind them is just boards. */
+.xk.is-spread .xk-book {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xk-cover,
+  .xk.is-spread .xk-book {
+    transition-duration: 0.01ms;
+  }
+
+  .xk-spread {
+    animation-duration: 0.01ms;
+  }
+}
+
 /* --- Putting it back ------------------------------------------------------ */
 
 .xk-back {
@@ -967,565 +1156,6 @@ body {
   }
 }
 
-/* --- Pages turning -------------------------------------------------------- */
-
-.xw-turn {
-  position: absolute;
-  inset: 0;
-  z-index: 11;
-  display: grid;
-  place-items: center;
-  background: #05060a;
-  perspective: 1400px;
-  animation: xw-turn-fade 0.25s ease both;
-}
-
-@keyframes xw-turn-fade {
-  from {
-    opacity: 0;
-  }
-}
-
-/* The stack grows past the lens while the sheets go over, so the camera reads
-   as passing through the file rather than watching it from outside. */
-.xw-turn-stack {
-  position: relative;
-  width: min(34ch, 62vw);
-  aspect-ratio: 3 / 4;
-  transform-style: preserve-3d;
-  animation: xw-turn-in 1.5s cubic-bezier(0.5, 0, 0.75, 0) both;
-}
-
-@keyframes xw-turn-in {
-  0% {
-    transform: scale(0.82);
-  }
-  70% {
-    transform: scale(1.35) translateZ(70px);
-  }
-  100% {
-    transform: scale(5.5) translateZ(420px);
-    opacity: 0;
-  }
-}
-
-.xw-turn-page {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  align-content: start;
-  gap: 1.1rem;
-  padding: 2rem 1.6rem;
-  border: 2px solid color-mix(in srgb, var(--xp-fg) 45%, transparent);
-  background: #05060a;
-  transform-origin: left center;
-  backface-visibility: hidden;
-  animation: xw-page 1.1s cubic-bezier(0.55, 0, 0.3, 1) both;
-}
-
-.xw-turn-page span {
-  display: block;
-  height: 5px;
-  background: color-mix(in srgb, var(--xp-fg) 26%, transparent);
-}
-
-.xw-turn-page span.is-short {
-  width: 48%;
-}
-
-@keyframes xw-page {
-  from {
-    transform: rotateY(0deg);
-  }
-  to {
-    transform: rotateY(-166deg);
-  }
-}
-
-.xw-turn.is-reduced .xw-turn-stack,
-.xw-turn.is-reduced .xw-turn-page {
-  animation: xw-turn-fade 0.3s ease both;
-}
-
-/* --- What is inside ------------------------------------------------------- */
-
-.xw-panel {
-  position: absolute;
-  inset: 0;
-  z-index: 12;
-  display: grid;
-  place-items: center;
-  padding: clamp(1rem, 4vw, 2.5rem);
-  overflow-y: auto;
-  background: color-mix(in srgb, #05060a 88%, transparent);
-  animation: xw-turn-fade 0.35s ease both;
-}
-
-.xw-panel-card {
-  width: min(56ch, 100%);
-  padding: clamp(1.4rem, 4vw, 2.2rem);
-  border: 2px solid color-mix(in srgb, var(--xp-fg) 45%, transparent);
-  border-radius: 2px;
-  background: #05060a;
-}
-
-.xw-panel-card:focus {
-  outline: none;
-}
-
-.xw-panel-head {
-  margin-bottom: 1.4rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
-}
-
-.xw-panel-n {
-  margin: 0;
-  font-size: 0.625rem;
-  letter-spacing: 0.3em;
-  color: var(--xp-hot);
-}
-
-.xw-panel-title {
-  margin: 0.3rem 0 0.2rem;
-  font-family: var(--font-mono);
-  font-size: clamp(1.25rem, 4vw, 1.6rem);
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  color: var(--xp-fg);
-}
-
-.xw-panel-sub {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--xp-dim);
-}
-
-.xw-panel-foot {
-  margin-top: 1.6rem;
-  padding-top: 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
-}
-
-/* --- The window: a blind, a cord, and what happens when you pull it -------
-
-   The blind slides, the daylight fades, and the ink in the room lifts by a few
-   percent. Three transitions on the same duration, which is what makes it read
-   as one event — a room getting light — instead of three things animating.
-   ------------------------------------------------------------------------- */
-
-.xw-blind,
-.xw-blind-rail {
-  transition: transform 1.1s cubic-bezier(0.32, 0.72, 0.24, 1);
-}
-
-.xw-blind-face {
-  fill: color-mix(in srgb, #05060a 84%, var(--xp-fg));
-  stroke: none;
-}
-
-.xw-outside {
-  opacity: 0;
-  transition: opacity 0.9s ease 0.35s;
-}
-
-.xw-outside.is-open {
-  opacity: 1;
-}
-
-/* The cord. Quiet until the camera is at the window, then it is the only warm
-   thing in frame — which is the whole instruction. */
-.xw-cord {
-  cursor: pointer;
-  transition: transform 1.1s cubic-bezier(0.32, 0.72, 0.24, 1);
-}
-
-.xw-cord-bead {
-  fill: var(--xp-fg);
-  stroke: none;
-  opacity: 0.6;
-  transition: fill 0.4s ease, opacity 0.4s ease;
-}
-
-/* A pulse as well as the warm fill, so that at the window it is obvious what to
-   pull. It is the one thing in the room that asks to be touched, so it is the
-   one thing allowed to move on its own. */
-.xw-cord.is-live .xw-cord-bead {
-  fill: var(--xp-hot);
-  opacity: 1;
-  animation: xw-bead 2.4s ease-in-out infinite;
-}
-
-@keyframes xw-bead {
-  0%, 100% { r: 9; }
-  50% { r: 11.5; }
-}
-
-/* --- The two lights -------------------------------------------------------
-
-   Every glow in the drawing fills with var(--xw-bulb), which World sets once
-   on .xw. Changing the bulb is that one string changing; the cone, the pool
-   and the filament never learn what colour they are.
-
-   The cones are flat polygons rather than gradients on purpose. The room is
-   flat ink, and a soft volumetric falloff would be the one thing in it
-   pretending to be lit rather than drawn.
-   ------------------------------------------------------------------------- */
-
-.xw {
-  /* Both are written from World, out of lib/world — BULBS[0] and DESK_BULB —
-     so the colours have one home and the stylesheet is not a second one. The
-     fallbacks are here because a room whose lights go black when a custom
-     property fails to arrive is worse than one lit the wrong colour. */
-  --xw-bulb: #ffc178;
-  --xw-lamp-bulb: #ffbe5c;
-}
-
-.xw-bulb-light,
-.xw-lamp-light {
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none;
-}
-
-.xw-pendant.is-on .xw-bulb-light,
-.xw-lamp.is-on .xw-lamp-light {
-  opacity: 1;
-}
-
-.xw-bulb-cone,
-.xw-lamp-cone {
-  fill: var(--xw-bulb);
-  stroke: none;
-  opacity: 0.09;
-}
-
-.xw-bulb-pool,
-.xw-lamp-pool {
-  fill: var(--xw-bulb);
-  stroke: none;
-  opacity: 0.14;
-}
-
-.xw-lamp-cone {
-  fill: var(--xw-lamp-bulb);
-}
-
-.xw-lamp-pool {
-  fill: var(--xw-lamp-bulb);
-  opacity: 0.18;
-}
-
-/* The filament. Dark and dead until it is switched on, and then it is the
-   brightest thing in the room — which is the whole feedback for the click. */
-.xw-bulb-core,
-.xw-lamp-core {
-  fill: var(--xp-fg);
-  stroke: none;
-  opacity: 0.18;
-  transition: fill 0.4s ease, opacity 0.4s ease, filter 0.4s ease;
-}
-
-.xw-pendant.is-on .xw-bulb-core {
-  fill: var(--xw-bulb);
-  opacity: 1;
-  filter: drop-shadow(0 0 14px var(--xw-bulb));
-}
-
-.xw-lamp.is-on .xw-lamp-core {
-  fill: var(--xw-lamp-bulb);
-  opacity: 1;
-  filter: drop-shadow(0 0 10px var(--xw-lamp-bulb));
-}
-
-/* Both fittings are things you press, so both say so. */
-.xw-pendant,
-.xw-lamp {
-  cursor: pointer;
-}
-
-/* --- The light switches in the HUD ---------------------------------------- */
-
-.xw-lights {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-  margin-left: auto;
-}
-
-.xw-mute.is-on {
-  border-color: var(--xp-hot);
-  color: var(--xp-hot);
-}
-
-.xw-bulbs {
-  display: flex;
-  gap: 0.3rem;
-  padding: 0 0.2rem;
-}
-
-.xw-bulb-swatch {
-  width: 1.15rem;
-  height: 1.15rem;
-  padding: 0;
-  border: 1px solid color-mix(in srgb, var(--xp-fg) 26%, transparent);
-  border-radius: 50%;
-  background: var(--swatch);
-  opacity: 0.45;
-  cursor: pointer;
-  transition: opacity 0.3s ease, transform 0.3s var(--ease-out), box-shadow 0.3s ease;
-}
-
-.xw-bulb-swatch:hover,
-.xw-bulb-swatch:focus-visible {
-  opacity: 0.85;
-  transform: scale(1.12);
-}
-
-.xw-bulb-swatch.is-on {
-  opacity: 1;
-  border-color: var(--xp-fg);
-  box-shadow: 0 0 12px var(--swatch);
-}
-
-/* --- Daylight ------------------------------------------------------------- */
-
-.xw-day {
-  opacity: 0;
-  transition: opacity 1.2s ease;
-  pointer-events: none;
-}
-
-.xw-day.is-on {
-  opacity: 1;
-}
-
-.xw-day-shaft {
-  fill: var(--xp-fg);
-  stroke: none;
-  opacity: 0.055;
-}
-
-
-/* The ink itself lifts once the blind is up. Small — five percent — because
-   the room is still a pen drawing and the point is that it reads as lighter,
-   not that it turns into a different room. */
-.xw .xw-svg {
-  transition: opacity 1.2s ease;
-}
-
-.xw.is-lit .xw-svg {
-  opacity: 1;
-}
-
-.xw:not(.is-lit) .xw-svg {
-  opacity: 0.94;
-}
-
-/* --- The machine on the desk ---------------------------------------------- */
-
-.xw-crt-led {
-  fill: var(--xp-hot);
-  opacity: 0.5;
-}
-
-.xw-crt.is-live .xw-crt-led {
-  opacity: 1;
-}
-
-.xw-crt-glow {
-  opacity: 0.45;
-  transition: opacity 0.6s ease;
-}
-
-.xw-crt.is-live .xw-crt-glow {
-  opacity: 0.9;
-}
-
-/* One line down the glass, so the machine is visibly ON before it is clicked.
-   The only thing in the drawing that moves by itself. */
-.xw-crt-scan {
-  fill: var(--xp-hot);
-  stroke: none;
-  opacity: 0.22;
-  animation: xw-scan 4.2s linear infinite;
-}
-
-@keyframes xw-scan {
-  from { transform: translateY(0); }
-  to { transform: translateY(136px); }
-}
-
-/* --- Inside a file: the portfolio's own sections --------------------------- */
-
-.xf-pages {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.xf-lede {
-  margin: 0;
-  font-size: 0.9375rem;
-  line-height: 1.7;
-  color: var(--xp-fg);
-  opacity: 0.9;
-}
-
-.xf-facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 1rem 2rem;
-  margin: 0;
-  padding: 1rem 0;
-  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 16%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 16%, transparent);
-}
-
-.xf-facts dt {
-  font-size: 0.5625rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--xp-dim);
-}
-
-.xf-facts dd {
-  margin: 0.3rem 0 0;
-  font-size: 0.8125rem;
-  color: var(--xp-fg);
-}
-
-.xf-sub {
-  display: grid;
-  gap: 0.75rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 16%, transparent);
-}
-
-.xf-sub h4 {
-  margin: 0;
-  font-size: 0.625rem;
-  font-weight: 400;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--xp-hot);
-}
-
-.xf-entry {
-  display: grid;
-  gap: 0.4rem;
-  padding-left: 1rem;
-  border-left: 2px solid color-mix(in srgb, var(--xp-hot) 45%, transparent);
-}
-
-.xf-entry + .xf-entry {
-  margin-top: 1.4rem;
-}
-
-.xf-entry-when {
-  margin: 0;
-  font-size: 0.625rem;
-  letter-spacing: 0.22em;
-  color: var(--xp-dim);
-}
-
-.xf-entry-title {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  color: var(--xp-fg);
-}
-
-.xf-entry-title a {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--xp-hot) 60%, transparent);
-  text-underline-offset: 4px;
-}
-
-.xf-entry-sub {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--xp-dim);
-}
-
-.xf-entry-tech,
-.xf-link {
-  margin: 0.2rem 0 0;
-  font-size: 0.6875rem;
-  letter-spacing: 0.08em;
-  color: var(--xp-hot);
-}
-
-.xf-bullets {
-  display: grid;
-  gap: 0.35rem;
-  margin: 0.4rem 0 0;
-  padding-left: 1.1rem;
-  font-size: 0.8125rem;
-  line-height: 1.6;
-  color: var(--xp-fg);
-  opacity: 0.85;
-}
-
-.xf-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.xf-chips li {
-  padding: 0.3rem 0.65rem;
-  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
-  font-size: 0.6875rem;
-  letter-spacing: 0.08em;
-  color: var(--xp-fg);
-}
-
-.xf-index {
-  display: grid;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.xf-index li {
-  display: flex;
-  align-items: baseline;
-  gap: 0.8rem;
-  padding: 0.55rem 0.9rem;
-  border-left: 2px solid var(--xp-hot);
-  background: color-mix(in srgb, var(--xp-fg) 5%, transparent);
-  font-size: 0.8125rem;
-  letter-spacing: 0.1em;
-  color: var(--xp-fg);
-}
-
-.xf-index-n {
-  color: var(--xp-hot);
-  font-size: 0.6875rem;
-}
-
-.xf-index-state {
-  margin-left: auto;
-  font-size: 0.5625rem;
-  letter-spacing: 0.2em;
-  color: var(--xp-dim);
-}
-
-.xf-blank {
-  margin: 0;
-  padding: 2rem 0;
-  font-size: 0.875rem;
-  color: var(--xp-dim);
-}
-
 /* --- Small screens -------------------------------------------------------- */
 
 @media (max-width: 720px) {
@@ -1557,11 +1187,6 @@ body {
      continuous place. Everything that is only decoration goes. */
   .xw-stage {
     transition-duration: 400ms !important;
-  }
-
-  .xw-turn-stack,
-  .xw-turn-page {
-    animation: xw-turn-fade 0.3s ease both;
   }
 
   /* The two things in the drawing that move on their own. The cord still
@@ -2057,25 +1682,55 @@ body {
   animation: blink 1.05s steps(1) infinite;
 }
 
-.xd-bar {
+/* --- The shell ------------------------------------------------------------
+
+   A workstation, not a panel with icons down the side. Three bands: a menu bar
+   that says what machine this is, a desktop with the volumes sitting on it, and
+   a status line that says what the thing under the pointer does. A window opens
+   OVER the desktop rather than beside it, which is the difference between a
+   system and a two-column layout.
+
+   The chrome is bevelled rather than flat — a light edge top-left, a dark one
+   bottom-right — because that is the one visual convention that says "this is
+   a machine from before flat design", and it costs two box-shadows.
+   --------------------------------------------------------------------------- */
+
+.xd-menubar {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.55rem 0.9rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
-  background: color-mix(in srgb, #05060a 80%, var(--xp-fg));
+  gap: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 40%, transparent);
+  background: color-mix(in srgb, #05060a 78%, var(--xp-fg));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--xp-fg) 22%, transparent);
 }
 
-.xd-bar-name {
+/* A mark, not a brand: three bars, the way a machine of this era stamped its
+   own corner. */
+.xd-logo {
+  width: 0.9rem;
+  height: 0.75rem;
+  background: repeating-linear-gradient(
+    0deg,
+    var(--xp-hot) 0 2px,
+    transparent 2px 4px
+  );
+}
+
+.xd-menubar-name,
+.xd-menubar-meta {
   font-size: 0.5625rem;
   letter-spacing: 0.24em;
   color: var(--xp-dim);
 }
 
+.xd-menubar-sp {
+  flex: 1;
+}
+
 .xd-shutdown {
-  margin-left: auto;
-  border: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
-  padding: 0.3rem 0.7rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
   background: transparent;
   font: inherit;
   font-size: 0.5625rem;
@@ -2083,6 +1738,9 @@ body {
   text-transform: uppercase;
   color: var(--xp-fg);
   cursor: pointer;
+  box-shadow:
+    inset 1px 1px 0 color-mix(in srgb, var(--xp-fg) 20%, transparent),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.6);
 }
 
 .xd-shutdown:hover,
@@ -2091,104 +1749,148 @@ body {
   color: var(--xp-hot);
 }
 
-.xd-body {
-  display: grid;
-  grid-template-columns: 8.5rem minmax(0, 1fr);
+/* The ground. Ruled faintly, so the icons are sitting on something. */
+.xd-desk {
+  position: relative;
   min-height: 0;
+  padding: 1rem;
+  overflow: hidden;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 7px, color-mix(in srgb, var(--xp-fg) 4%, transparent) 7px 8px),
+    repeating-linear-gradient(90deg, transparent 0 7px, color-mix(in srgb, var(--xp-fg) 4%, transparent) 7px 8px);
 }
 
 .xd-icons {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, max-content));
   align-content: start;
-  gap: 0.25rem;
-  padding: 0.75rem 0.5rem;
-  border-right: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  gap: 0.5rem;
 }
 
 .xd-icon {
   display: grid;
   justify-items: center;
-  gap: 0.35rem;
-  padding: 0.6rem 0.3rem;
+  gap: 0.4rem;
+  width: 5.5rem;
+  padding: 0.6rem 0.3rem 0.45rem;
   border: 1px solid transparent;
   background: transparent;
   font: inherit;
-  font-size: 0.625rem;
-  letter-spacing: 0.1em;
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
   color: var(--xp-fg);
   cursor: pointer;
 }
 
-.xd-icon:hover,
-.xd-icon:focus-visible {
-  border-color: color-mix(in srgb, var(--xp-fg) 26%, transparent);
-  background: color-mix(in srgb, var(--xp-fg) 7%, transparent);
+/* The label highlights, not the whole tile: that is how a desktop shows a
+   selected icon, and it keeps the ground visible underneath. */
+.xd-icon-name {
+  padding: 0.1rem 0.3rem;
+}
+
+.xd-icon:hover .xd-icon-name,
+.xd-icon:focus-visible .xd-icon-name {
+  background: color-mix(in srgb, var(--xp-fg) 16%, transparent);
 }
 
 .xd-icon.is-open {
-  border-color: var(--xp-hot);
   color: var(--xp-hot);
 }
 
+.xd-icon.is-open .xd-icon-name {
+  background: color-mix(in srgb, var(--xp-hot) 20%, transparent);
+}
+
 .xd-folder {
-  width: 34px;
-  height: 28px;
+  width: 38px;
+  height: 31px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.6;
   stroke-linejoin: round;
 }
 
-.xd-pane {
+/* --- The window ----------------------------------------------------------- */
+
+.xd-window {
+  position: absolute;
+  /* Inset from the desktop rather than filling it, so the icons stay visible
+     round the edges and the window reads as ON the desktop. */
+  inset: 2.25rem 1rem 1rem 3.5rem;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  min-height: 0;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 45%, transparent);
+  background: #07080d;
+  box-shadow:
+    inset 1px 1px 0 color-mix(in srgb, var(--xp-fg) 18%, transparent),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.8),
+    8px 8px 0 rgba(0, 0, 0, 0.55);
+  animation: xd-open 0.22s ease both;
 }
 
-.xd-pane-bar {
+@keyframes xd-open {
+  from { opacity: 0; transform: translate(-4px, -4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.xd-titlebar {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 0.4rem 0.5rem 0.9rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
-  font-size: 0.625rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--xp-hot);
+  gap: 0.6rem;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: color-mix(in srgb, #05060a 72%, var(--xp-fg));
 }
 
-.xd-x {
-  margin-left: auto;
-  width: 1.6rem;
-  height: 1.6rem;
-  border: 1px solid color-mix(in srgb, var(--xp-fg) 26%, transparent);
+/* A close box, the way these machines drew one: a square you press, not a
+   glyph you read. */
+.xd-close {
+  width: 0.95rem;
+  height: 0.95rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 55%, transparent);
   background: transparent;
-  font: inherit;
-  font-size: 0.9rem;
-  line-height: 1;
-  color: var(--xp-fg);
   cursor: pointer;
+  box-shadow: inset 0 0 0 2px #05060a;
 }
 
-.xd-pane-body {
+.xd-close:hover,
+.xd-close:focus-visible {
+  border-color: var(--xp-hot);
+  background: var(--xp-hot);
+}
+
+.xd-title {
+  font-size: 0.5625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--xp-fg);
+}
+
+/* The dragging hatch. It does not drag — there is nowhere to drag to — but a
+   title bar without one looks like a heading. */
+.xd-grip {
+  flex: 1;
+  height: 0.55rem;
+  background: repeating-linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--xp-fg) 26%, transparent) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+.xd-window-body {
   min-height: 0;
   padding: 1rem;
   overflow-y: auto;
 }
 
-.xd-idle {
-  margin: 0;
-  padding: 2rem 0;
-  font-size: 0.8125rem;
-  color: var(--xp-dim);
-  text-align: center;
-}
-
 .xd-status {
-  padding: 0.5rem 0.9rem;
-  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
-  font-size: 0.625rem;
-  letter-spacing: 0.12em;
+  padding: 0.4rem 0.7rem;
+  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: color-mix(in srgb, #05060a 84%, var(--xp-fg));
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
   color: var(--xp-dim);
 }
 
@@ -2384,17 +2086,29 @@ body {
   opacity: 0.88;
 }
 
+/* Still used by every app that has nothing to show, which on a fresh install
+   is most of them. */
+.xd-idle {
+  margin: 0;
+  padding: 2rem 0;
+  font-size: 0.8125rem;
+  color: var(--xp-dim);
+  text-align: center;
+}
+
 @media (max-width: 720px) {
-  .xd-body {
-    grid-template-columns: minmax(0, 1fr);
+  /* The window takes the whole desktop at this width: the icons cannot both
+     stay visible round it and leave the window enough room to be read. */
+  .xd-window {
+    inset: 0.5rem;
   }
 
   .xd-icons {
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(5rem, 1fr);
-    border-right: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
-    overflow-x: auto;
+    grid-template-columns: repeat(auto-fill, minmax(4.5rem, max-content));
+  }
+
+  .xd-icon {
+    width: 4.5rem;
   }
 
   .xd-form {
@@ -2403,7 +2117,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .xd-screen {
+  .xd-screen,
+  .xd-window {
     animation-duration: 0.01ms;
   }
 }

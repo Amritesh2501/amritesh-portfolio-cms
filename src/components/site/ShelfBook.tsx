@@ -1,39 +1,48 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import type { CaseFile } from "@/lib/world";
+import type { CaseRoomData } from "@/lib/content";
+import * as sound from "@/lib/sound";
+import { CaseFilePages } from "./CaseFilePages";
 
 /**
- * A file, taken off the shelf.
+ * A file, from the shelf to the page.
  *
- * This is ONE object from start to finish, and that is the whole point of it.
- * What it replaced was two: an SVG spine that animated out of the row and
- * faded, and an unrelated HTML card that flew in from off-screen. However well
- * the two were timed, the file was never the same thing before and after — it
- * vanished and something else arrived.
+ * This is ONE object the whole way through, and that is the point of it. What
+ * it replaced was three: an SVG spine that animated out of the row and faded,
+ * an HTML card that flew in from off-screen, and — when you opened it — a
+ * modal panel that had nothing to do with either. However well the three were
+ * timed, the file was never the same thing twice.
  *
- * Here the book is built as an actual box in three dimensions:
+ * The book is an actual box:
  *
  *      spine ── the narrow face, on the LEFT edge of the cover
  *      cover ── the wide face, pointing at the camera
  *      edge  ── the paper block, on the right
  *
- * A book on a shelf shows you its spine, which means the box starts turned
- * ninety degrees away from you. Getting to the cover is exactly the move you
- * would make with your hands: pull it out of the row, then turn it a quarter
- * turn about its own vertical axis. That is the animation — `rotateY(90deg)`
- * to `rotateY(0deg)` — and it is the reason the faces are laid out this way
- * rather than as a stack of cards that cross-fade.
+ * and it goes through four stages, each one a thing a hand does:
  *
- * It begins at the exact place on screen the drawn spine was standing. World
- * projects the spine's world coordinates through the same camera the room is
- * using and hands the result down as `from`, so the book lifts off the shelf
- * instead of appearing near it.
+ *      take    out of the row and a quarter turn, spine to cover
+ *      open    the cover swings back on the spine, the way a cover hinges
+ *      zoom    the open pages come at the camera until they are all there is
+ *      spread  two pages, and what is written on them
+ *
+ * The first stage begins at the exact place on screen the drawn spine was
+ * standing — World projects it through the same camera the room is using — so
+ * the book lifts off the shelf rather than appearing near it.
  */
 
+type Stage = "take" | "open" | "spread";
+
+/** Out of the row and round to the cover. Matches `xk-take` in CSS. */
+export const TURN_MS = 1500;
+/** The cover swinging back. Matches `xk-swing`. */
+const OPEN_MS = 900;
+
 /** The book, in its own pixels. Written onto the element, because the opening
- *  scale is computed against these numbers and the two must agree. */
+ *  scale is computed against these numbers and the two have to agree. */
 function sizeFor(view: { w: number; h: number }) {
   // Tall enough to read a cover on, short enough to leave the shelf visible
   // behind it on a laptop. The ratio is a case binder's, not a paperback's.
@@ -55,20 +64,28 @@ export function ShelfBook({
   file,
   from,
   view,
+  data,
+  read,
   done,
-  onOpen,
+  onRead,
   onBack,
 }: {
   file: CaseFile;
   from: BookFrom;
   view: { w: number; h: number };
+  data: CaseRoomData;
+  read: readonly string[];
   done: boolean;
-  onOpen: () => void;
+  /** Called once the pages are actually in front of the reader. */
+  onRead: () => void;
   onBack: () => void;
 }) {
   const reduce = useReducedMotion();
+  const [stage, setStage] = useState<Stage>("take");
   const [settled, setSettled] = useState(Boolean(reduce));
   const coverRef = useRef<HTMLButtonElement>(null);
+  const spreadRef = useRef<HTMLDivElement>(null);
+  const timers = useRef<number[]>([]);
 
   const size = sizeFor(view);
   // The spine's thickness, from the proportions it was drawn at. Derived
@@ -80,21 +97,57 @@ export function ShelfBook({
   const start = from.h / size.h;
 
   useEffect(() => {
+    const t = timers.current;
+    return () => t.forEach(window.clearTimeout);
+  }, []);
+
+  useEffect(() => {
     if (reduce) return;
     const t = window.setTimeout(() => setSettled(true), TURN_MS);
     return () => window.clearTimeout(t);
   }, [reduce]);
 
-  // Focus lands on the cover once it is facing, not while it is still edge-on
-  // and unreadable.
+  /* Opening ---------------------------------------------------------------- */
+
+  const open = useCallback(() => {
+    if (stage !== "take") return;
+    setStage("open");
+    sound.page();
+
+    if (reduce) {
+      setStage("spread");
+      onRead();
+      return;
+    }
+    // A second sheet as the cover comes over, so the swing has some paper in
+    // it rather than being one board moving.
+    timers.current.push(window.setTimeout(sound.page, 340));
+    timers.current.push(
+      window.setTimeout(() => {
+        setStage("spread");
+        onRead();
+      }, OPEN_MS),
+    );
+  }, [stage, reduce, onRead]);
+
+  /* Focus follows the thing that is actually readable -----------------------*/
+
   useEffect(() => {
-    if (settled) coverRef.current?.focus();
-  }, [settled]);
+    if (stage === "spread") spreadRef.current?.focus();
+    else if (settled) coverRef.current?.focus();
+  }, [stage, settled]);
+
+  const spread = stage === "spread";
 
   return (
-    <div className="xk" role="dialog" aria-modal="true" aria-label={file.name}>
+    <div className={`xk ${spread ? "is-spread" : ""}`} role="dialog" aria-modal="true" aria-label={file.name}>
+      {/* The book. Hidden once the spread has taken over — by then the pages
+          have come all the way to the camera and the boards are behind it. */}
       <div
-        className={`xk-book ${settled ? "is-settled" : ""} ${reduce ? "is-still" : ""}`}
+        className={`xk-book ${settled ? "is-settled" : ""} ${reduce ? "is-still" : ""} ${
+          stage === "take" ? "" : "is-open"
+        }`}
+        aria-hidden={spread}
         style={{
           width: size.w,
           height: size.h,
@@ -109,13 +162,22 @@ export function ShelfBook({
           ["--w" as string]: `${size.w}px`,
         }}
       >
+        {/* The first page, behind the cover. It is what the cover swings back
+            to reveal, so it has to exist before the swing rather than after. */}
+        <span className="xk-face xk-leaf" aria-hidden>
+          <span className="xk-leaf-rule" />
+          <span className="xk-leaf-rule" />
+          <span className="xk-leaf-rule is-short" />
+        </span>
+
         {/* The cover. A real button, because it is the thing that opens the
             file and the only face that is ever pointed at anybody. */}
         <button
           type="button"
           ref={coverRef}
           className="xk-face xk-cover"
-          onClick={onOpen}
+          onClick={open}
+          tabIndex={spread ? -1 : 0}
           aria-label={`${file.name}. ${file.subject}. Open the file.`}
         >
           <span className="xk-cover-rule" aria-hidden />
@@ -144,12 +206,34 @@ export function ShelfBook({
         <span className="xk-face xk-edge" aria-hidden />
       </div>
 
+      {/* The spread: the pages, arrived. It grows out of roughly where the
+          open book was standing, which is the zoom — the reader goes into the
+          book rather than the book being swapped for a panel. */}
+      {spread ? (
+        <div className="xk-spread" ref={spreadRef} tabIndex={-1}>
+          <div className="xk-page is-left">
+            <p className="xk-page-n">FILE {file.index}</p>
+            <h2 className="xk-page-title">{file.name}</h2>
+            <p className="xk-page-sub">{file.subject}</p>
+            <p className="xk-page-brief">{file.brief}</p>
+            <span className="xk-page-foot" aria-hidden>
+              {file.index} / {done ? "READ" : "OPEN"}
+            </span>
+          </div>
+
+          {/* The seam. Two gradients meeting, which is what the inside of a
+              bound spine looks like from directly above it. */}
+          <div className="xk-gutter" aria-hidden />
+
+          <div className="xk-page is-right">
+            <CaseFilePages file={file} data={data} read={read} />
+          </div>
+        </div>
+      ) : null}
+
       <button type="button" className="xk-back" onClick={onBack}>
-        Put it back
+        {spread ? "Close the file" : "Put it back"}
       </button>
     </div>
   );
 }
-
-/** Out of the row, round to the cover, settled. Matches `xk-take` in CSS. */
-export const TURN_MS = 1500;

@@ -20,7 +20,6 @@ import * as sound from "@/lib/sound";
 import { Board } from "./Board";
 import { Room } from "./RoomArt";
 import { Desktop } from "./Desktop";
-import { CaseFilePages } from "./CaseFilePages";
 import { ShelfBook, type BookFrom } from "./ShelfBook";
 
 /**
@@ -56,7 +55,7 @@ import { ShelfBook, type BookFrom } from "./ShelfBook";
  * IS that spine: two objects handing over to each other is what the old
  * version did, and it never looked like one file.
  */
-type Phase = "room" | "cover" | "turning" | "open";
+type Phase = "room" | "cover";
 
 /**
  * Where a file's spine is on screen, so the book can start exactly there.
@@ -108,7 +107,6 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
   const view = useViewport();
   const timers = useRef<number[]>([]);
-  const panelRef = useRef<HTMLDivElement>(null);
 
   const after = useCallback((ms: number, fn: () => void) => {
     timers.current.push(window.setTimeout(fn, ms));
@@ -214,28 +212,21 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
     [read, phase],
   );
 
-  /** Cover → pages → what is inside. */
-  const open = useCallback(() => {
+  /**
+   * Read, once the pages are actually in front of somebody.
+   *
+   * The book decides when that is and calls this — not when the cover was
+   * picked up, and not when it was put back unopened. The sequencing that used
+   * to live here, three setTimeouts deep, is the book's own business now.
+   */
+  const markRead = useCallback(() => {
     if (!picked) return;
-    setPhase("turning");
-    sound.page();
-
-    const beat = reduce ? 420 : 1500;
-    if (!reduce) {
-      after(420, sound.page);
-      after(840, sound.page);
-    }
-    after(beat, () => {
-      setPhase("open");
-      // Read is read once the pages are actually in front of you, not when the
-      // cover was picked up and put back.
-      setRead((prev) => {
-        if (prev.includes(picked.id)) return prev;
-        sound.recovered();
-        return [...prev, picked.id];
-      });
+    setRead((prev) => {
+      if (prev.includes(picked.id)) return prev;
+      sound.recovered();
+      return [...prev, picked.id];
     });
-  }, [picked, reduce, after]);
+  }, [picked]);
 
   const closeFile = useCallback(() => {
     clearPending();
@@ -249,6 +240,26 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
     setBlindDown((down) => !down);
     sound.latch();
   }, []);
+
+  /* The board --------------------------------------------------------------- */
+
+  /**
+   * Walk over, then take it down — on one click.
+   *
+   * The camera still travels, because arriving at the wall is what makes the
+   * full-screen board feel like the board rather than like a modal. It just
+   * does not stop there and wait to be clicked a second time: from across the
+   * room the first click was the intent, and the station shot on its own is a
+   * board you cannot read.
+   */
+  const takeBoardDown = useCallback(() => {
+    if (at === "board") {
+      setBoardOpen(true);
+      return;
+    }
+    goto("board");
+    after(reduce ? 0 : 900, () => setBoardOpen(true));
+  }, [at, goto, after, reduce]);
 
   /* The lights ------------------------------------------------------------- */
 
@@ -306,10 +317,6 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
     return () => window.removeEventListener("keydown", onKey);
   }, [at, order, picked, boardOpen, deskOpen, goto, toRoom, closeFile, onExit]);
 
-  useEffect(() => {
-    if (phase === "open") panelRef.current?.focus();
-  }, [phase]);
-
   /* The camera, resolved against the actual viewport ------------------------ */
 
   const shot = useMemo(() => {
@@ -366,7 +373,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
             taken={picked && phase !== "room" ? picked.id : null}
             onStation={goto}
             onFile={pick}
-            onBoard={() => setBoardOpen(true)}
+            onBoard={takeBoardDown}
             onDesk={() => setDeskOpen(true)}
             onCord={pullCord}
             onCeiling={toggleCeiling}
@@ -491,7 +498,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
           {at === "board" ? (
             <div className="xw-files">
-              <button type="button" className="xw-file-btn" onClick={() => setBoardOpen(true)}>
+              <button type="button" className="xw-file-btn" onClick={takeBoardDown}>
                 <span>TAKE THE BOARD DOWN</span>
                 <span className="xw-file-s">FULL SCREEN</span>
               </button>
@@ -520,39 +527,20 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
       {/* The file: cover, pages, contents ------------------------------------ */}
 
+      {/* The file. One component from the shelf to the page: it takes itself
+          off the row, turns, opens on its own spine and brings the pages to
+          the camera. World only says which file and where its spine was. */}
       {picked && phase === "cover" ? (
         <ShelfBook
           file={picked}
           from={bookFrom(picked, shot, view)}
           view={view}
+          data={data}
+          read={read}
           done={read.includes(picked.id)}
-          onOpen={open}
+          onRead={markRead}
           onBack={closeFile}
         />
-      ) : null}
-
-      {phase === "turning" ? <PageTurn reduce={Boolean(reduce)} /> : null}
-
-      {picked && phase === "open" ? (
-        <div className="xw-panel">
-          <div className="xw-panel-card" ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={picked.name}>
-            <header className="xw-panel-head">
-              <p className="xw-panel-n">FILE {picked.index}</p>
-              <h2 className="xw-panel-title">{picked.name}</h2>
-              <p className="xw-panel-sub">{picked.subject}</p>
-            </header>
-
-            <div className="xw-panel-body">
-              <CaseFilePages file={picked} data={data} read={read} />
-            </div>
-
-            <footer className="xw-panel-foot">
-              <button type="button" className="btn btn-sm" onClick={closeFile}>
-                Put it back
-              </button>
-            </footer>
-          </div>
-        </div>
       ) : null}
 
       {/* The board and the machine, each full screen ------------------------- */}
@@ -562,24 +550,6 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
       ) : null}
 
       {deskOpen ? <Desktop data={data} onClose={() => setDeskOpen(false)} /> : null}
-    </div>
-  );
-}
-
-
-/** Sheets going over, one after another, and the camera going with them. */
-function PageTurn({ reduce }: { reduce: boolean }) {
-  return (
-    <div className={`xw-turn ${reduce ? "is-reduced" : ""}`} aria-hidden>
-      <div className="xw-turn-stack">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="xw-turn-page" style={{ animationDelay: `${i * 160}ms` }}>
-            <span />
-            <span />
-            <span className="is-short" />
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
