@@ -18,7 +18,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import sharp from "sharp";
 import { Room } from "../src/components/site/RoomArt";
-import { WORLD } from "../src/lib/world";
+import { WORLD, stationById } from "../src/lib/world";
 
 /**
  * The ink, inlined.
@@ -71,6 +71,10 @@ type Shot = {
   ceiling: boolean;
   lamp: boolean;
   at: string | null;
+  /** Render through this stations camera instead of flat. Answers the only
+   *  question a flat render cannot: what is actually IN frame when the
+   *  player walks over to a thing. */
+  through?: string;
 };
 
 async function shoot(name: string, shot: Shot) {
@@ -89,26 +93,58 @@ async function shoot(name: string, shot: Shot) {
     }),
   );
 
+  /**
+   * The frame, in world units.
+   *
+   * Flat, that is the whole room. Through a station it is the rectangle that
+   * station's camera actually shows, worked out with the same fit, zoom and
+   * clamp World uses — so what comes out is what a player at 1920x1080 sees,
+   * not an approximation of it.
+   */
+  const VIEW = { w: 1920, h: 1080 };
+  let box: { x: number; y: number; w: number; h: number } = {
+    x: 0,
+    y: 0,
+    w: WORLD.w,
+    h: WORLD.h,
+  };
+  const station = shot.through ? stationById(shot.through) : null;
+  if (station) {
+    const cam = station.cam;
+    const fit = Math.max(Math.min(1, VIEW.w / 1400), 0.45);
+    const z = Math.max(cam.z * fit, VIEW.h / WORLD.h);
+    const w = VIEW.w / z;
+    const h = VIEW.h / z;
+    const clamp = (v: number, a: number, b: number) =>
+      a > b ? (a + b) / 2 : Math.min(b, Math.max(a, v));
+    box = {
+      x: clamp(cam.x, w / 2, WORLD.w - w / 2) - w / 2,
+      y: clamp(cam.y, h / 2, WORLD.h - h / 2) - h / 2,
+      w,
+      h,
+    };
+  }
+
   // The component renders <svg class="xw-svg" viewBox=...> with no width or
   // height, which a browser is happy with and a rasteriser is not.
+  const out = `scratch-room-${name}.png`;
+  const px = station ? VIEW : { w: WORLD.w, h: WORLD.h };
   const svg = body
     .replace(
-      "<svg ",
-      `<svg width="${WORLD.w}" height="${WORLD.h}" `,
+      /<svg [^>]*viewBox="[^"]*"/,
+      `<svg width="${px.w}" height="${px.h}" viewBox="${box.x} ${box.y} ${box.w} ${box.h}"`,
     )
-    
     .replace(/(<svg[^>]*>)/, `$1<style>${INK}</style>`);
 
-  const out = `scratch-room-${name}.png`;
   // Flattened onto the room's own ground. Without it the transparent areas come
   // out white, which inverts the whole drawing and makes a 5% light wash read
   // as a solid slab — the two things this script exists to let somebody judge.
   await sharp(Buffer.from(svg), { density: 96 })
-    .resize(WORLD.w, WORLD.h)
+    .resize(px.w, px.h)
     .flatten({ background: "#05060a" })
     .png()
     .toFile(out);
-  console.log(`  ${out}`);
+  console.log(`  ${out}${station ? `  (through ${shot.through})` : ""}`);
 }
 
 /** One per lighting state, because each one is a different set of shapes. */
@@ -116,6 +152,13 @@ const SHOTS: Record<string, Shot> = {
   dark: { blindDown: true, ceiling: false, lamp: false, at: null },
   lit: { blindDown: false, ceiling: false, lamp: false, at: "window" },
   lamps: { blindDown: true, ceiling: true, lamp: true, at: "desk" },
+  // What the player actually sees on arriving at each thing. These are the
+  // shots that decide whether walking over to something feels like arriving
+  // at it or stopping short of it.
+  board: { blindDown: true, ceiling: true, lamp: false, at: "board", through: "board" },
+  shelf: { blindDown: true, ceiling: true, lamp: false, at: "shelf", through: "shelf" },
+  desk: { blindDown: true, ceiling: false, lamp: true, at: "desk", through: "desk" },
+  window: { blindDown: false, ceiling: false, lamp: false, at: "window", through: "window" },
 };
 
 async function main() {

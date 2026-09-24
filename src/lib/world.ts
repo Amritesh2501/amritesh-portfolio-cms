@@ -57,9 +57,14 @@ export const ARRIVAL: Shot = { x: 1080, y: 960, z: 1.6 };
 export const STATIONS: Station[] = [
   {
     id: "board",
+    // Framed on the board and nothing else. The drawn board is 412 x 512 and
+    // this puts a 1920-wide frame about 640 units across it, so it fills the
+    // height and most of the width instead of sitting in the middle of a wall
+    // — which is what it did at 1.7, and is why walking over to it read as
+    // stopping short of it.
     name: "The board",
     blurb: "Photographs, a map, and string between them. Somebody was working.",
-    cam: { x: 330, y: 520, z: 1.7 },
+    cam: { x: 252, y: 548, z: 3.2 },
   },
   {
     id: "window",
