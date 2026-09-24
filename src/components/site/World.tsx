@@ -105,7 +105,12 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
    */
   const clearPending = useCallback(() => {
     timers.current.forEach(window.clearTimeout);
-    timers.current = [];
+    // Emptied in place, never reassigned. The unmount cleanup below captured
+    // this array at mount; handing `timers.current` a NEW array leaves that
+    // cleanup holding the old one, so every timer started after the first
+    // close would outlive the room — firing sounds and setting state on a
+    // component that is no longer there.
+    timers.current.length = 0;
   }, []);
 
   useEffect(() => {
