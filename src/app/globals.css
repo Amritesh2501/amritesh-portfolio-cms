@@ -1022,10 +1022,12 @@ body {
    ------------------------------------------------------------------------- */
 
 .xw {
-  /* The fallback matters: BULBS[0] is tungsten, and a room whose lights go
-     black because a custom property did not arrive is worse than one lit the
-     wrong colour. */
+  /* Both are written from World, out of lib/world — BULBS[0] and DESK_BULB —
+     so the colours have one home and the stylesheet is not a second one. The
+     fallbacks are here because a room whose lights go black when a custom
+     property fails to arrive is worse than one lit the wrong colour. */
   --xw-bulb: #ffc178;
+  --xw-lamp-bulb: #ffbe5c;
 }
 
 .xw-bulb-light,
@@ -1055,11 +1057,11 @@ body {
 }
 
 .xw-lamp-cone {
-  fill: var(--xw-lamp-bulb, #ffbe5c);
+  fill: var(--xw-lamp-bulb);
 }
 
 .xw-lamp-pool {
-  fill: var(--xw-lamp-bulb, #ffbe5c);
+  fill: var(--xw-lamp-bulb);
   opacity: 0.18;
 }
 
@@ -1080,9 +1082,9 @@ body {
 }
 
 .xw-lamp.is-on .xw-lamp-core {
-  fill: var(--xw-lamp-bulb, #ffbe5c);
+  fill: var(--xw-lamp-bulb);
   opacity: 1;
-  filter: drop-shadow(0 0 10px var(--xw-lamp-bulb, #ffbe5c));
+  filter: drop-shadow(0 0 10px var(--xw-lamp-bulb));
 }
 
 /* Both fittings are things you press, so both say so. */
@@ -1595,7 +1597,8 @@ body {
 
 .xb-pin {
   position: absolute;
-  width: 210px;
+  /* width and height are written from Board, because the thread anchor is
+     derived from the height. */
   transform-style: preserve-3d;
   /* The simulation writes left/top every frame, so those two cannot be part of
      a transition or the pin would lag its own physics. Everything else can. */
@@ -1608,7 +1611,16 @@ body {
   cursor: grabbing;
 }
 
-.xb-pin.is-dim {
+/* Dimmed on the CHILDREN, never on .xb-pin itself.
+
+   opacity and filter are both grouping properties: an element carrying either
+   one is forced to transform-style:flat and squashes its descendants onto its
+   own plane. Put them on the card wrapper and the tack's translateZ collapses
+   for the 0.35s the transition runs, so every unrelated pin's tack visibly
+   twitches the moment one pin is opened. It is the same trap that flattened
+   the work slab, one component over. */
+.xb-pin.is-dim .xb-pin-hit,
+.xb-pin.is-dim .xb-tack {
   opacity: 0.4;
   filter: grayscale(1);
 }
@@ -1632,8 +1644,13 @@ body {
 }
 
 .xb-pin-hit {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  height: 100%;
+  /* Safe here and nowhere else on this card: nothing inside the button carries
+     a translateZ, so clipping it flattens nothing that was doing any work. */
+  overflow: hidden;
   /* Bottom-heavy, the way a print with a caption under it is. */
   padding: 11px 11px 9px;
   border: 0;
@@ -1696,6 +1713,12 @@ body {
 }
 
 .xb-pin-title {
+  /* Two lines at most, so a long title cannot push the foot past the fixed
+     height and take the caption with it. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   line-height: 1.35;
@@ -4763,6 +4786,8 @@ html {
       transform: none;
     }
 
+    .wi-slab-back,
+    .wi-slab-face,
     .wi-slab-face img,
     .wi-slab-plate,
     .wi-slab-peek {

@@ -640,6 +640,44 @@ function Desk({
         <path d="M1314 918 Q1338 930 1314 944" className="xw-thin" />
       </g>
 
+      {/* The lamp, and the only warm thing on this desk.
+          Drawn after the desk so its pool lands ON the surface, and BEFORE the
+          machine, so the monitor and the keyboard standing in the cone cut
+          their own shadows out of it rather than being washed over by it —
+          the same occlusion rule the ceiling cone follows.
+
+          Its own target, so that clicking the lamp is clicking the lamp rather
+          than walking to the desk. A gooseneck burns tungsten and nothing
+          else, so unlike the ceiling this one has no colours to choose from. */}
+      <g className={`xw-lamp ${lamp ? "is-on" : ""}`}>
+        <g className="xw-lamp-light">
+          {/* Out of the shade, down onto the desk in front of it. */}
+          <path d="M916 806 L964 828 L1128 962 L862 966 Z" className="xw-lamp-cone" />
+          <ellipse cx={984} cy={946} rx={168} ry={34} className="xw-lamp-pool" />
+        </g>
+
+        <g className="xw-line">
+          <path d="M872 900 L872 812" />
+          <path d="M872 812 L930 786" />
+          <path d="M906 760 L968 796 L936 818 Z" className="xw-solid" />
+          <path d="M846 900 L900 898" />
+        </g>
+        <circle cx={938} cy={800} r={7} className="xw-lamp-core" />
+
+        <rect
+          className="xw-hit"
+          x={890}
+          y={748}
+          width={92}
+          height={84}
+          onClick={(e) => {
+            e.stopPropagation();
+            onLamp();
+          }}
+        />
+      </g>
+
+
       {/* The machine. */}
       <g className={`xw-crt ${atDesk ? "is-live" : ""}`}>
         <g className="xw-line">
@@ -684,39 +722,6 @@ function Desk({
           width={256}
           height={286}
           onClick={atDesk ? onOpen : () => onStation("desk")}
-        />
-      </g>
-
-      {/* The lamp, and the only warm thing on this desk.
-          Drawn after the desk so its pool lands ON the surface, and given its
-          own target so that clicking the lamp is clicking the lamp rather than
-          walking to the desk. A gooseneck burns tungsten and nothing else, so
-          unlike the ceiling this one has no colours to choose from. */}
-      <g className={`xw-lamp ${lamp ? "is-on" : ""}`}>
-        <g className="xw-lamp-light">
-          {/* Out of the shade, down onto the desk in front of it. */}
-          <path d="M916 806 L964 828 L1128 962 L862 966 Z" className="xw-lamp-cone" />
-          <ellipse cx={984} cy={946} rx={168} ry={34} className="xw-lamp-pool" />
-        </g>
-
-        <g className="xw-line">
-          <path d="M872 900 L872 812" />
-          <path d="M872 812 L930 786" />
-          <path d="M906 760 L968 796 L936 818 Z" className="xw-solid" />
-          <path d="M846 900 L900 898" />
-        </g>
-        <circle cx={938} cy={800} r={7} className="xw-lamp-core" />
-
-        <rect
-          className="xw-hit"
-          x={890}
-          y={748}
-          width={92}
-          height={84}
-          onClick={(e) => {
-            e.stopPropagation();
-            onLamp();
-          }}
         />
       </g>
 

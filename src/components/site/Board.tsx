@@ -44,17 +44,29 @@ import { buildBoard, type Pin, type Thread } from "@/lib/world";
 
 const BOARD = { w: 1440, h: 900 } as const;
 
-/** Half the collision box of a pin, in board units. Cards are ~210x240. */
+/**
+ * The card, in board units.
+ *
+ * The height is written onto the element rather than left to the content,
+ * because the thread anchor below is derived from it and a card whose height
+ * depends on whether its title wrapped is a card whose string does not reach
+ * its own tack. One number, used by the layout and by the geometry.
+ */
+const PIN_W = 210;
+const PIN_H = 212;
+
+/** Half the collision box of a pin. Generous, so two cards never touch. */
 const PIN_R = 118;
 
 /**
- * How far above a pin's centre its tack sits, in board units.
+ * How far above a pin's centre its tack sits.
  *
- * The threads tie here rather than to the node the simulation moves, because
- * a thread from the centre of a card runs under the photograph and out the
- * other side. Half the card's height plus the tack's own overhang.
+ * The threads tie here rather than to the node the simulation moves, because a
+ * thread from the centre of a card runs under its own photograph and comes out
+ * the other side. The card is translated -50% in both axes, so its top edge —
+ * and the tack sitting on it — is exactly half its height above the node.
  */
-const TACK_UP = 122;
+const TACK_UP = PIN_H / 2;
 
 type Node = SimulationNodeDatum & { pin: Pin };
 type Link = SimulationLinkDatum<Node>;
@@ -412,6 +424,11 @@ function PinCard({
       style={{
         left: at.x,
         top: at.y,
+        width: PIN_W,
+        // Fixed, and the same number TACK_UP is derived from. Left to the
+        // content, a two-line title would make the card taller and move its
+        // tack away from where the threads were tied.
+        height: PIN_H,
         transform: `translate(-50%, -50%) rotate(${tilt}deg)`,
       }}
       onPointerDown={onGrab}

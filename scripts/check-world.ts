@@ -9,6 +9,8 @@ import assert from "node:assert/strict";
 import {
   ARRIVAL,
   BLIND,
+  BULBS,
+  DESK_BULB,
   DESKTOP_APPS,
   DIAGNOSTICS,
   ESTABLISH,
@@ -24,6 +26,7 @@ import {
   allFilesReachable,
   appById,
   blindHeight,
+  bulbById,
   buildBoard,
   buildSequence,
   fileById,
@@ -213,6 +216,24 @@ function rng(seed: number) {
   );
 }
 
+/* The lights ------------------------------------------------------------- */
+
+{
+  const ids = BULBS.map((b) => b.id);
+  assert.equal(new Set(ids).size, ids.length, "two bulbs share an id");
+  assert.ok(BULBS.length > 1, "there is nothing to choose between");
+
+  for (const b of BULBS) {
+    assert.ok(bulbById(b.id), `${b.id} cannot be looked up by its own id`);
+    assert.ok(b.name.trim().length > 0, `${b.id} has no name on its swatch`);
+    // Every one of these is written straight into a CSS custom property and
+    // comes out the other end as a fill. A value CSS cannot parse is a light
+    // that silently stops working rather than an error anybody sees.
+    assert.match(b.value, /^#[0-9a-f]{6}$/i, `${b.id} is not a hex colour`);
+  }
+  assert.match(DESK_BULB, /^#[0-9a-f]{6}$/i, "the desk lamp is not a hex colour");
+}
+
 /* The evidence board ------------------------------------------------------ */
 
 {
@@ -394,5 +415,5 @@ function rng(seed: number) {
 console.log(
   `check-world: OK — ${STATIONS.length} places to stand, ${FILES.length} files ` +
     `(${FILE_COUNT} of them a section), ${DESKTOP_APPS.length} icons on the machine ` +
-    `(${PUZZLE_COUNT} puzzles), room ${WORLD.w}x${WORLD.h}.`,
+    `(${PUZZLE_COUNT} puzzles), ${BULBS.length} bulbs, room ${WORLD.w}x${WORLD.h}.`,
 );

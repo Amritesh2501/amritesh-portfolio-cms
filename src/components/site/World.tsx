@@ -5,6 +5,7 @@ import { useReducedMotion } from "motion/react";
 import {
   ARRIVAL,
   BULBS,
+  DESK_BULB,
   ESTABLISH,
   FILES,
   FILE_COUNT,
@@ -89,6 +90,22 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
   const after = useCallback((ms: number, fn: () => void) => {
     timers.current.push(window.setTimeout(fn, ms));
+  }, []);
+
+  /**
+   * Drop every timer that has not fired.
+   *
+   * Without this the file sequence can be left permanently jammed. Escape
+   * during the pull sets phase back to "room" and clears the file, and then
+   * the orphaned timer fires "cover" against a file that is no longer there:
+   * nothing renders, and because `pick` now refuses to start unless the phase
+   * is "room", no file can ever be opened again. The same happens one beat
+   * later with the turn. Any state machine driven by setTimeout has to be able
+   * to cancel, and this one could not.
+   */
+  const clearPending = useCallback(() => {
+    timers.current.forEach(window.clearTimeout);
+    timers.current = [];
   }, []);
 
   useEffect(() => {
@@ -199,9 +216,10 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   }, [picked, reduce, after]);
 
   const closeFile = useCallback(() => {
+    clearPending();
     setPicked(null);
     setPhase("room");
-  }, []);
+  }, [clearPending]);
 
   /* The cord ---------------------------------------------------------------- */
 
@@ -298,9 +316,14 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
       // Lit by any of the three, because the room getting brighter is about
       // how much light is in it and not about where the light came from.
       className={`xw ${!blindDown || ceiling || lamp ? "is-lit" : ""}`}
-      // One property, read by every glow in the drawing. Changing the bulb is
-      // this string changing; nothing downstream knows it happened.
-      style={{ ["--xw-bulb" as string]: bulb.value }}
+      // Two properties, read by every glow in the drawing. Changing the bulb
+      // is this string changing; nothing downstream knows it happened. Both
+      // come out of lib/world, so the colours have one home rather than being
+      // spelled again in the stylesheet.
+      style={{
+        ["--xw-bulb" as string]: bulb.value,
+        ["--xw-lamp-bulb" as string]: DESK_BULB,
+      }}
     >
       <div className="xw-viewport">
         <div
