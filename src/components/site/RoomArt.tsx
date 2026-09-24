@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import { FILES, WINDOW_GLASS, WORLD, blindHeight, isUnlocked, type CaseFile } from "@/lib/world";
 
 /**
@@ -165,8 +165,6 @@ export function Room({
         onOpen={onDesk}
         onLamp={onLamp}
       />
-      <Cabinet />
-      <CoatStand />
     </svg>
   );
 }
@@ -252,13 +250,13 @@ function BoardWall({
             it. A pinboard is a slab hung on a wall, so it has a visible edge
             all the way round — and on a wall seen this obliquely that edge is
             most of what says the board is not painted on. */}
-        <path d="M70 300 L470 388 L470 800 L70 772 Z" className="xw-solid" />
+        <path d="M62 262 L470 396 L470 790 L62 818 Z" className="xw-solid" />
         {/* The frame's own thickness: the same quad, pushed back to the wall. */}
-        <path d="M94 318 L470 400 L470 788 L94 758 Z" className="xw-thin xw-faint" />
-        <path d="M70 300 L94 318" className="xw-thin" />
-        <path d="M70 772 L94 758" className="xw-thin" />
+        <path d="M88 286 L470 408 L470 778 L88 796 Z" className="xw-thin xw-faint" />
+        <path d="M62 262 L88 286" className="xw-thin" />
+        <path d="M62 818 L88 796" className="xw-thin" />
         {/* The cork inside the frame. */}
-        <path d="M100 338 L440 412 L440 766 L100 742 Z" className="xw-thin xw-faint" />
+        <path d="M98 312 L442 424 L442 760 L98 782 Z" className="xw-thin xw-faint" />
 
         {/* Pinned scraps. Each one is a quad and each one at its own angle,
             and each gets a curled corner so it reads as paper rather than as
@@ -687,12 +685,16 @@ function Shelf({
 }
 
 /**
- * The desk, and the machine somebody left running on it.
+ * The desk, the machine on it, and the mug nobody finished.
  *
- * The monitor is drawn as a CRT because a flat panel in a room drawn this way
- * would have to be two rectangles and would read as a picture frame. The
- * scanline across the glass is the only animated thing in the whole drawing,
- * and it is there to say the machine is on before anybody clicks it.
+ * Both were period pieces and are not any more. The desk was a slab on four
+ * thick posts; it is a thin top on two panel ends now, with a cable tray under
+ * the back edge, which is what a desk somebody works at today actually is. The
+ * machine was a wedge with a tube in it; it is a flat panel on a stem.
+ *
+ * The line language does not change — everything is still a front face, a side
+ * face and an edge, drawn and not filled. Modern here means thinner, fewer
+ * parts, and the parts it does have doing more.
  */
 function Desk({
   atDesk,
@@ -710,49 +712,43 @@ function Desk({
   return (
     <g>
       <g className="xw-line">
-        {/* Top, in perspective: narrower at the back, and with a real edge
-            under it rather than a line pretending to be one. */}
+        {/* The top: a thin slab, in perspective, narrower at the back. The
+            whole difference between this desk and the old one is that the
+            edge is 18 units instead of 38. */}
         <path d="M812 872 L1468 870 L1596 1004 L690 1008 Z" className="xw-solid" />
-        <path d="M690 1008 L1596 1004 L1596 1042 L690 1046 Z" className="xw-solid" />
-        {/* The lip under the front edge, so the top has a thickness you can
-            see the underside of. */}
-        <path d="M694 1046 L1592 1042" className="xw-thin xw-faint" />
+        <path d="M690 1008 L1596 1004 L1596 1022 L690 1026 Z" className="xw-solid" />
+        <path d="M694 1026 L1592 1022" className="xw-thin xw-faint" />
 
-        {/* Legs, as boxes. Two faces each: the one facing us and the one
-            turned inward, which is the whole difference between a leg and a
-            line drawn where a leg would be. */}
-        <path d="M700 1046 L728 1046 L734 1262 L706 1262 Z" className="xw-solid" />
-        <path d="M728 1046 L748 1034 L754 1250 L734 1262 Z" className="xw-solid" />
-        <path d="M1556 1042 L1584 1042 L1576 1258 L1548 1258 Z" className="xw-solid" />
-        <path d="M1556 1042 L1536 1030 L1528 1246 L1548 1258 Z" className="xw-solid" />
+        {/* Panel ends rather than legs. Two faces each, set in from the
+            corners so the top reads as cantilevered over them. */}
+        <path d="M742 1026 L790 1026 L802 1256 L754 1256 Z" className="xw-solid" />
+        <path d="M790 1026 L828 1006 L840 1236 L802 1256 Z" className="xw-solid" />
+        <path d="M1498 1022 L1546 1022 L1534 1252 L1486 1252 Z" className="xw-solid" />
+        <path d="M1498 1022 L1460 1002 L1448 1232 L1486 1252 Z" className="xw-solid" />
 
-        {/* The back edge of the top, seen because the desk sits below eye
-            level — and the right return, which is the side of the slab. */}
+        {/* A cable tray slung under the back edge. */}
+        <path d="M900 1034 L1420 1030" className="xw-thin xw-faint" />
+        <path d="M912 1048 L1408 1044" className="xw-thin xw-faint" />
+        <path d="M900 1034 L912 1048" className="xw-thin xw-faint" />
+        <path d="M1420 1030 L1408 1044" className="xw-thin xw-faint" />
+
+        {/* The right return of the slab, seen because the desk is below eye
+            level. */}
         <path d="M1468 870 L1596 1004" className="xw-thin xw-faint" />
         <path d="M842 886 L846 1010" className="xw-thin xw-faint" />
-
-        {/* Modesty panel, set back from the front edge. */}
-        <path d="M860 1050 L1430 1046" className="xw-thin xw-faint" />
-        <path d="M872 1062 L1418 1058" className="xw-thin xw-faint" />
-
-        {/* Papers, a mug, a phone off its cradle. */}
-        <path d="M1372 928 L1468 926 L1470 958 L1374 960 Z" className="xw-thin xw-solid" />
-        <path d="M1258 908 L1310 906 L1314 956 L1262 958 Z" className="xw-solid" />
-        <path d="M1314 918 Q1338 930 1314 944" className="xw-thin" />
       </g>
 
       {/* The lamp, and the only warm thing on this desk.
           Drawn after the desk so its pool lands ON the surface, and BEFORE the
-          machine, so the monitor and the keyboard standing in the cone cut
-          their own shadows out of it rather than being washed over by it —
-          the same occlusion rule the ceiling cone follows.
+          machine, so the panel standing in the cone cuts its own shadow out of
+          it rather than being washed over by it — the same occlusion rule the
+          ceiling cone follows.
 
           Its own target, so that clicking the lamp is clicking the lamp rather
           than walking to the desk. A gooseneck burns tungsten and nothing
           else, so unlike the ceiling this one has no colours to choose from. */}
       <g className={`xw-lamp ${lamp ? "is-on" : ""}`}>
         <g className="xw-lamp-light">
-          {/* Out of the shade, down onto the desk in front of it. */}
           <path d="M916 806 L964 828 L1128 962 L862 966 Z" className="xw-lamp-cone" />
           <ellipse cx={984} cy={946} rx={168} ry={34} className="xw-lamp-pool" />
         </g>
@@ -778,87 +774,60 @@ function Desk({
         />
       </g>
 
+      {/* The machine: a flat panel on a stem, and a board in front of it.
 
-      {/* The machine.
-
-          An all-in-one: one wedge with the screen built into it, rather than a
-          monitor balanced on a separate chassis. It is a different object, not
-          a restyled one — the silhouette is a single tapering block leaning
-          back from the reader, which is what a terminal of this kind actually
-          looked like and reads very differently in a room of boxes.
-
-          The wedge is the whole idea: the case is deeper at the base than at
-          the top, so the side face is a trapezium rather than a rectangle and
-          the machine looks like it is sitting back on its heels. */}
+          A modern monitor is almost nothing — a sheet, a neck and a foot — so
+          most of the drawing here is the thinness: the panel gets a side face
+          only eight units deep, and the stand is two strokes and a disc. */}
       <g className={`xw-crt ${atDesk ? "is-live" : ""}`}>
         <g className="xw-line">
-          {/* Front, leaning back. */}
-          <path d="M1004 674 L1224 670 L1240 886 L996 890 Z" className="xw-solid" />
-          {/* Right side: the taper, which is the object. */}
-          <path d="M1224 670 L1258 652 L1282 858 L1240 886 Z" className="xw-solid" />
-          {/* The top, seen from below, so only a sliver of it. */}
-          <path d="M1004 674 L1038 656 L1258 652 L1224 670 Z" className="xw-solid" />
+          {/* The panel. */}
+          <path d="M1018 664 L1266 660 L1268 826 L1016 830 Z" className="xw-solid" />
+          {/* Its depth: eight units, which is the whole point. */}
+          <path d="M1266 660 L1276 654 L1278 820 L1268 826 Z" className="xw-solid" />
+          <path d="M1018 664 L1028 658 L1276 654 L1266 660 Z" className="xw-solid" />
+          {/* The screen, inset by a hair at the top and sides and more at the
+              chin, the way a panel's bezel actually sits. */}
+          <path d="M1026 672 L1258 668 L1260 806 L1024 810 Z" className="xw-thin" />
 
-          {/* The bezel, and the tube set back inside it. */}
-          <path d="M1022 692 L1208 688 L1216 816 L1018 820 Z" className="xw-thin" />
-          <path
-            d="M1034 702 Q1120 697 1202 702 Q1208 754 1202 806 Q1120 811 1030 806 Q1026 754 1034 702 Z"
-            className="xw-thin xw-faint"
-          />
-
-          {/* Under the screen: a drive slot, a brand rule, and vents down the
-              side of the wedge where the heat actually went. */}
-          <path d="M1026 846 L1112 845" className="xw-thin" />
-          <path d="M1026 858 L1112 857" className="xw-thin xw-faint" />
-          <path d="M1136 840 L1216 838" className="xw-thin xw-faint" />
-          {/* Slots ACROSS the side face, not strokes down it. Run the other
-              way and they read as scratches on the case rather than as the
-              louvres the heat went out of. Each one spans the trapezium at its
-              own height, so they lean with the taper. */}
-          {[708, 736, 764, 792, 820].map((y) => {
-            const x1 = 1226 + (y - 670) * 0.074;
-            const x2 = 1256 + (y - 652) * 0.1165;
-            return (
-              <path key={y} d={`M${x1.toFixed(1)} ${y} L${x2.toFixed(1)} ${y - 12}`} className="xw-thin xw-faint" />
-            );
-          })}
+          {/* Stem and foot. */}
+          <path d="M1130 830 L1130 884" />
+          <path d="M1156 830 L1156 884" />
+          <ellipse cx={1143} cy={890} rx={62} ry={13} className="xw-solid xw-thin" />
         </g>
-        <circle cx={1196} cy={854} r={5} className="xw-fill xw-crt-led" />
+        <circle cx={1266} cy={816} r={4} className="xw-fill xw-crt-led" />
 
-        {/* What is on the glass: a prompt, and a line sweeping down it. */}
+        {/* What is on the screen. */}
         <g className="xw-crt-glow">
-          <path d="M1050 722 L1094 721" className="xw-line xw-thin" />
-          <path d="M1050 740 L1152 739" className="xw-line xw-thin" />
-          <path d="M1050 758 L1112 757" className="xw-line xw-thin" />
-          <rect className="xw-crt-scan" x={1032} y={702} width={168} height={4} />
+          <path d="M1048 700 L1104 699" className="xw-line xw-thin" />
+          <path d="M1048 722 L1178 721" className="xw-line xw-thin" />
+          <path d="M1048 744 L1122 743" className="xw-line xw-thin" />
+          <path d="M1048 766 L1160 765" className="xw-line xw-thin" />
+          <rect className="xw-crt-scan" x={1026} y={670} width={232} height={3} />
         </g>
 
-        {/* Keyboard, pulled forward and wedged the same way the case is. */}
+        {/* A low-profile board, because the tall wedge one belonged to the
+            other machine. */}
         <g className="xw-line">
-          <path d="M1006 918 L1178 915 L1192 958 L1016 962 Z" className="xw-thin xw-solid" />
-          <path d="M1016 962 L1192 958 L1192 972 L1016 976 Z" className="xw-thin xw-solid" />
-          <path d="M1022 930 L1168 927" className="xw-thin xw-faint" />
-          <path d="M1026 941 L1172 938" className="xw-thin xw-faint" />
-          <path d="M1030 952 L1140 949" className="xw-thin xw-faint" />
+          <path d="M1014 922 L1186 919 L1196 952 L1022 956 Z" className="xw-thin xw-solid" />
+          <path d="M1022 956 L1196 952 L1196 962 L1022 966 Z" className="xw-thin xw-solid" />
+          <path d="M1030 934 L1174 931" className="xw-thin xw-faint" />
+          <path d="M1032 944 L1152 941" className="xw-thin xw-faint" />
         </g>
 
-        {/* The machine's own target, tight around the case and the keyboard.
-            Its own rather than part of the desk's, because the desk is wide
-            enough that a rectangle covering both the desk and the machine
-            standing on it would also cover the bottom-left corner of the
-            shelf — and a click on the shelf that walks you to the desk is the
-            kind of thing that makes a room feel like it is not listening. */}
         <rect
           className="xw-hit"
-          x={992}
+          x={1008}
           y={648}
-          width={296}
-          height={332}
+          width={280}
+          height={326}
           onClick={atDesk ? onOpen : () => onStation("desk")}
         />
       </g>
 
-      <Hatch x={700} y={1012} w={890} h={40} gap={12} className="xw-hatch xw-faint" />
+      <Mug />
+
+      <Hatch x={700} y={1012} w={890} h={30} gap={12} className="xw-hatch xw-faint" />
       {/* The desk surface, which only ever walks you over. Kept below the
           shelf carcass so the two do not fight for the same pixels. */}
       <rect
@@ -873,46 +842,54 @@ function Desk({
   );
 }
 
-function Cabinet() {
+/**
+ * The mug, which is the one thing in this room you can fiddle with.
+ *
+ * Its state is its own. Nothing else in the room needs to know whether
+ * somebody has spun the mug, so it does not travel up to World and back down
+ * again — the whole feature is a boolean and a class.
+ *
+ * The spin is keyed rather than toggled: re-rendering with a new key restarts
+ * the animation, which is the cheapest way to make a thing that can be
+ * clicked repeatedly rather than clicked once and then be finished.
+ */
+function Mug() {
+  const [spin, setSpin] = useState(0);
+
   return (
-    <g className="xw-line">
-      {/* Front. */}
-      <path d="M150 858 L352 900 L352 1268 L150 1186 Z" className="xw-solid" />
-      {/* Right side, receding. */}
-      <path d="M352 900 L430 872 L430 1216 L352 1268 Z" className="xw-solid" />
-      {/* Top, seen from below the cabinet's height — so only a sliver. */}
-      <path d="M150 858 L352 900 L430 872 L228 832 Z" className="xw-solid" />
+    <g className="xw-mug">
+      {/* Steam. Three strands, each drifting at its own rate, and all of them
+          held at zero opacity until the mug is hovered — a mug that steams all
+          the time is a mug nobody will ever think to touch. */}
+      <g className="xw-steam" aria-hidden>
+        <path d="M1262 902 Q1250 878 1262 856 Q1274 834 1264 812" />
+        <path d="M1288 904 Q1278 880 1290 860 Q1300 840 1292 820" />
+        <path d="M1314 902 Q1304 882 1314 864 Q1324 846 1316 828" />
+      </g>
 
-      {/* Three drawers, each with its own face and a returned edge on the
-          side panel, so the divisions carry round the corner. */}
-      <path d="M150 980 L352 1022" className="xw-thin" />
-      <path d="M352 1022 L430 992" className="xw-thin xw-faint" />
-      <path d="M150 1102 L352 1144" className="xw-thin" />
-      <path d="M352 1144 L430 1112" className="xw-thin xw-faint" />
+      <g className="xw-mug-body" key={spin}>
+        <g className="xw-line">
+          {/* A cylinder: two ellipses and the sides between them. */}
+          <path d="M1252 910 L1256 962 Q1290 972 1324 962 L1328 910 Z" className="xw-solid" />
+          <ellipse cx={1290} cy={910} rx={38} ry={11} className="xw-solid xw-thin" />
+          {/* What is left in it. */}
+          <ellipse cx={1290} cy={916} rx={30} ry={8} className="xw-thin xw-faint" />
+          {/* The handle, on the right. */}
+          <path d="M1328 920 Q1354 926 1348 944 Q1344 954 1326 954" className="xw-thin" />
+        </g>
+      </g>
 
-      {/* Handles: a recessed pull, which is two lines and a shadow. */}
-      <path d="M212 908 L290 924" className="xw-thin" />
-      <path d="M212 916 L290 932" className="xw-thin xw-faint" />
-      <path d="M212 1030 L290 1046" className="xw-thin" />
-      <path d="M212 1038 L290 1054" className="xw-thin xw-faint" />
-      <path d="M212 1152 L290 1168" className="xw-thin" />
-      <path d="M212 1160 L290 1176" className="xw-thin xw-faint" />
-
-    </g>
-  );
-}
-
-function CoatStand() {
-  return (
-    <g className="xw-line">
-      <path d="M2118 620 L2108 1156" />
-      <path d="M2118 640 L2064 672" className="xw-thin" />
-      <path d="M2118 640 L2176 668" className="xw-thin" />
-      <path d="M2052 1176 L2166 1172" />
-      <path d="M2108 1156 L2052 1176" className="xw-thin" />
-      <path d="M2108 1156 L2166 1172" className="xw-thin" />
-      {/* A coat, hung and forgotten. */}
-      <path d="M2176 668 Q2214 760 2196 882 L2140 878 Q2134 752 2166 674" className="xw-thin" />
+      <ellipse
+        className="xw-hit"
+        cx={1292}
+        cy={936}
+        rx={54}
+        ry={44}
+        onClick={(e) => {
+          e.stopPropagation();
+          setSpin((n) => n + 1);
+        }}
+      />
     </g>
   );
 }
