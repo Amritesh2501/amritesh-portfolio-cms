@@ -23,6 +23,7 @@ import { Room } from "./RoomArt";
 import { Desktop } from "./Desktop";
 import { ShelfBook, type BookFrom } from "./ShelfBook";
 import { Bedroom } from "./Bedroom";
+import { Office } from "./Office";
 
 /**
  * An officer's room, drawn in ink, with four things in it worth walking to.
@@ -108,7 +109,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
    * underneath, so coming back lands on the same shelf with the same files
    * read rather than on a room that has forgotten the last ten minutes.
    */
-  const [place, setPlace] = useState<"case" | "bedroom">("case");
+  const [place, setPlace] = useState<"case" | "bedroom" | "office">("case");
   /** The blind. Down on arrival: it is the middle of the night out there. */
   const [blindDown, setBlindDown] = useState(true);
   /** The two lights, both off. A room somebody left in a hurry is a dark one. */
@@ -344,15 +345,15 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
    * coming back lands on the same shelf with the same files read rather than
    * on a room that has forgotten the last ten minutes.
    */
-  if (place === "bedroom") {
-    return (
-      <Bedroom
-        data={data}
-        onBack={() => {
-          setPlace("case");
-          closeFile();
-        }}
-      />
+  if (place !== "case") {
+    const back = () => {
+      setPlace("case");
+      closeFile();
+    };
+    return place === "bedroom" ? (
+      <Bedroom data={data} onBack={back} />
+    ) : (
+      <Office data={data} onBack={back} />
     );
   }
 
@@ -563,7 +564,9 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
           data={data}
           done={read.includes(picked.id)}
           onRead={markRead}
-          onThrough={() => setPlace("bedroom")}
+          onThrough={() =>
+            setPlace(picked.topic === "experience" ? "office" : "bedroom")
+          }
           onBack={closeFile}
         />
       ) : null}

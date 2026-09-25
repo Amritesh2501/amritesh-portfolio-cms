@@ -38,16 +38,19 @@ export type CipherStage = {
 };
 
 /**
- * Four stages, and every one of them is something out of his own work.
+ * Three stages, and every one of them is something out of his own work.
  *
- * Short to long, and the hint carries the theme so that a stage is readable as
- * "this is about the portfolio" rather than as a random word.
+ * It was four, and tight. This is a poster-room puzzle in somebody's bedroom,
+ * not an exam: three stages with roughly seven seconds a letter, which is slow
+ * enough to look a letter up, find it in the table and type it without
+ * hurrying. The clock is there to stop somebody wandering off, not to beat
+ * them. Short to long, and the hint carries the theme so a stage reads as
+ * being about the portfolio rather than as a random word.
  */
 export const CIPHER_STAGES: CipherStage[] = [
-  { plain: "SHIP IT", hint: "What the sticker on the laptop says.", seconds: 60 },
-  { plain: "FLEET ZENO", hint: "The platform the drivers actually use.", seconds: 70 },
-  { plain: "THE SCHEMA IS THE CONTRACT", hint: "His first rule.", seconds: 110 },
-  { plain: "BORING WHERE IT COUNTS", hint: "And sharp where it shows.", seconds: 100 },
+  { plain: "SHIP IT", hint: "What the sticker on the laptop says.", seconds: 75 },
+  { plain: "FLEET ZENO", hint: "The platform the drivers actually use.", seconds: 95 },
+  { plain: "BORING WHERE IT COUNTS", hint: "And sharp where it shows.", seconds: 165 },
 ];
 
 export type Key = Record<string, string>;

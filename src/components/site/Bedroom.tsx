@@ -18,7 +18,8 @@ import { BedroomRoom } from "./BedroomArt";
 import { Cipher } from "./Cipher";
 import { Lockpick } from "./Lockpick";
 import { Sums } from "./Sums";
-import { Books, Working } from "./AboutInRoom";
+import { Books } from "./AboutInRoom";
+import { HisMachine } from "./HisMachine";
 import type { CaseRoomData } from "@/lib/content";
 
 /**
@@ -54,6 +55,24 @@ export function Bedroom({
   const [open, setOpen] = useState<PuzzleId | null>(null);
   const [solved, setSolved] = useState<PuzzleId[]>([]);
   const [lamp, setLamp] = useState(false);
+  /** The pendant over the floor, and the blind on the window behind the bed. */
+  const [ceiling, setCeiling] = useState(false);
+  const [blindDown, setBlindDown] = useState(true);
+
+  const toggleCeiling = useCallback(() => {
+    setCeiling((on) => !on);
+    sound.latch();
+  }, []);
+
+  const toggleLamp = useCallback(() => {
+    setLamp((on) => !on);
+    sound.latch();
+  }, []);
+
+  const pullCord = useCallback(() => {
+    setBlindDown((down) => !down);
+    sound.latch();
+  }, []);
 
   /* Arriving ---------------------------------------------------------------- */
 
@@ -173,7 +192,7 @@ export function Bedroom({
   const here = at ? bedStationById(at) : null;
 
   return (
-    <div className={`xw xr ${lamp ? "is-lit" : ""}`}>
+    <div className={`xw xr ${lamp || ceiling || !blindDown ? "is-lit" : ""}`}>
       <div className="xw-viewport">
         <div
           className="xw-stage"
@@ -187,14 +206,15 @@ export function Bedroom({
           <BedroomRoom
             at={at}
             lamp={lamp}
+            ceiling={ceiling}
+            blindDown={blindDown}
             drawerOpen={solved.includes("drawer")}
             posterDone={solved.includes("poster")}
             onStation={goto}
             onPuzzle={reach}
-            onLamp={() => {
-              setLamp((on) => !on);
-              sound.latch();
-            }}
+            onLamp={toggleLamp}
+            onCeiling={toggleCeiling}
+            onCord={pullCord}
           />
         </div>
       </div>
@@ -207,17 +227,32 @@ export function Bedroom({
           <p className="xw-count">
             {solved.length} / {BED_PUZZLES.length} opened
           </p>
+          {/* The fittings take the click in the drawing; these are the same
+              three switches somewhere a keyboard can reach them. */}
           <div className="xw-lights">
             <button
               type="button"
+              className={`xw-mute ${ceiling ? "is-on" : ""}`}
+              onClick={toggleCeiling}
+              aria-pressed={ceiling}
+            >
+              CEILING
+            </button>
+            <button
+              type="button"
               className={`xw-mute ${lamp ? "is-on" : ""}`}
-              onClick={() => {
-                setLamp((on) => !on);
-                sound.latch();
-              }}
+              onClick={toggleLamp}
               aria-pressed={lamp}
             >
               LAMP
+            </button>
+            <button
+              type="button"
+              className={`xw-mute ${blindDown ? "" : "is-on"}`}
+              onClick={pullCord}
+              aria-pressed={!blindDown}
+            >
+              BLIND
             </button>
           </div>
         </div>
@@ -274,7 +309,7 @@ export function Bedroom({
         <Books data={data} onClose={() => setOpen(null)} />
       ) : open === "terminal" ? (
         solved.includes("terminal") ? (
-          <Working data={data} onClose={() => setOpen(null)} />
+          <HisMachine data={data} onClose={() => setOpen(null)} />
         ) : (
           <Cipher onSolved={() => solve("terminal")} onClose={() => setOpen(null)} />
         )

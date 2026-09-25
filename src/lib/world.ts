@@ -81,7 +81,7 @@ export const STATIONS: Station[] = [
   {
     id: "shelf",
     name: "The shelf",
-    blurb: "Five files, standing upright. The first one is not a file.",
+    blurb: "Five files. The first two are not files — they are doors.",
     cam: { x: 1440, y: 620, z: 2.3 },
   },
 ];
@@ -159,7 +159,8 @@ export const FILES: CaseFile[] = [
     index: "02",
     name: "EXPERIENCE",
     subject: "Where the time went",
-    brief: "Roles, dates, and what each one was actually for. Education at the back.",
+    brief:
+      "Not pages either. The office he worked in is still standing, and the work is still on the walls.",
     topic: "experience",
     spine: { x: 1296, y: 488, w: 62, h: 184, tilt: 0.9 },
   },
