@@ -486,6 +486,11 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
               {FILES.map((f) => {
                 const done = read.includes(f.id);
                 const locked = !isUnlocked(f, read);
+                // A sealed file has to say what unseals it and how far off it
+                // is. "SEALED" on its own is a dead end: it tells you the door
+                // is shut and nothing about the key, so the room behind this
+                // one is unreachable by anybody who does not already know.
+                const owing = (f.needs ?? []).filter((id) => !read.includes(id)).length;
                 return (
                   <button
                     key={f.id}
@@ -495,7 +500,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
                     disabled={locked}
                     aria-label={`File ${f.index}, ${f.name}. ${
                       locked
-                        ? "Sealed until the other five have been read."
+                        ? `Sealed. Read ${owing} more file${owing === 1 ? "" : "s"} to open it.`
                         : done
                           ? "Already read."
                           : f.subject
@@ -504,7 +509,11 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
                     <span className="xw-file-n">{f.index}</span>
                     <span>{f.name}</span>
                     <span className="xw-file-s">
-                      {locked ? "SEALED" : done ? "READ" : "OPEN"}
+                      {locked
+                        ? `${owing} MORE TO READ`
+                        : done
+                          ? "READ"
+                          : "OPEN"}
                     </span>
                   </button>
                 );

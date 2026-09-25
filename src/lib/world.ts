@@ -81,7 +81,8 @@ export const STATIONS: Station[] = [
   {
     id: "shelf",
     name: "The shelf",
-    blurb: "Six files, standing upright. Names down the spines.",
+    blurb:
+      "Six files. Five are sections of the portfolio; the sixth is sealed until they have been read, and it is a door.",
     cam: { x: 1440, y: 620, z: 2.3 },
   },
 ];
@@ -195,9 +196,9 @@ export const FILES: CaseFile[] = [
     id: "dossier",
     index: "06",
     name: "THE FILE",
-    subject: "Everything above, in one place",
+    subject: "The way out of this room",
     brief:
-      "Sealed until the other five have been read. It is the index, and an index is no use before the thing it indexes.",
+      "Sealed until the other five have been read. It is not an index — it is the way out of this room, and it does not open for somebody who has not been through the rest of it.",
     topic: "dossier",
     needs: ["about", "experience", "projects", "stack", "certifications"],
     spine: { x: 1608, y: 488, w: 60, h: 182, tilt: 1.8 },
