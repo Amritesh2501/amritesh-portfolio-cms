@@ -128,7 +128,10 @@ export function ShelfBook({
 
   /** ABOUT does not render pages. Everything a person is outside their CV is
    *  in the room he lives in rather than in a file about the room. */
-  const isDoor = file.topic === "about";
+  // Two of the five are doors rather than files. ABOUT opens onto the room he
+  // lives in; EXPERIENCE opens onto the office he worked in. Both are places
+  // rather than pages, which is the whole reason they are not spreads.
+  const isDoor = file.topic === "about" || file.topic === "experience";
 
   const open = useCallback(() => {
     if (stage !== "take") return;

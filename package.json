@@ -23,6 +23,7 @@
     "check:cipher": "tsx scripts/check-cipher.ts",
     "check:lockpick": "tsx scripts/check-lockpick.ts",
     "check:sums": "tsx scripts/check-sums.ts",
+    "check:office": "tsx scripts/check-office.ts",
     "check:styles": "tsx scripts/check-styles.ts",
     "check:resources": "tsx scripts/check-resources.ts",
     "room": "tsx --tsconfig scripts/tsconfig.json scripts/render-room.ts"

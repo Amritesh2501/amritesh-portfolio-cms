@@ -19,8 +19,10 @@ import { createElement } from "react";
 import sharp from "sharp";
 import { Room } from "../src/components/site/RoomArt";
 import { BedroomRoom } from "../src/components/site/BedroomArt";
+import { OfficeRoom } from "../src/components/site/OfficeArt";
 import { WORLD, stationById } from "../src/lib/world";
 import { BEDROOM, bedStationById } from "../src/lib/bedroom";
+import { OFFICE, officeStationById } from "../src/lib/office";
 
 /**
  * The ink, inlined.
@@ -79,14 +81,27 @@ const INK = `
   .xw-bed-sum { fill: #d9a05b; stroke: none; font-family: monospace; font-size: 22px; }
   .xw-bed-term-glow .xw-line { stroke: #7fe0a8; opacity: .85; }
   .xw-bed-term-caret { fill: #7fe0a8; }
+  .xw-office-tubes .xw-bulb-core { fill: #dff1f5; opacity: .14; }
+  .xw-pendant.is-on .xw-office-tubes .xw-bulb-core { fill: #dff1f5; opacity: .9; }
+  .xw-office-diagram rect { fill: none; stroke: #e4ddcb; opacity: .5; }
+  .xw-office-edge path { fill: none; stroke: #d9a05b; stroke-width: 1.6; opacity: .55; }
+  .xw-office-ports circle { fill: none; stroke: #e4ddcb; opacity: .6; }
+  .xw-office-cable path { fill: none; stroke: #d9a05b; stroke-width: 2; stroke-linecap: round; opacity: .6; }
+  .xw-office-tile { stroke: none; opacity: .55; }
+  .xw-office-tile.is-k0 { fill: #e2564a; }
+  .xw-office-tile.is-k1 { fill: #e0a33c; }
+  .xw-office-tile.is-k2 { fill: #4fb477; }
+  .xw-office-tile.is-k3 { fill: #4a86d8; }
+  .xw-office-tile.is-k4 { fill: #9a6fd0; }
 `;
 
 const noop = () => {};
 
 type Shot = {
-  /** The bedroom instead of the case room. A different drawing, the same
-   *  camera maths, so one script shoots both. */
+  /** Which room. A different drawing each, the same camera maths, so one
+   *  script shoots all three. */
   bed?: boolean;
+  office?: boolean;
   blindDown: boolean;
   ceiling: boolean;
   lamp: boolean;
@@ -98,8 +113,19 @@ type Shot = {
 };
 
 async function shoot(name: string, shot: Shot) {
-  const world = shot.bed ? BEDROOM : WORLD;
-  const body = shot.bed
+  const world = shot.office ? OFFICE : shot.bed ? BEDROOM : WORLD;
+  const body = shot.office
+    ? renderToStaticMarkup(
+        createElement(OfficeRoom, {
+          at: shot.at,
+          lights: shot.ceiling,
+          solved: [],
+          onStation: noop,
+          onPuzzle: noop,
+          onLights: noop,
+        }),
+      )
+    : shot.bed
     ? renderToStaticMarkup(
         createElement(BedroomRoom, {
           at: shot.at,
@@ -146,7 +172,11 @@ async function shoot(name: string, shot: Shot) {
     h: world.h,
   };
   const station = shot.through
-    ? (shot.bed ? bedStationById(shot.through) : stationById(shot.through))
+    ? shot.office
+      ? officeStationById(shot.through)
+      : shot.bed
+        ? bedStationById(shot.through)
+        : stationById(shot.through)
     : null;
   if (station) {
     const cam = station.cam;
@@ -205,6 +235,13 @@ const SHOTS: Record<string, Shot> = {
   "bed-posters": { bed: true, blindDown: false, ceiling: false, lamp: false, at: "posters", through: "posters" },
   "bed-side": { bed: true, blindDown: false, ceiling: false, lamp: true, at: "side", through: "side" },
   "bed-desk": { bed: true, blindDown: false, ceiling: false, lamp: false, at: "desk", through: "desk" },
+
+  // The office, through the EXPERIENCE book.
+  office: { office: true, blindDown: false, ceiling: true, lamp: false, at: null },
+  "office-dark": { office: true, blindDown: false, ceiling: false, lamp: false, at: null },
+  "office-board": { office: true, blindDown: false, ceiling: true, lamp: false, at: "board", through: "board" },
+  "office-rack": { office: true, blindDown: false, ceiling: true, lamp: false, at: "rack", through: "rack" },
+  "office-desk": { office: true, blindDown: false, ceiling: true, lamp: false, at: "desk", through: "desk" },
 };
 
 async function main() {
