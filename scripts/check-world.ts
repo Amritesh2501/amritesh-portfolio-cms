@@ -150,22 +150,27 @@ function rng(seed: number) {
   const topics = FILES.map((f) => f.topic);
   assert.equal(new Set(topics).size, topics.length, "two files hold the same section");
 
-  assert.equal(
-    FILE_COUNT,
-    FILES.filter((f) => f.topic !== "dossier").length,
-    "the HUD counts a different number of files than the shelf holds",
-  );
-  assert.ok(FILE_COUNT > 0, "the shelf holds nothing but the index");
+  assert.equal(FILE_COUNT, FILES.length, "the HUD counts a different number of files than the shelf holds");
+  assert.ok(FILE_COUNT > 0, "the shelf is empty");
 
-  // The index is gated on every other file, or it can be read first and the
-  // five it indexes become optional.
-  const index = FILES.find((f) => f.topic === "dossier");
-  assert.ok(index, "there is no index file");
-  assert.equal(
-    (index.needs ?? []).length,
-    FILE_COUNT,
-    "the index does not wait for every other file",
+  // ABOUT is the door out of this room, and it has to be openable from the
+  // moment somebody arrives. It was sealed behind five other files once and
+  // the room behind it was unreachable in practice.
+  const door = FILES.find((f) => f.topic === "about");
+  assert.ok(door, "there is no ABOUT file, so there is no way through to the other room");
+  assert.ok(
+    isUnlocked(door, []),
+    "the way through is sealed on arrival, which is how it went unfound before",
   );
+
+  // And nothing on this shelf is sealed at all any more.
+  for (const f of FILES) {
+    assert.equal(
+      (f.needs ?? []).length,
+      0,
+      `${f.id} waits on another file, and nothing on this shelf should`,
+    );
+  }
 }
 
 /* The machine on the desk ------------------------------------------------- */

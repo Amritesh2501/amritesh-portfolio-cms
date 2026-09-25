@@ -334,7 +334,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
   const here = at ? stationById(at) : null;
   const atShelf = at === "shelf";
-  const got = read.filter((id) => id !== "dossier").length;
+  const got = read.length;
 
   /**
    * The room through the book.
@@ -561,7 +561,6 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
           from={bookFrom(picked, shot, view)}
           view={view}
           data={data}
-          read={read}
           done={read.includes(picked.id)}
           onRead={markRead}
           onThrough={() => setPlace("bedroom")}

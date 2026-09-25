@@ -78,7 +78,7 @@ export const bedStationById = (id: string) => BED_STATIONS.find((s) => s.id === 
  * because a puzzle that cannot be reached from any station is the exact failure
  * this file exists to make impossible.
  */
-export type PuzzleId = "poster" | "drawer" | "terminal";
+export type PuzzleId = "poster" | "drawer" | "terminal" | "books";
 
 export type BedPuzzle = {
   id: PuzzleId;
@@ -106,7 +106,16 @@ export const BED_PUZZLES: BedPuzzle[] = [
     id: "terminal",
     at: "desk",
     name: "The terminal",
-    holds: "Whatever he was in the middle of.",
+    holds: "Whatever he was in the middle of — and how he thinks about the work.",
+  },
+  {
+    // Not a puzzle. ABOUT is the door to this room now, so the long version of
+    // who he is has to live in it somewhere, and a shelf of books is where a
+    // person's own account of themselves belongs. It opens on a click.
+    id: "books",
+    at: "posters",
+    name: "The books",
+    holds: "His own account of himself, in his own words.",
   },
 ];
 

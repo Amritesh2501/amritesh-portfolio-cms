@@ -18,6 +18,7 @@ import { BedroomRoom } from "./BedroomArt";
 import { Cipher } from "./Cipher";
 import { Lockpick } from "./Lockpick";
 import { Sums } from "./Sums";
+import { Books, Working } from "./AboutInRoom";
 import type { CaseRoomData } from "@/lib/content";
 
 /**
@@ -131,9 +132,17 @@ export function Bedroom({
     [at, goto, reduce],
   );
 
+  /**
+   * Beaten.
+   *
+   * The panel is NOT closed here. Every one of these is a lock on something,
+   * and closing the moment the lock gives would throw away the thing the
+   * player just earned — the terminal shows what it was protecting, the
+   * drawer shows the diary, the poster shows the photograph. Each of those
+   * components decides when it is done.
+   */
   const solve = useCallback((id: PuzzleId) => {
     setSolved((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    setOpen(null);
     sound.recovered();
   }, []);
 
@@ -260,8 +269,15 @@ export function Bedroom({
       </div>
 
       {/* All three are built now. */}
-      {open === "terminal" ? (
-        <Cipher onSolved={() => solve("terminal")} onClose={() => setOpen(null)} />
+      {/* The books open on a click; the other three are earned. */}
+      {open === "books" ? (
+        <Books data={data} onClose={() => setOpen(null)} />
+      ) : open === "terminal" ? (
+        solved.includes("terminal") ? (
+          <Working data={data} onClose={() => setOpen(null)} />
+        ) : (
+          <Cipher onSolved={() => solve("terminal")} onClose={() => setOpen(null)} />
+        )
       ) : open === "drawer" ? (
         <Lockpick
           data={data}
