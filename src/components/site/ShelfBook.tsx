@@ -34,7 +34,21 @@ import { CaseFilePages } from "./CaseFilePages";
  * the book lifts off the shelf rather than appearing near it.
  */
 
-type Stage = "take" | "open" | "spread";
+/**
+ * take    out of the row and a quarter turn, spine to cover
+ * open    the cover swings back on the spine
+ * spread  two pages, and what is written on them
+ * through the leaves go over one after another and the room changes
+ *
+ * Only the index file reaches "through". The five section files hold the
+ * portfolio and stop at "spread"; the sixth holds nothing of its own, which is
+ * exactly why it is the one that is a door.
+ */
+type Stage = "take" | "open" | "spread" | "through";
+
+/** The leaves going over, and the room on the other side. Matches `xk-flight`
+ *  and `xk-fade` in CSS. */
+const FLIGHT_MS = 2600;
 
 /** Out of the row and round to the cover. Matches `xk-take` in CSS.
  *  Slow on purpose: the pull and the turn are two separate things a hand
@@ -70,6 +84,7 @@ export function ShelfBook({
   read,
   done,
   onRead,
+  onThrough,
   onBack,
 }: {
   file: CaseFile;
@@ -80,6 +95,9 @@ export function ShelfBook({
   done: boolean;
   /** Called once the pages are actually in front of the reader. */
   onRead: () => void;
+  /** Only ever called by the index file: the pages carry the reader out of
+   *  this room entirely. */
+  onThrough: () => void;
   onBack: () => void;
 }) {
   const reduce = useReducedMotion();
@@ -111,26 +129,36 @@ export function ShelfBook({
 
   /* Opening ---------------------------------------------------------------- */
 
+  /** The index file has nothing of its own to show, so it does not stop. */
+  const isDoor = file.topic === "dossier";
+
   const open = useCallback(() => {
     if (stage !== "take") return;
     setStage("open");
     sound.page();
 
-    if (reduce) {
+    const arrive = () => {
+      if (isDoor) {
+        // Not a spread. The leaves go over one after another, the camera goes
+        // into them, and the room on the other side is a different room.
+        setStage("through");
+        onRead();
+        timers.current.push(window.setTimeout(onThrough, reduce ? 0 : FLIGHT_MS));
+        return;
+      }
       setStage("spread");
       onRead();
+    };
+
+    if (reduce) {
+      arrive();
       return;
     }
     // A second sheet as the cover comes over, so the swing has some paper in
     // it rather than being one board moving.
     timers.current.push(window.setTimeout(sound.page, 340));
-    timers.current.push(
-      window.setTimeout(() => {
-        setStage("spread");
-        onRead();
-      }, OPEN_MS),
-    );
-  }, [stage, reduce, onRead]);
+    timers.current.push(window.setTimeout(arrive, OPEN_MS));
+  }, [stage, reduce, isDoor, onRead, onThrough]);
 
   /* Focus follows the thing that is actually readable -----------------------*/
 
@@ -277,9 +305,32 @@ export function ShelfBook({
         </div>
       ) : null}
 
+      {/* Going through.
+
+          Six leaves over one after another, the whole book coming at the
+          camera as they go, and then black. It is the one place in this
+          project where a cut is the right answer: you do not see the room
+          arrive, you come round in it. */}
+      {stage === "through" ? (
+        <div className="xk-flight" aria-hidden>
+          <div className="xk-flight-stack">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <span
+                key={i}
+                className="xk-leafing"
+                style={{ animationDelay: `${i * 180}ms` }}
+              />
+            ))}
+          </div>
+          <div className="xk-fade" />
+        </div>
+      ) : null}
+
+      {stage === "through" ? null : (
       <button type="button" className="xk-back" onClick={onBack}>
         {spread ? "Close the file" : "Put it back"}
       </button>
+      )}
     </div>
   );
 }

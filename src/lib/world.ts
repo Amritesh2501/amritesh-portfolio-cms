@@ -517,3 +517,43 @@ export const bulbById = (id: string) => BULBS.find((b) => b.id === id);
 
 /** The desk lamp does not change colour. A gooseneck lamp burns tungsten. */
 export const DESK_BULB = "#ffbe5c";
+
+/* ---------------------------------------------------------------------------
+   The camera
+   ------------------------------------------------------------------------- */
+
+/**
+ * The rectangle of world a camera actually shows, resolved against a viewport.
+ *
+ * Four things need this answer and until now each one worked it out again:
+ * World, to place the stage; check-world, to assert a shot frames what it is
+ * supposed to; render-room, to shoot through a station; and now the bedroom.
+ * Four copies of a fit-and-clamp is four chances for the check to be asserting
+ * something the room does not do.
+ *
+ * The zoom is scaled down on a narrow screen — a shot framed for a desktop
+ * shows three hundred pixels of shelf upright on a phone — and raised again if
+ * that would leave the room short of the top and bottom of the screen. Then
+ * the centre is clamped so the frame stays inside the room: a station composed
+ * on something near an edge wants to centre on it, and centring on it puts a
+ * slab of empty stage in shot.
+ */
+export function frameFor(
+  cam: Shot,
+  view: { w: number; h: number },
+  world: { w: number; h: number },
+) {
+  const fit = Math.max(Math.min(1, view.w / 1400), 0.45);
+  const z = Math.max(cam.z * fit, view.h / world.h);
+  const halfW = view.w / (2 * z);
+  const halfH = view.h / (2 * z);
+  // When the frame is wider than the room there is nothing to clamp to, so it
+  // centres instead of snapping to an edge.
+  const clamp = (v: number, min: number, max: number) =>
+    min > max ? (min + max) / 2 : Math.min(max, Math.max(min, v));
+  return {
+    z,
+    x: clamp(cam.x, halfW, world.w - halfW),
+    y: clamp(cam.y, halfH, world.h - halfH),
+  };
+}

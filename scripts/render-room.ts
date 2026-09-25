@@ -18,7 +18,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import sharp from "sharp";
 import { Room } from "../src/components/site/RoomArt";
+import { BedroomRoom } from "../src/components/site/BedroomArt";
 import { WORLD, stationById } from "../src/lib/world";
+import { BEDROOM, bedStationById } from "../src/lib/bedroom";
 
 /**
  * The ink, inlined.
@@ -71,11 +73,20 @@ const INK = `
   .xw-crt-led { fill: #d9a05b; }
   .xw-crt-glow { opacity: .9; }
   .xw-crt-scan { fill: #d9a05b; stroke: none; opacity: .22; }
+  .xw-bed-sky-fill { fill: #cfe0ff; opacity: .1; }
+  .xw-bed-sun { fill: #ffcf8a; opacity: .3; }
+  .xw-bed-poster-live .xw-line { stroke: #d9a05b; }
+  .xw-bed-sum { fill: #d9a05b; stroke: none; font-family: monospace; font-size: 22px; }
+  .xw-bed-term-glow .xw-line { stroke: #7fe0a8; opacity: .85; }
+  .xw-bed-term-caret { fill: #7fe0a8; }
 `;
 
 const noop = () => {};
 
 type Shot = {
+  /** The bedroom instead of the case room. A different drawing, the same
+   *  camera maths, so one script shoots both. */
+  bed?: boolean;
   blindDown: boolean;
   ceiling: boolean;
   lamp: boolean;
@@ -87,7 +98,20 @@ type Shot = {
 };
 
 async function shoot(name: string, shot: Shot) {
-  const body = renderToStaticMarkup(
+  const world = shot.bed ? BEDROOM : WORLD;
+  const body = shot.bed
+    ? renderToStaticMarkup(
+        createElement(BedroomRoom, {
+          at: shot.at,
+          lamp: shot.lamp,
+          drawerOpen: false,
+          posterDone: false,
+          onStation: noop,
+          onPuzzle: noop,
+          onLamp: noop,
+        }),
+      )
+    : renderToStaticMarkup(
     createElement(Room, {
       read: [],
       taken: null,
@@ -114,21 +138,23 @@ async function shoot(name: string, shot: Shot) {
   let box: { x: number; y: number; w: number; h: number } = {
     x: 0,
     y: 0,
-    w: WORLD.w,
-    h: WORLD.h,
+    w: world.w,
+    h: world.h,
   };
-  const station = shot.through ? stationById(shot.through) : null;
+  const station = shot.through
+    ? (shot.bed ? bedStationById(shot.through) : stationById(shot.through))
+    : null;
   if (station) {
     const cam = station.cam;
     const fit = Math.max(Math.min(1, VIEW.w / 1400), 0.45);
-    const z = Math.max(cam.z * fit, VIEW.h / WORLD.h);
+    const z = Math.max(cam.z * fit, VIEW.h / world.h);
     const w = VIEW.w / z;
     const h = VIEW.h / z;
     const clamp = (v: number, a: number, b: number) =>
       a > b ? (a + b) / 2 : Math.min(b, Math.max(a, v));
     box = {
-      x: clamp(cam.x, w / 2, WORLD.w - w / 2) - w / 2,
-      y: clamp(cam.y, h / 2, WORLD.h - h / 2) - h / 2,
+      x: clamp(cam.x, w / 2, world.w - w / 2) - w / 2,
+      y: clamp(cam.y, h / 2, world.h - h / 2) - h / 2,
       w,
       h,
     };
@@ -137,7 +163,7 @@ async function shoot(name: string, shot: Shot) {
   // The component renders <svg class="xw-svg" viewBox=...> with no width or
   // height, which a browser is happy with and a rasteriser is not.
   const out = `scratch-room-${name}.png`;
-  const px = station ? VIEW : { w: WORLD.w, h: WORLD.h };
+  const px = station ? VIEW : { w: world.w, h: world.h };
   const svg = body
     .replace(
       /<svg [^>]*viewBox="[^"]*"/,
@@ -168,6 +194,13 @@ const SHOTS: Record<string, Shot> = {
   shelf: { blindDown: true, ceiling: true, lamp: false, at: "shelf", through: "shelf" },
   desk: { blindDown: true, ceiling: false, lamp: true, at: "desk", through: "desk" },
   window: { blindDown: false, ceiling: false, lamp: false, at: "window", through: "window" },
+
+  // The room through the book.
+  bed: { bed: true, blindDown: false, ceiling: false, lamp: false, at: null },
+  "bed-lamp": { bed: true, blindDown: false, ceiling: false, lamp: true, at: null },
+  "bed-posters": { bed: true, blindDown: false, ceiling: false, lamp: false, at: "posters", through: "posters" },
+  "bed-side": { bed: true, blindDown: false, ceiling: false, lamp: true, at: "side", through: "side" },
+  "bed-desk": { bed: true, blindDown: false, ceiling: false, lamp: false, at: "desk", through: "desk" },
 };
 
 async function main() {

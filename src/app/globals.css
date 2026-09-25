@@ -2088,6 +2088,236 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+   Going through the book
+
+   The index file has nothing of its own to show, which is exactly why it is
+   the one that is a door. Its leaves go over one after another, the whole book
+   comes at the camera as they go, and then black — and the black is the point.
+   You do not watch the next room arrive, you come round in it.
+   ------------------------------------------------------------------------- */
+
+.xk-flight {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  perspective: 1600px;
+  pointer-events: none;
+}
+
+.xk-flight-stack {
+  position: relative;
+  width: min(42ch, 74vw);
+  aspect-ratio: 3 / 4;
+  transform-style: preserve-3d;
+  /* The book coming at the reader while its own pages turn. Two movements at
+     once, which is what makes it read as going INTO the book rather than as
+     watching a book from a fixed seat. */
+  animation: xk-flight-in 2600ms cubic-bezier(0.5, 0, 0.75, 0.2) both;
+}
+
+@keyframes xk-flight-in {
+  0% { transform: scale(0.9) translateZ(0); }
+  70% { transform: scale(1.9) translateZ(160px); }
+  100% { transform: scale(7) translateZ(620px); }
+}
+
+/* One leaf. Hinged on its left edge, like every page in a bound book. */
+.xk-leafing {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 26%, transparent);
+  border-radius: 2px;
+  background: linear-gradient(100deg, #17181f, #0b0c11 70%);
+  transform-origin: left center;
+  backface-visibility: hidden;
+  animation: xk-leaf-over 900ms cubic-bezier(0.45, 0, 0.3, 1) both;
+}
+
+@keyframes xk-leaf-over {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(-172deg); }
+}
+
+/* And then black, held long enough to be a cut rather than a fade. */
+.xk-fade {
+  position: absolute;
+  inset: 0;
+  background: #05060a;
+  animation: xk-fade-in 900ms ease-in 1700ms both;
+}
+
+@keyframes xk-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xk-flight-stack,
+  .xk-leafing,
+  .xk-fade {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   His room
+
+   Everything structural is the case room's — .xw, .xw-stage, .xw-hud and the
+   rest are shared, because it is the same screen with a different drawing in
+   it. What is here is only what differs: the light, which is morning rather
+   than three in the morning, and the panels that stand in for puzzles.
+   ------------------------------------------------------------------------- */
+
+.xr {
+  /* Warmer paper than the case room. Same pen, better morning. */
+  --xp-fg: #ece6d6;
+  --xp-dim: #938b78;
+}
+
+/* Daylight through the window, always on: it is getting light out there and
+   there is no blind in this room to argue with. */
+.xr .xw-bed-day {
+  pointer-events: none;
+}
+
+.xw-bed-sky-fill {
+  fill: var(--xw-city, #cfe0ff);
+  opacity: 0.1;
+}
+
+.xw-bed-sun {
+  fill: #ffcf8a;
+  opacity: 0.3;
+}
+
+.xw-bed-sky {
+  pointer-events: none;
+}
+
+/* The poster that is a puzzle: the only warm thing on that wall until it is
+   solved, and a photograph afterwards. */
+.xw-bed-poster-live .xw-line {
+  stroke: var(--xp-hot);
+}
+
+.xw-bed-sum {
+  fill: var(--xp-hot);
+  stroke: none;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  letter-spacing: 0.08em;
+}
+
+.xw-bed-posters.is-done .xw-bed-poster-live .xw-line {
+  stroke: var(--xp-fg);
+}
+
+.xw-bed-posters .xw-hit,
+.xw-bed-term .xw-hit {
+  cursor: pointer;
+}
+
+/* The drawer slides; the cavity behind it does not. */
+.xw-bed-drawer-face {
+  transition: transform 0.6s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+.xw-bed-drawer.is-open .xw-bed-drawer-face {
+  transform: translate(-14px, 26px);
+}
+
+/* The terminal: green, because a machine that wants a password should look
+   older than the room it is in. */
+.xw-bed-term-glow .xw-line {
+  stroke: #7fe0a8;
+  opacity: 0.85;
+}
+
+.xw-bed-term-caret {
+  fill: #7fe0a8;
+  animation: blink 1.05s steps(1) infinite;
+}
+
+/* --- What stands in for a puzzle ------------------------------------------
+
+   Deliberately not a fake game. It names what it is, says what it is guarding
+   and what it will be, and has one button that hands the reward over — so the
+   room downstream of it can be walked and judged now. A stub that pretends to
+   be playable is a thing somebody has to be told is not real.
+   ------------------------------------------------------------------------- */
+
+.xr-stub {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  background: color-mix(in srgb, #05060a 82%, transparent);
+  font-family: var(--font-mono);
+  animation: xk-fade-in 0.3s ease both;
+}
+
+.xr-stub-card {
+  display: grid;
+  gap: 0.9rem;
+  justify-items: start;
+  width: min(48ch, 100%);
+  padding: clamp(1.4rem, 4vw, 2.2rem);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 40%, transparent);
+  background: #05060a;
+}
+
+.xr-stub-kicker {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-hot);
+}
+
+.xr-stub-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--xp-fg);
+}
+
+.xr-stub-holds {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--xp-fg);
+  opacity: 0.88;
+}
+
+/* Says plainly that it is not finished. A placeholder that hides being a
+   placeholder wastes the reader's time twice. */
+.xr-stub-note {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-left: 2px solid var(--xp-hot);
+  background: color-mix(in srgb, var(--xp-fg) 5%, transparent);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--xp-dim);
+}
+
+.xr-stub-note strong {
+  font-weight: 400;
+  color: var(--xp-hot);
+}
+
+.xr-stub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------------
    The evidence board, full screen
 
    Nothing here is positioned in this file. A force simulation decides where

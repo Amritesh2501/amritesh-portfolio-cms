@@ -19,6 +19,7 @@
     "vercel-build": "prisma generate && node scripts/migrate.mjs && next build",
     "db:migrate:deploy": "node scripts/migrate.mjs",
     "check:world": "tsx scripts/check-world.ts",
+    "check:bedroom": "tsx scripts/check-bedroom.ts",
     "check:styles": "tsx scripts/check-styles.ts",
     "check:resources": "tsx scripts/check-resources.ts",
     "room": "tsx --tsconfig scripts/tsconfig.json scripts/render-room.ts"
