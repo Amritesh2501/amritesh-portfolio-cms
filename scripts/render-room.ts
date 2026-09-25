@@ -65,6 +65,8 @@ const INK = `
   .xw-bulb-core, .xw-lamp-core { fill: #e4ddcb; stroke: none; opacity: .18; }
   .xw-pendant.is-on .xw-bulb-core { fill: #ffc178; opacity: 1; }
   .xw-lamp.is-on .xw-lamp-core { fill: #ffbe5c; opacity: 1; }
+  .xw-key { fill: none; stroke: #e4ddcb; stroke-width: .8; opacity: .3; }
+  .xw-pen { fill: none; stroke: #e4ddcb; stroke-width: 2.4; stroke-linecap: round; opacity: .8; }
   .xw-steam path { fill: none; stroke: #e4ddcb; stroke-width: 1.6; opacity: 0; }
   .xw-crt-led { fill: #d9a05b; }
   .xw-crt-glow { opacity: .9; }
