@@ -308,6 +308,13 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   const order = useMemo(() => STATIONS.map((s) => s.id), []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Another room is on screen and this one is not rendered at all — but the
+      // component is still mounted, so without this the listener is still live
+      // and every key is handled TWICE: once by the bedroom or the office, and
+      // once by a case room nobody can see. One Escape in the office ran that
+      // room's "step back" and this room's on the same press, which walked the
+      // reader out through both and dumped them on the warning page.
+      if (place !== "case") return;
       // The board and the machine are full screen and run their own Escape in
       // the capture phase, so this never sees a key while either is up.
       if (e.key === "Escape") {
@@ -327,7 +334,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [at, order, picked, boardOpen, deskOpen, goto, toRoom, closeFile, onExit]);
+  }, [at, order, picked, place, boardOpen, deskOpen, goto, toRoom, closeFile, onExit]);
 
   /* The camera, resolved against the actual viewport ------------------------ */
 

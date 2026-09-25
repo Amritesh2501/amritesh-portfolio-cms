@@ -93,6 +93,10 @@ const INK = `
   .xw-office-tile.is-k2 { fill: #4fb477; }
   .xw-office-tile.is-k3 { fill: #4a86d8; }
   .xw-office-tile.is-k4 { fill: #9a6fd0; }
+  .xw-office-slats rect { fill: #1a1c22; stroke: none; }
+  .xw-office-slats.is-open rect { fill: #101218; }
+  .xw-office-bloom ellipse, .xw-office-bloom-eye { fill: #e0a33c; stroke: none; opacity: .62; }
+  .xw-office-bloom-eye { opacity: .95; }
 `;
 
 const noop = () => {};
@@ -119,10 +123,16 @@ async function shoot(name: string, shot: Shot) {
         createElement(OfficeRoom, {
           at: shot.at,
           lights: shot.ceiling,
+          // The office's louvres stand in for the other two rooms' blinds, so
+          // one flag shoots the shut and the open state of all three.
+          blindOpen: !shot.blindDown,
+          bloom: 0,
           solved: [],
           onStation: noop,
           onPuzzle: noop,
           onLights: noop,
+          onBlind: noop,
+          onBloom: noop,
         }),
       )
     : shot.bed
@@ -238,6 +248,7 @@ const SHOTS: Record<string, Shot> = {
 
   // The office, through the EXPERIENCE book.
   office: { office: true, blindDown: false, ceiling: true, lamp: false, at: null },
+  "office-shut": { office: true, blindDown: true, ceiling: true, lamp: false, at: null },
   "office-dark": { office: true, blindDown: false, ceiling: false, lamp: false, at: null },
   "office-board": { office: true, blindDown: false, ceiling: true, lamp: false, at: "board", through: "board" },
   "office-rack": { office: true, blindDown: false, ceiling: true, lamp: false, at: "rack", through: "rack" },

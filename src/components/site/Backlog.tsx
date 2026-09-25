@@ -151,13 +151,17 @@ export function Backlog({ onSolved, onClose }: { onSolved: () => void; onClose: 
             >
               {board.map((kind, i) => {
                 const k = KIND[kind] ?? KIND[0];
+                // Marked while a tile is in hand: the neighbours it would
+                // actually clear against. Four checks, not a solver.
+                const can =
+                  picked !== null && areNeighbours(picked, i) && isLegal(board, picked, i);
                 return (
                   <button
                     key={i}
                     type="button"
                     className={`xt-cell ${picked === i ? "is-picked" : ""} ${
-                      refused === i ? "is-refused" : ""
-                    }`}
+                      can ? "is-can" : ""
+                    } ${refused === i ? "is-refused" : ""}`}
                     style={{ ["--tile" as string]: k.hex }}
                     onClick={() => tap(i)}
                     disabled={busy}
@@ -170,8 +174,9 @@ export function Backlog({ onSolved, onClose }: { onSolved: () => void; onClose: 
             </div>
 
             <p className="xt-note">
-              Swap two neighbours to line up three. A swap that would not clear
-              anything is refused rather than taken back.
+              {picked === null
+                ? "Pick a ticket. Swap it with a neighbour to line up three of a kind."
+                : "The outlined neighbours are the swaps that clear something. Anything else is refused rather than taken back."}
             </p>
           </>
         )}
