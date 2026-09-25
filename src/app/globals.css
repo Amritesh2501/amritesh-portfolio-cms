@@ -1356,7 +1356,10 @@ body {
   transition: opacity 0.7s ease 0.45s;
 }
 
-.xw-outside.is-open .xw-city {
+.xw-outside.is-open .xw-city,
+/* The bedroom's window has no reveal of its own — the blind is drawn over the
+   view, so the blind going up IS the reveal and the lights are simply on. */
+.xw-bed-out .xw-city {
   opacity: 1;
 }
 
@@ -1886,6 +1889,13 @@ body {
 /* Daylight through the window, always on: it is getting light out there and
    there is no blind in this room to argue with. */
 .xr .xw-bed-day {
+  pointer-events: none;
+}
+
+/* What is through the glass. No fade of its own: the blind is drawn over it,
+   so the blind going up IS the reveal, and a second opacity here would be two
+   things animating one event. */
+.xw-bed-out {
   pointer-events: none;
 }
 
@@ -2973,6 +2983,294 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .xa-card {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   His machine
+
+   What was behind the cipher. The case room's computer is a workstation
+   somebody was doing a job on; this is a person's own, so it is the opposite —
+   no system name, no volumes, no shutdown. A wallpaper, a handful of files
+   somebody actually made, and whatever was left open.
+
+   Green, because the terminal it was locked behind was green and this is the
+   same machine once you are past the lock.
+   ------------------------------------------------------------------------- */
+
+.xm {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 2.5vw, 2rem);
+  background: #020603;
+  font-family: var(--font-mono);
+}
+
+.xm-screen {
+  --green: #5bffa8;
+  --green-dim: #2f8f5e;
+  --green-deep: #0c2c1c;
+
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(74ch, 100%);
+  height: min(46rem, 100%);
+  overflow: hidden;
+  border: 1px solid var(--green-dim);
+  border-radius: 8px;
+  background:
+    radial-gradient(130% 120% at 50% 40%, rgba(20, 90, 55, 0.18), transparent 72%),
+    #020603;
+  color: var(--green);
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.9), 0 40px 120px -40px rgba(30, 255, 150, 0.16);
+  animation: xm-on 0.4s ease both;
+}
+
+@keyframes xm-on {
+  from { opacity: 0; transform: scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Scanlines, the same glass the cipher was behind. */
+.xm-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+
+.xm-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--green-dim);
+}
+
+.xm-user,
+.xm-free {
+  font-size: 0.5625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--green-dim);
+}
+
+.xm-sp {
+  flex: 1;
+}
+
+.xm-quit {
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--green-dim);
+  background: transparent;
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green);
+  cursor: pointer;
+}
+
+.xm-quit:hover,
+.xm-quit:focus-visible {
+  background: rgba(91, 255, 168, 0.16);
+}
+
+.xm-desk {
+  position: relative;
+  min-height: 0;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.xm-files {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, max-content));
+  align-content: start;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xm-file {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  width: 6.5rem;
+  padding: 0.6rem 0.3rem 0.45rem;
+  border: 1px solid transparent;
+  background: transparent;
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.08em;
+  color: var(--green);
+  cursor: pointer;
+}
+
+.xm-file-name {
+  padding: 0.1rem 0.3rem;
+  word-break: break-all;
+}
+
+.xm-file:hover .xm-file-name,
+.xm-file:focus-visible .xm-file-name {
+  background: rgba(91, 255, 168, 0.18);
+}
+
+.xm-file.is-open .xm-file-name {
+  background: var(--green);
+  color: #020603;
+}
+
+/* A file with nothing in it is greyed, not hidden. A machine that hides its
+   empty files looks like a machine with nothing on it. */
+.xm-file.is-empty {
+  color: var(--green-dim);
+  opacity: 0.6;
+}
+
+.xm-glyph {
+  width: 30px;
+  height: 34px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+/* --- An open file --------------------------------------------------------- */
+
+.xm-window {
+  position: absolute;
+  inset: 2.5rem 1rem 1rem 3rem;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border: 1px solid var(--green-dim);
+  background: #030a06;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.6);
+  animation: xm-open 0.2s ease both;
+}
+
+@keyframes xm-open {
+  from { opacity: 0; transform: translate(-4px, -4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.xm-window-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.4rem 0.4rem 0.7rem;
+  border-bottom: 1px solid var(--green-dim);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  color: var(--green);
+}
+
+.xm-x {
+  margin-left: auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--green-dim);
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--green);
+  cursor: pointer;
+}
+
+.xm-window-body {
+  min-height: 0;
+  padding: 1rem 1.1rem 1.4rem;
+  overflow-y: auto;
+}
+
+.xm-lede {
+  margin: 0 0 0.8rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--green);
+}
+
+.xm-window-body .prose-tech,
+.xm-window-body .prose-tech p,
+.xm-window-body .prose-tech li {
+  font-size: 0.8125rem;
+  line-height: 1.85;
+  color: color-mix(in srgb, var(--green) 82%, transparent);
+}
+
+.xm-window-body .prose-tech strong {
+  font-weight: 400;
+  color: var(--green);
+}
+
+.xm-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.xm-facts {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.xm-facts dt {
+  font-size: 0.5rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--green-dim);
+}
+
+.xm-facts dd {
+  margin: 0.15rem 0 0;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--green-deep);
+  font-size: 0.8125rem;
+}
+
+.xm-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--green-dim);
+}
+
+.xm-empty strong {
+  font-weight: 400;
+  color: var(--green);
+}
+
+.xm-status {
+  padding: 0.4rem 0.75rem;
+  border-top: 1px solid var(--green-dim);
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  color: var(--green-dim);
+}
+
+@media (max-width: 640px) {
+  .xm-window {
+    inset: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xm-screen,
+  .xm-window {
     animation: none;
   }
 }

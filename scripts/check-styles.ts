@@ -39,6 +39,7 @@ const PREFIXES = [
   "xl-", // the drawer, and the diary in it
   "xs-", // the poster, and the photograph behind it
   "xa-", // what the room gives up about him
+  "xm-", // his own computer, once the cipher is beaten
   "mg-", // the minigames
   "wi-", // selected work on the front page
 ];

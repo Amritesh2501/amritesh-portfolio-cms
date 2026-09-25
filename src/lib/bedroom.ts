@@ -29,7 +29,7 @@ export const BED_ESTABLISH: Shot = { x: 1200, y: 690, z: 0.82 };
  * Close on the bed, because that is what somebody coming round in a room they
  * do not recognise looks at first, and then it pulls back.
  */
-export const BED_ARRIVAL: Shot = { x: 860, y: 880, z: 1.7 };
+export const BED_ARRIVAL: Shot = { x: 830, y: 860, z: 1.7 };
 
 export type BedStation = {
   id: string;
@@ -40,28 +40,29 @@ export type BedStation = {
 
 export const BED_STATIONS: BedStation[] = [
   {
+    // The left wall, seen down its own length. The posters are on it.
     id: "posters",
     name: "The posters",
-    blurb: "Pinned over the bed. One of them is not a poster.",
-    cam: { x: 690, y: 452, z: 2.2 },
-  },
-  {
-    id: "side",
-    name: "The side table",
-    blurb: "A drawer, and it is locked.",
-    cam: { x: 1148, y: 902, z: 2.6 },
-  },
-  {
-    id: "desk",
-    name: "The desk",
-    blurb: "A machine, still on, asking for something.",
-    cam: { x: 1748, y: 742, z: 2.1 },
+    blurb: "Pinned to the wall he wakes up facing. One of them is not a poster.",
+    cam: { x: 246, y: 548, z: 2.5 },
   },
   {
     id: "window",
     name: "The window",
-    blurb: "It is getting light out there.",
-    cam: { x: 402, y: 560, z: 2.1 },
+    blurb: "Behind the bed, and there is a cord on the blind.",
+    cam: { x: 860, y: 470, z: 2.4 },
+  },
+  {
+    id: "side",
+    name: "The side table",
+    blurb: "Beside the bed. A drawer, and it is locked.",
+    cam: { x: 1268, y: 872, z: 2.7 },
+  },
+  {
+    id: "desk",
+    name: "The desk",
+    blurb: "A machine, still on, asking for something. Books over it.",
+    cam: { x: 1716, y: 748, z: 2.2 },
   },
 ];
 
@@ -113,7 +114,7 @@ export const BED_PUZZLES: BedPuzzle[] = [
     // who he is has to live in it somewhere, and a shelf of books is where a
     // person's own account of themselves belongs. It opens on a click.
     id: "books",
-    at: "posters",
+    at: "desk",
     name: "The books",
     holds: "His own account of himself, in his own words.",
   },

@@ -43,42 +43,6 @@ export function Books({
   );
 }
 
-/**
- * What the terminal was protecting.
- *
- * The cipher is the lock; this is what is behind it. How somebody works is the
- * thing they are least likely to say out loud on a front page, so it is the
- * thing worth making somebody earn.
- */
-export function Working({
-  data,
-  onClose,
-}: {
-  data: CaseRoomData;
-  onClose: () => void;
-}) {
-  const p = data.profile;
-
-  return (
-    <Panel kicker="DECRYPTED" title="How he works" onClose={onClose}>
-      {p?.philosophy ? (
-        <Markdown content={p.philosophy} />
-      ) : (
-        <p className="xa-empty">
-          Nothing written yet. <strong>Profile → Engineering philosophy</strong> in
-          the CMS.
-        </p>
-      )}
-
-      {p?.currentlyWorkingRole && p?.currentlyWorkingAt ? (
-        <p className="xa-foot">
-          Currently {p.currentlyWorkingRole} at {p.currentlyWorkingAt}.
-        </p>
-      ) : null}
-    </Panel>
-  );
-}
-
 /* ------------------------------------------------------------------------- */
 
 function Panel({

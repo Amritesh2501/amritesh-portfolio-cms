@@ -53,7 +53,7 @@ const INK = `
   .xw-day-pool { fill: #cfe0ff; stroke: none; opacity: .05; }
   .xw-day-glow { fill: #cfe0ff; stroke: none; opacity: .09; }
   .xw-city { opacity: 0; }
-  .xw-outside.is-open .xw-city { opacity: 1; }
+  .xw-outside.is-open .xw-city, .xw-bed-out .xw-city { opacity: 1; }
   .xw-city-lit { fill: #cfe0ff; stroke: none; opacity: .32; }
   .xw-city-lit.is-warm { fill: #ffcf8a; opacity: .5; }
   .xw-outside.is-open { opacity: 1; }
@@ -104,11 +104,15 @@ async function shoot(name: string, shot: Shot) {
         createElement(BedroomRoom, {
           at: shot.at,
           lamp: shot.lamp,
+          ceiling: shot.ceiling,
+          blindDown: shot.blindDown,
           drawerOpen: false,
           posterDone: false,
           onStation: noop,
           onPuzzle: noop,
           onLamp: noop,
+          onCeiling: noop,
+          onCord: noop,
         }),
       )
     : renderToStaticMarkup(
