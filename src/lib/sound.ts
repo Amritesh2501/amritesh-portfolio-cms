@@ -317,6 +317,21 @@ export const page = () => burst(0.14, 260, "bandpass", 1800, 5200, 1.4);
 /** A file coming off the shelf, or a cover falling open. */
 export const latch = () => burst(0.12, 130, "bandpass", 700, 2400, 2.2);
 
+/**
+ * One key going down.
+ *
+ * Short and dry, with a little more top than the latch: a keyboard is a small
+ * hard thing hitting a small hard thing, and the whole sound is the attack. It
+ * is detuned very slightly at random so that typing does not come out as the
+ * same click repeated, which is the thing that makes synthesised keys sound
+ * synthesised.
+ */
+export const keypress = () =>
+  burst(0.09, 42, "bandpass", 2600 + Math.random() * 1400, 900, 3.2);
+
+/** A pen leaving the pot, and again when it lands. */
+export const toss = () => burst(0.07, 90, "highpass", 1200, 3800, 1.1);
+
 /** The camera settling somewhere new. Very quiet, almost a felt thing. */
 export const settle = () => burst(0.05, 200, "lowpass", 900, 220);
 

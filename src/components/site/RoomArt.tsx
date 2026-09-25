@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import * as sound from "@/lib/sound";
 import { FILES, WINDOW_GLASS, WORLD, blindHeight, isUnlocked, type CaseFile } from "@/lib/world";
 
 /**
@@ -806,53 +807,232 @@ function Desk({
           <rect className="xw-crt-scan" x={1026} y={670} width={232} height={3} />
         </g>
 
-        {/* A low-profile board, because the tall wedge one belonged to the
-            other machine. */}
-        <g className="xw-line">
-          <path d="M1014 922 L1186 919 L1196 952 L1022 956 Z" className="xw-thin xw-solid" />
-          <path d="M1022 956 L1196 952 L1196 962 L1022 966 Z" className="xw-thin xw-solid" />
-          <path d="M1030 934 L1174 931" className="xw-thin xw-faint" />
-          <path d="M1032 944 L1152 941" className="xw-thin xw-faint" />
-        </g>
-
+        {/* The screen's own target, which is only ever the screen.
+            Tight around the panel rather than around the whole machine, so
+            the keyboard below it can take its own clicks. */}
         <rect
           className="xw-hit"
           x={1008}
           y={648}
           width={280}
-          height={326}
+          height={250}
           onClick={atDesk ? onOpen : () => onStation("desk")}
         />
       </g>
 
+      <Keyboard atDesk={atDesk} onStation={onStation} />
       <Mug />
+      <PenStand atDesk={atDesk} onStation={onStation} />
 
       <Hatch x={700} y={1012} w={890} h={30} gap={12} className="xw-hatch xw-faint" />
-      {/* The desk surface, which only ever walks you over. Kept below the
-          shelf carcass so the two do not fight for the same pixels. */}
-      <rect
-        className="xw-hit"
-        x={686}
-        y={868}
-        width={920}
-        height={192}
-        onClick={atDesk ? onOpen : () => onStation("desk")}
-      />
+      {/* The desk surface walks you over, and ONLY from across the room.
+
+          Once the camera is at the desk it is not drawn at all. A target
+          covering the whole surface is the right thing when the desk is a
+          destination and exactly the wrong thing when it is a place you are
+          standing: it sits over the keyboard, the mug and the pens and takes
+          every click meant for them. Arriving is what turns the desk from one
+          object into four. */}
+      {atDesk ? null : (
+        <rect
+          className="xw-hit"
+          x={686}
+          y={868}
+          width={920}
+          height={192}
+          onClick={() => onStation("desk")}
+        />
+      )}
     </g>
   );
 }
 
 /**
- * The mug, which is the one thing in this room you can fiddle with.
+ * The keyboard, which is a thing you press.
  *
- * Its state is its own. Nothing else in the room needs to know whether
- * somebody has spun the mug, so it does not travel up to World and back down
- * again — the whole feature is a boolean and a class.
+ * Twenty-four keys in three rows, each one its own target. Pressing one makes
+ * the sound a key makes and lights it, and that is the whole feature: nothing
+ * is typed, nothing is spelled, there is no cursor. It is a keyboard to fidget
+ * with, the same way the mug is a mug to fidget with.
  *
- * The spin is keyed rather than toggled: re-rendering with a new key restarts
- * the animation, which is the cheapest way to make a thing that can be
- * clicked repeatedly rather than clicked once and then be finished.
+ * The lit key is held in state by index rather than by class on the element,
+ * because the colour has to be able to land on the same key twice running —
+ * a class toggle cannot restart its own transition.
  */
+function Keyboard({
+  atDesk,
+  onStation,
+}: {
+  atDesk: boolean;
+  onStation: (id: string) => void;
+}) {
+  const [hits, setHits] = useState<{ i: number; n: number }[]>([]);
+
+  const press = (i: number) => {
+    sound.keypress();
+    setHits((prev) => [...prev.slice(-11), { i, n: Date.now() + i }]);
+  };
+
+  // Three rows, stepped in like a real board and sheared to match the
+  // perspective the desk is drawn in.
+  const keys: { x: number; y: number; w: number }[] = [];
+  const rows = [
+    { y: 926, from: 1022, count: 9, w: 17 },
+    { y: 939, from: 1026, count: 9, w: 17 },
+    { y: 952, from: 1032, count: 6, w: 17 },
+  ];
+  for (const row of rows) {
+    for (let k = 0; k < row.count; k++) {
+      keys.push({ x: row.from + k * (row.w + 2), y: row.y, w: row.w });
+    }
+  }
+
+  return (
+    <g className="xw-keys">
+      <g className="xw-line">
+        <path d="M1014 922 L1186 919 L1196 952 L1022 956 Z" className="xw-thin xw-solid" />
+        <path d="M1022 956 L1196 952 L1196 962 L1022 966 Z" className="xw-thin xw-solid" />
+      </g>
+
+      {keys.map((k, i) => {
+        const lit = hits.find((h) => h.i === i);
+        return (
+          <g key={i}>
+            {/* The key cap. Drawn faint always; the lit copy over it is what
+                the press actually shows. */}
+            <rect
+              className="xw-key"
+              x={k.x}
+              y={k.y}
+              width={k.w}
+              height={10}
+              rx={2}
+            />
+            {lit ? (
+              <rect
+                key={lit.n}
+                className="xw-key-lit"
+                x={k.x}
+                y={k.y}
+                width={k.w}
+                height={10}
+                rx={2}
+                style={{ ["--hue" as string]: `${(i * 37) % 360}` }}
+              />
+            ) : null}
+          </g>
+        );
+      })}
+
+      {/* At the desk every key takes its own press. From across the room the
+          board is one object and walking over is all it does. */}
+      {atDesk ? (
+        keys.map((k, i) => (
+          <rect
+            key={`hit-${i}`}
+            className="xw-hit"
+            x={k.x - 1}
+            y={k.y - 2}
+            width={k.w + 2}
+            height={14}
+            onClick={(e) => {
+              e.stopPropagation();
+              press(i);
+            }}
+          />
+        ))
+      ) : (
+        <rect
+          className="xw-hit"
+          x={1010}
+          y={914}
+          width={192}
+          height={58}
+          onClick={() => onStation("desk")}
+        />
+      )}
+    </g>
+  );
+}
+
+/**
+ * The pen pot, and what comes out of it.
+ *
+ * Clicking it throws a pen across the room. The pen is a real element that
+ * animates along an arc and stays where it lands, so throwing four of them
+ * leaves four pens on the floor — which is the only reason it is worth doing
+ * at all. A pen that vanishes at the end of its arc is a particle effect.
+ *
+ * Each throw gets its own angle and distance from its index, so they do not
+ * stack, and the pot runs out: six pens in it, six throws, and then you have
+ * made a mess and that is that.
+ */
+const PENS = 6;
+
+function PenStand({
+  atDesk,
+  onStation,
+}: {
+  atDesk: boolean;
+  onStation: (id: string) => void;
+}) {
+  const [thrown, setThrown] = useState(0);
+
+  const toss = () => {
+    if (thrown >= PENS) return;
+    sound.toss();
+    setThrown((n) => n + 1);
+  };
+
+  return (
+    <g className="xw-pens">
+      {/* The pot. */}
+      <g className="xw-line">
+        <path d="M1402 908 L1404 964 Q1436 972 1466 964 L1468 908 Z" className="xw-solid" />
+        <ellipse cx={1435} cy={908} rx={33} ry={10} className="xw-solid xw-thin" />
+      </g>
+
+      {/* What is still in it. Each one leaves as it is thrown. */}
+      {Array.from({ length: PENS }, (_, i) => (
+        <path
+          key={i}
+          className={`xw-pen ${i < thrown ? "is-gone" : ""}`}
+          d={`M${1414 + i * 8} 906 L${1410 + i * 9} ${852 - (i % 3) * 9}`}
+        />
+      ))}
+
+      {/* What has been thrown, lying where it landed. Index decides the arc,
+          so six throws go six different ways. */}
+      {Array.from({ length: thrown }, (_, i) => (
+        <g
+          key={i}
+          className="xw-pen-flown"
+          style={{
+            ["--to-x" as string]: `${-320 - i * 118}px`,
+            ["--to-y" as string]: `${210 + (i % 3) * 86}px`,
+            ["--spin" as string]: `${540 + i * 180}deg`,
+          }}
+        >
+          <path d="M1430 900 L1426 846" className="xw-pen" />
+        </g>
+      ))}
+
+      <ellipse
+        className="xw-hit"
+        cx={1435}
+        cy={906}
+        rx={46}
+        ry={62}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (atDesk) toss();
+          else onStation("desk");
+        }}
+      />
+    </g>
+  );
+}
+
 function Mug() {
   const [spin, setSpin] = useState(0);
 

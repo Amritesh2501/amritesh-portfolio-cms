@@ -11,6 +11,7 @@ import {
   FILE_COUNT,
   STATIONS,
   WORLD,
+  frameFor,
   isUnlocked,
   stationById,
   type CaseFile,
@@ -21,6 +22,7 @@ import { Board } from "./Board";
 import { Room } from "./RoomArt";
 import { Desktop } from "./Desktop";
 import { ShelfBook, type BookFrom } from "./ShelfBook";
+import { Bedroom } from "./Bedroom";
 
 /**
  * An officer's room, drawn in ink, with four things in it worth walking to.
@@ -98,6 +100,15 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   /** The three things in the room that open onto something bigger. */
   const [boardOpen, setBoardOpen] = useState(false);
   const [deskOpen, setDeskOpen] = useState(false);
+  /**
+   * Which room the reader is in.
+   *
+   * The case room is the whole of this component; the bedroom is its own.
+   * Swapping between them here rather than routing keeps the case room mounted
+   * underneath, so coming back lands on the same shelf with the same files
+   * read rather than on a room that has forgotten the last ten minutes.
+   */
+  const [place, setPlace] = useState<"case" | "bedroom">("case");
   /** The blind. Down on arrival: it is the middle of the night out there. */
   const [blindDown, setBlindDown] = useState(true);
   /** The two lights, both off. A room somebody left in a hurry is a dark one. */
@@ -319,26 +330,30 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
   /* The camera, resolved against the actual viewport ------------------------ */
 
-  const shot = useMemo(() => {
-    // Zoom is scaled down on a narrow screen, or a shot framed for a desktop
-    // shows three hundred pixels of shelf upright, and raised again if that
-    // would leave the room short of the top and bottom of the screen.
-    const fit = Math.max(Math.min(1, view.w / 1400), 0.45);
-    const z = Math.max(cam.z * fit, view.h / WORLD.h);
-    const halfW = view.w / (2 * z);
-    const halfH = view.h / (2 * z);
-    const clamp = (v: number, min: number, max: number) =>
-      min > max ? (min + max) / 2 : Math.min(max, Math.max(min, v));
-    return {
-      z,
-      x: clamp(cam.x, halfW, WORLD.w - halfW),
-      y: clamp(cam.y, halfH, WORLD.h - halfH),
-    };
-  }, [cam, view]);
+  const shot = useMemo(() => frameFor(cam, view, WORLD), [cam, view]);
 
   const here = at ? stationById(at) : null;
   const atShelf = at === "shelf";
   const got = read.filter((id) => id !== "dossier").length;
+
+  /**
+   * The room through the book.
+   *
+   * Returned instead of the case room rather than layered over it, so nothing
+   * of this room is running behind it — but the state above stays mounted, so
+   * coming back lands on the same shelf with the same files read rather than
+   * on a room that has forgotten the last ten minutes.
+   */
+  if (place === "bedroom") {
+    return (
+      <Bedroom
+        onBack={() => {
+          setPlace("case");
+          closeFile();
+        }}
+      />
+    );
+  }
 
   return (
     <div
@@ -539,6 +554,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
           read={read}
           done={read.includes(picked.id)}
           onRead={markRead}
+          onThrough={() => setPlace("bedroom")}
           onBack={closeFile}
         />
       ) : null}
