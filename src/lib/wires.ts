@@ -36,6 +36,31 @@ export const strandById = (id: string) => STRANDS.find((s) => s.id === id);
 /** How many strands a panel uses. All of them. */
 export const PANEL_SIZE = STRANDS.length;
 
+/* ---------------------------------------------------------------------------
+   Where the terminals stand
+
+   Here rather than in the component because the panel is dragged: a dropped
+   cable end goes to the NEAREST socket within `SNAP`, so if two sockets are
+   ever closer together than that, a drop lands somewhere the player did not
+   aim and the panel reads as broken rather than as missed. That is an
+   arithmetic relationship between four numbers, and arithmetic between numbers
+   can be checked — see scripts/check-office.ts.
+   ------------------------------------------------------------------------- */
+
+/** The panel's own coordinates. The SVG is scaled to whatever width it gets. */
+export const PANEL_W = 440;
+export const PANEL_H = 300;
+export const LEFT_X = 104;
+export const RIGHT_X = PANEL_W - 104;
+const TOP = 34;
+/** The gap between one socket and the next. */
+export const ROW = (PANEL_H - TOP * 2) / (PANEL_SIZE - 1);
+export const rowY = (i: number) => TOP + i * ROW;
+
+/** How close a dropped end has to be to count as in the socket. Generous:
+ *  this is a fiddly job, not a precision one. */
+export const SNAP = 34;
+
 export type Panel = {
   /** Top to bottom on the left. */
   left: StrandId[];

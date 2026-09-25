@@ -54,17 +54,25 @@ function Hatch({
 export function OfficeRoom({
   at,
   lights,
+  blindOpen,
+  bloom,
   solved,
   onStation,
   onPuzzle,
   onLights,
+  onBlind,
+  onBloom,
 }: {
   at: string | null;
   lights: boolean;
+  blindOpen: boolean;
+  bloom: number;
   solved: readonly string[];
   onStation: (id: string) => void;
   onPuzzle: (id: "wiring" | "patch" | "backlog" | "record") => void;
   onLights: () => void;
+  onBlind: () => void;
+  onBloom: () => void;
 }) {
   const atBoard = at === "board";
   const atRack = at === "rack";
@@ -101,7 +109,7 @@ export function OfficeRoom({
       </g>
 
       <Ceiling on={lights} onToggle={onLights} />
-      <Window />
+      <Window open={blindOpen} onToggle={onBlind} />
       <Whiteboard
         at={atBoard}
         done={solved.includes("wiring")}
@@ -115,7 +123,7 @@ export function OfficeRoom({
         onOpen={() => onPuzzle("patch")}
       />
       <Cabinet at={atCabinet} onStation={onStation} onOpen={() => onPuzzle("record")} />
-      <Plant />
+      <Plant bloom={bloom} onTouch={onBloom} />
       <Desk
         at={atDesk}
         done={solved.includes("backlog")}
@@ -204,17 +212,30 @@ function Ceiling({ on, onToggle }: { on: boolean; onToggle: () => void }) {
    The window
    ------------------------------------------------------------------------- */
 
-/** Vertical louvres, half open. The one window covering nobody has ever
- *  chosen for their own home. */
-function Window() {
+/**
+ * Vertical louvres, and the wand that turns them.
+ *
+ * The one window covering nobody has ever chosen for their own home. It was
+ * drawn permanently half open and nothing could be done to it, which also meant
+ * the city behind it never showed: the reveal is keyed off `.xw-outside.is-open`
+ * and there was nothing in this room to ever set it. So it turns now, and
+ * turning it is what lets the outside in.
+ *
+ * One number does the whole thing. Edge-on you see the 9px edge of each slat and
+ * the gaps between them; turned flat they are 26 wide and overlap into a wall.
+ * That is what a louvre actually does, and it is cheaper than animating a
+ * rotation nobody would read at this scale.
+ */
+function Window({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   const louvres = [];
   for (let x = 1452; x < 1900; x += 28) louvres.push(x);
+  const face = open ? 9 : 26;
 
   return (
-    <g>
+    <g className="xw-office-win">
       <path d="M1424 336 L1918 332 L1918 640 L1424 644 Z" className="xw-line xw-solid" />
 
-      <g className="xw-office-out">
+      <g className={`xw-outside xw-office-out ${open ? "is-open" : ""}`}>
         <rect x={1440} y={348} width={462} height={280} className="xw-bed-sky-fill" />
         <g className="xw-line xw-thin xw-faint">
           <path d="M1460 628 L1460 392 L1524 392 L1524 628" />
@@ -243,14 +264,18 @@ function Window() {
         </g>
       </g>
 
-      {/* Louvres, each one turned a little so you see its edge. */}
+      {/* The louvres. Turned flat they are filled, because a closed blind is
+          opaque and a closed blind you can see through is not closed. */}
+      <g className={`xw-office-slats ${open ? "is-open" : ""}`}>
+        {louvres.map((x) => (
+          <rect key={x} x={x} y={350} width={face} height={278} />
+        ))}
+      </g>
       <g className="xw-line xw-thin xw-faint">
         {louvres.map((x) => (
-          <g key={x}>
-            <path d={`M${x} 350 L${x} 628`} />
-            <path d={`M${x + 9} 350 L${x + 9} 628`} />
-          </g>
+          <path key={x} d={`M${x} 350 L${x} 628`} />
         ))}
+        {/* The headrail they all hang off. */}
         <path d="M1440 348 L1902 344" />
       </g>
 
@@ -259,6 +284,25 @@ function Window() {
         <path d="M1408 644 L1934 640" />
         <path d="M1416 658 L1926 654" className="xw-thin" />
       </g>
+
+      {/* The wand. What you actually take hold of to turn a vertical blind,
+          and the only warm thing on the window — which is the instruction. */}
+      <g className={`xw-office-wand ${open ? "is-open" : ""}`}>
+        <path d="M1896 352 L1896 452" className="xw-hot-line" />
+        <circle cx={1896} cy={458} r={7} className="xw-cord-bead" />
+      </g>
+
+      <rect
+        className="xw-hit"
+        x={1424}
+        y={332}
+        width={496}
+        height={314}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+      />
     </g>
   );
 }
@@ -437,16 +481,69 @@ function Cabinet({
   );
 }
 
-/** The one in every office, and nobody knows whose job it is. */
-function Plant() {
+/** What the flower can be. Named as well as coloured, for the same reason the
+ *  patch panel's strands are. */
+export const BLOOMS = [
+  { name: "amber", hex: "#e0a33c" },
+  { name: "red", hex: "#e2564a" },
+  { name: "violet", hex: "#9a6fd0" },
+  { name: "blue", hex: "#4a86d8" },
+  { name: "green", hex: "#4fb477" },
+  { name: "white", hex: "#dcd6c6" },
+];
+
+/**
+ * The one in every office, and nobody knows whose job it is.
+ *
+ * The only thing in this room that is not work. It has a flower in it now, and
+ * the flower is the one thing here that does nothing at all except change
+ * colour when you touch it — which is the point of it.
+ */
+function Plant({ bloom, onTouch }: { bloom: number; onTouch: () => void }) {
+  // Six petals round the centre, placed rather than drawn one at a time.
+  const petals = [0, 1, 2, 3, 4, 5].map((i) => {
+    const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    return { cx: 1189 + Math.cos(a) * 15, cy: 772 + Math.sin(a) * 15 };
+  });
+
   return (
-    <g className="xw-line">
-      <path d="M1150 872 L1228 870 L1218 962 L1160 964 Z" className="xw-solid" />
-      <path d="M1150 872 L1228 870" className="xw-thin" />
-      <path d="M1189 870 Q1176 812 1140 790" className="xw-thin" />
-      <path d="M1189 870 Q1196 806 1232 782" className="xw-thin" />
-      <path d="M1189 870 Q1184 822 1204 796" className="xw-thin" />
-      <path d="M1189 870 Q1200 828 1166 800" className="xw-thin" />
+    <g
+      className="xw-office-pot"
+      style={{ ["--bloom" as string]: BLOOMS[bloom % BLOOMS.length].hex }}
+    >
+      <g className="xw-line">
+        {/* A tapered pot, and a rim that sits proud of it. */}
+        <path d="M1150 872 L1228 870 L1218 962 L1160 964 Z" className="xw-solid" />
+        <path d="M1144 866 L1234 864 L1234 882 L1144 884 Z" className="xw-thin xw-solid" />
+        <ellipse cx={1189} cy={866} rx={45} ry={9} className="xw-thin xw-solid" />
+        {/* Leaves, and the stem the flower is on. */}
+        <path d="M1189 866 Q1176 812 1140 790" className="xw-thin" />
+        <path d="M1189 866 Q1196 806 1232 782" className="xw-thin" />
+        <path d="M1189 866 Q1184 822 1204 796" className="xw-thin" />
+        <path d="M1189 866 Q1200 828 1166 800" className="xw-thin" />
+        <path d="M1189 866 Q1192 820 1189 788" className="xw-thin" />
+      </g>
+
+      {/* The flower. `--bloom` is set from the room, so the colour lives in one
+          list rather than being spelled again per petal. */}
+      <g className="xw-office-bloom">
+        {petals.map((p, i) => (
+          <ellipse key={i} cx={p.cx} cy={p.cy} rx={11} ry={11} />
+        ))}
+        <circle cx={1189} cy={772} r={8} className="xw-office-bloom-eye" />
+      </g>
+
+      <rect
+        className="xw-hit"
+        x={1132}
+        y={748}
+        width={116}
+        height={228}
+        onClick={(e) => {
+          e.stopPropagation();
+          onTouch();
+        }}
+      />
     </g>
   );
 }
@@ -531,12 +628,24 @@ function Desk({
         <ellipse cx={1681} cy={816} rx={33} ry={9} className="xw-solid xw-thin" />
       </g>
 
+      {/* The desk, in two pieces rather than one rectangle over the screen.
+          The screen was the only thing here anybody could click; the desk
+          itself — the top, the pedestal, the mug, two thirds of what reads as
+          "the desk" — was dead surface. Both go to the same place. */}
       <rect
         className="xw-hit"
         x={1340}
         y={576}
         width={390}
         height={266}
+        onClick={at ? onOpen : () => onStation("desk")}
+      />
+      <rect
+        className="xw-hit"
+        x={1246}
+        y={790}
+        width={676}
+        height={264}
         onClick={at ? onOpen : () => onStation("desk")}
       />
     </g>

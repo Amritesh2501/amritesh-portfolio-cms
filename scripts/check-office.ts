@@ -20,11 +20,18 @@ import {
 } from "../src/lib/office";
 import { frameFor, type Shot } from "../src/lib/world";
 import {
+  LEFT_X,
   PANEL_SIZE,
+  PANEL_H,
+  PANEL_W,
+  RIGHT_X,
+  ROW,
+  SNAP,
   STRANDS,
   isPatched,
   joins,
   makePanel,
+  rowY,
   strandById,
 } from "../src/lib/wires";
 import {
@@ -243,7 +250,36 @@ function rng(seed: number) {
   );
 }
 
+/* ---------------------------------------------------------------------------
+   The panel is dragged, so its geometry has to hold
+
+   A dropped cable end goes to the nearest free socket within SNAP. Two things
+   break that, and neither shows up as a type error or as a failed render — the
+   panel simply connects the wrong pair and reads as cheating:
+
+     - sockets closer together than the snap radius, which happens the moment
+       somebody adds a seventh strand without making the panel taller;
+     - the two columns close enough that a drop meant for one side lands on the
+       other.
+   ------------------------------------------------------------------------- */
+{
+  assert.ok(
+    ROW > SNAP,
+    `sockets are ${ROW.toFixed(1)} apart and the snap radius is ${SNAP}, so a drop ` +
+      `between two of them can land on either`,
+  );
+  assert.ok(
+    RIGHT_X - LEFT_X > SNAP * 2,
+    "the two columns are close enough that a drop can reach the side it came from",
+  );
+  // And the whole run of sockets has to be inside the panel it is drawn in.
+  assert.ok(rowY(0) > 0, "the top socket is off the panel");
+  assert.ok(rowY(PANEL_SIZE - 1) < PANEL_H, "the bottom socket is off the panel");
+  assert.ok(LEFT_X > 0 && RIGHT_X < PANEL_W, "a column of sockets is off the panel");
+}
+
 console.log(
   `check-office: OK — ${OFFICE_STATIONS.length} places to stand, ${OFFICE_PUZZLES.length} things to open, ` +
-    `5000 panels, 600 boards, 120 games played through.`,
+    `5000 panels, 600 boards, 120 games played through, ` +
+    `${PANEL_SIZE} sockets ${ROW.toFixed(0)} apart with a ${SNAP} snap.`,
 );

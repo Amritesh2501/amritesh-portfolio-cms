@@ -16,7 +16,7 @@ import { frameFor } from "@/lib/world";
 import type { CaseRoomData } from "@/lib/content";
 import * as sound from "@/lib/sound";
 import { dateRange } from "@/lib/utils";
-import { OfficeRoom } from "./OfficeArt";
+import { BLOOMS, OfficeRoom } from "./OfficeArt";
 import { Untangle } from "./Untangle";
 import { Wires } from "./Wires";
 import { Backlog } from "./Backlog";
@@ -54,6 +54,10 @@ export function Office({
   const [open, setOpen] = useState<OfficePuzzleId | null>(null);
   const [solved, setSolved] = useState<OfficePuzzleId[]>([]);
   const [lights, setLights] = useState(false);
+  /** The louvres. Shut on arrival: it is an office after everybody has gone. */
+  const [blindOpen, setBlindOpen] = useState(false);
+  /** Which flower is in the pot. Nothing depends on it. */
+  const [bloom, setBloom] = useState(0);
 
   const timers = useRef<number[]>([]);
   useEffect(() => {
@@ -177,12 +181,22 @@ export function Office({
           <OfficeRoom
             at={at}
             lights={lights}
+            blindOpen={blindOpen}
+            bloom={bloom}
             solved={solved}
             onStation={goto}
             onPuzzle={reach}
             onLights={() => {
               setLights((on) => !on);
               sound.latch();
+            }}
+            onBlind={() => {
+              setBlindOpen((on) => !on);
+              sound.latch();
+            }}
+            onBloom={() => {
+              setBloom((n) => (n + 1) % BLOOMS.length);
+              sound.settle();
             }}
           />
         </div>

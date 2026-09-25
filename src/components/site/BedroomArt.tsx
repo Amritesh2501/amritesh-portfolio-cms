@@ -418,34 +418,92 @@ function Posters({
  * pillow on it, and the room around it has nowhere to be.
  */
 function Bed() {
+  // The bed's sides converge, so anything drawn ON it has to converge too. One
+  // fraction across the width gives the head point and the foot point, and the
+  // line between them is a fold running away from the reader.
+  const along = (t: number) => ({
+    hx: 604 + t * 440,
+    fx: 500 + t * 650,
+  });
+
   return (
     <g className="xw-line">
-      {/* Headboard, against the back wall under the window. */}
-      <path d="M598 566 L1046 562 L1046 702 L598 706 Z" className="xw-solid" />
-      <path d="M1046 562 L1082 544 L1082 684 L1046 702 Z" className="xw-solid" />
-      <path d="M598 566 L634 548 L1082 544 L1046 562 Z" className="xw-solid" />
-      <path d="M616 590 L1028 586" className="xw-thin xw-faint" />
+      {/*
+        Headboard: a slatted panel, and a low one.
 
-      {/* The mattress: narrower at the head, wider at the foot. */}
-      <path d="M604 702 L1044 698 L1150 946 L500 952 Z" className="xw-solid" />
-      {/* Its thickness, at the foot and down the near side. */}
-      <path d="M500 952 L1150 946 L1150 1000 L500 1006 Z" className="xw-solid" />
-      <path d="M604 702 L500 952 L500 1006 L604 756 Z" className="xw-solid" />
+        What it replaced was a 140-deep slab that started at y566 — above the
+        window's sill — so the one thing in the room worth looking out of was
+        boarded up by the furniture in front of it. It is 94 now and it starts
+        under the sill, which is the whole reason a headboard is a headboard
+        rather than a wall.
+      */}
+      <path d="M598 616 L1046 612 L1046 706 L598 710 Z" className="xw-solid" />
+      <path d="M1046 612 L1070 600 L1070 694 L1046 706 Z" className="xw-solid" />
+      <path d="M598 616 L622 604 L1070 600 L1046 612 Z" className="xw-solid" />
+      <path d="M610 628 L1034 624" className="xw-thin xw-faint" />
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <path
+          key={i}
+          d={`M${644 + i * 72} 628 L${644 + i * 72} 702`}
+          className="xw-thin xw-faint"
+        />
+      ))}
 
-      {/* Bedding: a turned-back sheet across the width, following the taper. */}
-      <path d="M628 762 L1068 757 L1080 790 L616 795 Z" className="xw-thin xw-faint" />
-      <path d="M622 812 L1096 806" className="xw-thin xw-faint" />
+      {/* The mattress: narrower at the head, wider at the foot. Both side
+          faces, not just the near one — the far side is what tells you the
+          thing has a width rather than an edge. */}
+      <path d="M604 706 L1044 702 L1150 942 L500 948 Z" className="xw-solid" />
+      <path d="M500 948 L1150 942 L1150 990 L500 996 Z" className="xw-solid" />
+      <path d="M604 706 L500 948 L500 996 L604 754 Z" className="xw-solid" />
+      <path d="M1044 702 L1150 942 L1150 990 L1044 750 Z" className="xw-solid" />
 
-      {/* Two pillows at the head, in the same perspective as everything else. */}
-      <path d="M632 706 L826 704 L834 754 L626 757 Z" className="xw-thin xw-solid" />
-      <path d="M850 704 L1022 702 L1028 752 L846 754 Z" className="xw-thin xw-solid" />
+      {/* The frame under it, and four feet. A mattress straight onto the floor
+          is a mattress on the floor. Drawn before the bedding, because the
+          bedding hangs in front of it. */}
+      <path d="M504 992 L1146 986 L1146 1022 L504 1028 Z" className="xw-thin xw-solid" />
+      <path d="M522 1028 L522 1072" />
+      <path d="M534 1027 L534 1068" className="xw-thin xw-faint" />
+      <path d="M1128 1022 L1128 1064" />
+      <path d="M1116 1023 L1116 1061" className="xw-thin xw-faint" />
 
-      {/* Feet at the near corners. */}
-      <path d="M512 1006 L512 1052" />
-      <path d="M1140 1000 L1140 1046" />
+      {/*
+        The duvet.
+
+        The thing the last version was missing entirely: it had a mattress with
+        two faint lines ruled across it, which from the door reads as a table.
+        A duvet is a separate object that sits ON the mattress and hangs OVER
+        it, so it is drawn as one — wider than what it covers at every edge,
+        and with its own thickness down the foot and both sides.
+      */}
+      <path d="M562 780 L1088 776 L1166 944 L484 950 Z" className="xw-solid" />
+      <path d="M484 950 L1166 944 L1166 986 L484 992 Z" className="xw-solid" />
+      <path d="M562 780 L484 950 L484 992 L562 822 Z" className="xw-solid" />
+      <path d="M1088 776 L1166 944 L1166 986 L1088 818 Z" className="xw-solid" />
+
+      {/* Turned back at the head, and two folds running down the LENGTH with
+          the taper. Across the width they would contradict the perspective
+          every other line in the room is drawn in. */}
+      <path d="M572 800 L1078 796 L1094 850 L556 854 Z" className="xw-thin xw-faint" />
+      <path d="M580 818 L1086 814" className="xw-thin xw-faint" />
+      {[0.33, 0.66].map((t) => {
+        const { hx, fx } = along(t);
+        // Started below the turn-back, because a fold that runs under the
+        // sheet is a line drawn through a thing rather than on it.
+        const x0 = hx + ((854 - 705) / 241) * (fx - hx);
+        return (
+          <path key={t} d={`M${Math.round(x0)} 854 L${fx} 944`} className="xw-thin xw-faint" />
+        );
+      })}
+
+      {/* Two pillows, propped against the headboard rather than lying flat —
+          which is the difference between a made bed and a shop display. */}
+      <path d="M630 712 L822 709 L804 774 L602 777 Z" className="xw-thin xw-solid" />
+      <path d="M642 726 L812 723" className="xw-thin xw-faint" />
+      <path d="M842 709 L1024 706 L1048 774 L826 777 Z" className="xw-thin xw-solid" />
+      <path d="M856 723 L1016 720" className="xw-thin xw-faint" />
 
       {/* And the shadow it sits in. */}
-      <Hatch x={520} y={1006} w={620} h={38} gap={13} className="xw-hatch xw-faint" />
+      <Hatch x={528} y={1028} w={600} h={34} gap={13} className="xw-hatch xw-faint" />
     </g>
   );
 }
@@ -479,13 +537,39 @@ function SideTable({
         </g>
       </g>
 
-      {/* Carcass, tight against the side of the bed. */}
+      {/*
+        A table rather than a box.
+
+        What it replaced was a carcass: one cube, floor to top, with two drawer
+        faces cut into it. Beside a bed on legs it read as a filing cabinet
+        somebody had left in a bedroom. This is the piece it should have been —
+        a top that overhangs, one drawer in an apron under it, an open shelf,
+        and four legs that are actually visible.
+      */}
       <g className="xw-line">
-        <path d="M1176 892 L1332 888 L1332 1058 L1176 1062 Z" className="xw-solid" />
-        <path d="M1332 888 L1382 862 L1382 1030 L1332 1058 Z" className="xw-solid" />
-        <path d="M1176 892 L1226 866 L1382 862 L1332 888 Z" className="xw-solid" />
-        <path d="M1186 1062 L1186 1106" />
-        <path d="M1322 1058 L1322 1100" />
+        {/* Top, overhanging the frame on every side. */}
+        <path d="M1166 888 L1222 860 L1390 856 L1334 884 Z" className="xw-solid" />
+        <path d="M1166 888 L1334 884 L1334 906 L1166 910 Z" className="xw-solid" />
+        <path d="M1334 884 L1390 856 L1390 878 L1334 906 Z" className="xw-solid" />
+
+        {/* The apron the drawer sits in, set back from the top's edge. */}
+        <path d="M1180 910 L1326 906 L1326 992 L1180 996 Z" className="xw-solid" />
+        <path d="M1326 906 L1374 882 L1374 968 L1326 992 Z" className="xw-solid" />
+
+        {/* An open shelf under it, and something left on it. */}
+        <path d="M1182 1032 L1324 1028 L1324 1044 L1182 1048 Z" className="xw-thin xw-solid" />
+        <path d="M1324 1028 L1370 1006 L1370 1022 L1324 1044 Z" className="xw-thin xw-solid" />
+        <path d="M1222 1010 L1300 1008 L1300 1030 L1222 1032 Z" className="xw-thin xw-solid" />
+        <path d="M1228 1016 L1294 1014" className="xw-thin xw-faint" />
+
+        {/* Four legs, tapering and splayed a little. The back pair is short
+            because the shelf and the apron cover most of them. */}
+        <path d="M1186 996 L1178 1104" />
+        <path d="M1198 996 L1194 1100" className="xw-thin xw-faint" />
+        <path d="M1318 992 L1326 1094" />
+        <path d="M1306 993 L1312 1092" className="xw-thin xw-faint" />
+        <path d="M1364 968 L1370 1062" className="xw-thin xw-faint" />
+        <path d="M1234 982 L1230 1066" className="xw-thin xw-faint" />
       </g>
 
       {/* The drawer. Shut it is a face; open it is the same face further out
@@ -493,40 +577,44 @@ function SideTable({
       <g className={`xw-bed-drawer ${open ? "is-open" : ""}`}>
         {open ? (
           <g className="xw-line">
-            <path d="M1188 910 L1320 907 L1320 972 L1188 975 Z" className="xw-thin xw-faint" />
-            <Hatch x={1190} y={912} w={128} h={58} gap={10} className="xw-hatch xw-faint" />
-            <path d="M1208 928 L1300 926 L1302 962 L1210 964 Z" className="xw-thin xw-solid" />
-            <path d="M1218 938 L1290 936" className="xw-thin xw-faint" />
+            <path d="M1190 920 L1318 917 L1318 982 L1190 985 Z" className="xw-thin xw-faint" />
+            <Hatch x={1192} y={922} w={124} h={58} gap={10} className="xw-hatch xw-faint" />
+            <path d="M1210 938 L1298 936 L1300 972 L1212 974 Z" className="xw-thin xw-solid" />
+            <path d="M1220 948 L1288 946" className="xw-thin xw-faint" />
           </g>
         ) : null}
 
         <g className="xw-line xw-bed-drawer-face">
-          <path d="M1178 908 L1330 904 L1330 978 L1178 982 Z" className="xw-solid" />
-          <path d="M1230 940 L1278 939" className="xw-thin" />
-          <path d="M1230 948 L1278 947" className="xw-thin xw-faint" />
+          <path d="M1182 918 L1324 914 L1324 988 L1182 992 Z" className="xw-solid" />
+          {/* A pull rather than two scratches: a bar on two posts. */}
+          <path d="M1226 946 L1280 945" />
+          <path d="M1228 946 L1228 954" className="xw-thin" />
+          <path d="M1278 945 L1278 953" className="xw-thin" />
         </g>
       </g>
 
-      {/* A second drawer under it, so the table is a table. */}
-      <g className="xw-line">
-        <path d="M1178 996 L1330 992 L1330 1052 L1178 1056 Z" className="xw-thin" />
-        <path d="M1230 1024 L1278 1023" className="xw-thin xw-faint" />
-      </g>
-
-      {/* The lamp itself, after its own light. */}
+      {/* The lamp itself, after its own light. A drum on a slim stem with a
+          weighted base — the shade reads as round because it is closed top and
+          bottom with an ellipse rather than being a flat trapezium. */}
       <g className={`xw-lamp ${lamp ? "is-on" : ""}`}>
         <g className="xw-line">
-          <path d="M1222 866 L1222 774" />
-          <path d="M1188 768 L1290 766 L1310 704 L1170 706 Z" className="xw-solid" />
-          <ellipse cx={1244} cy={868} rx={42} ry={11} className="xw-solid xw-thin" />
+          <path d="M1186 706 L1300 704 L1312 764 L1174 766 Z" className="xw-solid" />
+          <ellipse cx={1243} cy={765} rx={69} ry={12} className="xw-solid xw-thin" />
+          <ellipse cx={1243} cy={705} rx={57} ry={9} className="xw-thin" />
+          <path d="M1240 766 L1240 858" />
+          <path d="M1248 766 L1248 858" className="xw-thin xw-faint" />
+          <ellipse cx={1244} cy={862} rx={38} ry={10} className="xw-solid xw-thin" />
+          <path d="M1206 862 L1206 872" className="xw-thin" />
+          <path d="M1282 862 L1282 872" className="xw-thin" />
+          <path d="M1206 872 Q1244 884 1282 872" className="xw-thin" />
         </g>
-        <circle cx={1240} cy={754} r={9} className="xw-lamp-core" />
+        <circle cx={1243} cy={748} r={9} className="xw-lamp-core" />
         <rect
           className="xw-hit"
-          x={1164}
+          x={1170}
           y={698}
-          width={152}
-          height={76}
+          width={148}
+          height={74}
           onClick={(e) => {
             e.stopPropagation();
             onLamp();
