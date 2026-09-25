@@ -36,6 +36,8 @@ const PREFIXES = [
   "xf-", // what is written on its pages
   "xr-", // his room, through the book
   "xc-", // the cipher terminal in it
+  "xl-", // the drawer, and the diary in it
+  "xs-", // the poster, and the photograph behind it
   "mg-", // the minigames
   "wi-", // selected work on the front page
 ];

@@ -101,6 +101,14 @@ model Profile {
   technicalInterests   String? @db.Text
   currentFocus         String? @db.Text
 
+  /// What is in the drawer of the side table in the room through the book.
+  /// Deliberately on Profile rather than in a file: it is the same person the
+  /// rest of this table describes, and a diary hardcoded in the UI is the one
+  /// thing on this site nobody could edit.
+  dateOfBirth          DateTime?
+  hobbies              String[]  @default([])
+  diaryNote            String?   @db.Text
+
   status      ContentStatus @default(PUBLISHED)
   publishedAt DateTime?
   updatedBy   String?
