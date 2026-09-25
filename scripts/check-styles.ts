@@ -19,8 +19,28 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 
-/** The hand-written namespaces. Everything else on an element is Tailwind. */
-const PREFIXES = ["xw-", "xp-", "xb-", "xd-", "xk-", "xf-", "mg-", "wi-"];
+/**
+ * The hand-written namespaces. Everything else on an element is Tailwind.
+ *
+ * Adding a namespace and forgetting to add it here is the one way this check
+ * can be wrong, and it is quiet when it is: the run still passes, it just
+ * stops looking at the new code. It happened once already — two namespaces
+ * went in and the count did not move.
+ */
+const PREFIXES = [
+  "xw-", // the case room
+  "xp-", // the terminal gate in front of it
+  "xb-", // the evidence board
+  "xd-", // the machine on the case-room desk
+  "xk-", // a file off the shelf
+  "xf-", // what is written on its pages
+  "xr-", // his room, through the book
+  "xc-", // the cipher terminal in it
+  "xl-", // the drawer, and the diary in it
+  "xs-", // the poster, and the photograph behind it
+  "mg-", // the minigames
+  "wi-", // selected work on the front page
+];
 
 const SRC = path.join(import.meta.dirname, "..", "src");
 const CSS = path.join(SRC, "app", "globals.css");

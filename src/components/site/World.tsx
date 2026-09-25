@@ -347,6 +347,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   if (place === "bedroom") {
     return (
       <Bedroom
+        data={data}
         onBack={() => {
           setPlace("case");
           closeFile();

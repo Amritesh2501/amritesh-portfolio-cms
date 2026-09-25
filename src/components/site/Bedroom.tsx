@@ -15,6 +15,10 @@ import {
 import { frameFor } from "@/lib/world";
 import * as sound from "@/lib/sound";
 import { BedroomRoom } from "./BedroomArt";
+import { Cipher } from "./Cipher";
+import { Lockpick } from "./Lockpick";
+import { Sums } from "./Sums";
+import type { CaseRoomData } from "@/lib/content";
 
 /**
  * The room through the book.
@@ -30,7 +34,13 @@ import { BedroomRoom } from "./BedroomArt";
  * stub is replacing one component and nothing else: the station, the target,
  * the camera move and the reward all already work.
  */
-export function Bedroom({ onBack }: { onBack: () => void }) {
+export function Bedroom({
+  data,
+  onBack,
+}: {
+  data: CaseRoomData;
+  onBack: () => void;
+}) {
   const reduce = useReducedMotion();
   const view = useViewport();
 
@@ -249,73 +259,22 @@ export function Bedroom({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      {open ? (
-        <Stub
-          id={open}
-          solved={solved.includes(open)}
-          onSolve={() => solve(open)}
+      {/* All three are built now. */}
+      {open === "terminal" ? (
+        <Cipher onSolved={() => solve("terminal")} onClose={() => setOpen(null)} />
+      ) : open === "drawer" ? (
+        <Lockpick
+          data={data}
+          onOpened={() => setSolved((prev) => (prev.includes("drawer") ? prev : [...prev, "drawer"]))}
+          onClose={() => setOpen(null)}
+        />
+      ) : open === "poster" ? (
+        <Sums
+          data={data}
+          onSolved={() => setSolved((prev) => (prev.includes("poster") ? prev : [...prev, "poster"]))}
           onClose={() => setOpen(null)}
         />
       ) : null}
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   The three puzzles, before they are puzzles
-   ------------------------------------------------------------------------- */
-
-/**
- * What stands in for a puzzle until the puzzle exists.
- *
- * Deliberately not a fake game. It names what it is, says what it is guarding
- * and what it will be, and has one button that hands the reward over — so the
- * room downstream of it can be walked and judged now. A stub that pretends to
- * be playable is a thing somebody has to be told is not real.
- */
-function Stub({
-  id,
-  solved,
-  onSolve,
-  onClose,
-}: {
-  id: PuzzleId;
-  solved: boolean;
-  onSolve: () => void;
-  onClose: () => void;
-}) {
-  const puzzle = bedPuzzleById(id)!;
-  const coming: Record<PuzzleId, string> = {
-    poster:
-      "An arithmetic drill — addition, subtraction, multiplication, division — and a photograph of him behind it.",
-    drawer:
-      "A lockpick: feel for the pins, set them one at a time, and the drawer opens on a diary.",
-    terminal:
-      "A cipher terminal. A scrambled message, a decoder key, a countdown, and three attempts before it locks.",
-  };
-
-  return (
-    <div className="xr-stub" role="dialog" aria-modal="true" aria-label={puzzle.name}>
-      <div className="xr-stub-card">
-        <p className="xr-stub-kicker">{solved ? "OPEN" : "LOCKED"}</p>
-        <h2 className="xr-stub-title">{puzzle.name}</h2>
-        <p className="xr-stub-holds">{puzzle.holds}</p>
-
-        <p className="xr-stub-note">
-          <strong>Not built yet.</strong> {coming[id]}
-        </p>
-
-        <div className="xr-stub-actions">
-          {solved ? null : (
-            <button type="button" className="btn btn-solid" onClick={onSolve} autoFocus>
-              Open it anyway
-            </button>
-          )}
-          <button type="button" className="btn btn-sm" onClick={onClose}>
-            Step back
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
