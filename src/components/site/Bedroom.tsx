@@ -15,6 +15,7 @@ import {
 import { frameFor } from "@/lib/world";
 import * as sound from "@/lib/sound";
 import { BedroomRoom } from "./BedroomArt";
+import { Cipher } from "./Cipher";
 
 /**
  * The room through the book.
@@ -249,7 +250,10 @@ export function Bedroom({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      {open ? (
+      {/* The terminal is built; the other two are still stubs. */}
+      {open === "terminal" ? (
+        <Cipher onSolved={() => solve("terminal")} onClose={() => setOpen(null)} />
+      ) : open ? (
         <Stub
           id={open}
           solved={solved.includes(open)}

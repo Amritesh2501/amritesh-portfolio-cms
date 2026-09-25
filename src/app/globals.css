@@ -2318,6 +2318,369 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+   The cipher terminal
+
+   Green on black, and the green does the work: everything readable is one hue
+   at three brightnesses, and the only other colour in here is the red that
+   arrives when the thing locks. A terminal that uses four colours is a
+   dashboard wearing a costume.
+
+   The CRT is three things and no more — scanlines, a bloom in the middle, and
+   a curve at the edges. Anything beyond that starts costing frames for an
+   effect nobody is looking at.
+   ------------------------------------------------------------------------- */
+
+.xc {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 2.5vw, 2rem);
+  background: #020603;
+  font-family: var(--font-mono);
+}
+
+.xc-crt {
+  --green: #5bffa8;
+  --green-dim: #2f8f5e;
+  --green-deep: #0c2c1c;
+  --red: #ff5f56;
+
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(72ch, 100%);
+  height: min(46rem, 100%);
+  overflow: hidden;
+  border: 1px solid var(--green-dim);
+  border-radius: 8px;
+  background:
+    radial-gradient(120% 120% at 50% 45%, rgba(20, 90, 55, 0.22), transparent 70%),
+    #020603;
+  color: var(--green);
+  box-shadow:
+    inset 0 0 90px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(0, 0, 0, 0.9),
+    0 40px 120px -40px rgba(30, 255, 150, 0.16);
+  animation: xc-on 0.45s ease both;
+}
+
+/* A screen coming on: a line, then a frame. */
+@keyframes xc-on {
+  0% { opacity: 0; transform: scaleY(0.004); }
+  50% { opacity: 1; transform: scaleY(0.04); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* A wrong answer knocks the picture. Keyed in the component, so it can land
+   twice running. */
+.xc-crt {
+  animation: xc-on 0.45s ease both, xc-knock 0.32s ease-out;
+}
+
+@keyframes xc-knock {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-5px, 1px); }
+  45% { transform: translate(4px, -1px); }
+  70% { transform: translate(-2px, 0); }
+}
+
+.xc-crt.is-dead {
+  border-color: color-mix(in srgb, var(--red) 60%, transparent);
+  color: var(--red);
+}
+
+/* --- HUD ------------------------------------------------------------------ */
+
+.xc-hud {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-bottom: 1px solid var(--green-dim);
+}
+
+.xc-hud-cell {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+}
+
+.xc-hud-cell + .xc-hud-cell {
+  border-left: 1px solid var(--green-deep);
+}
+
+.xc-hud-cell b {
+  font-weight: 400;
+  font-size: 0.5rem;
+  letter-spacing: 0.26em;
+  color: var(--green-dim);
+}
+
+.xc-pips {
+  display: flex;
+  gap: 4px;
+}
+
+.xc-pips i {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--green-dim);
+}
+
+.xc-pips i.is-spent {
+  border-color: var(--red);
+  background: var(--red);
+}
+
+/* The clock is the pressure, so it is the one thing allowed to change colour
+   on its own. */
+.xc-clock.is-low {
+  color: var(--red);
+  animation: xc-tick 1s steps(2) infinite;
+}
+
+@keyframes xc-tick {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* --- Body ----------------------------------------------------------------- */
+
+.xc-body {
+  min-height: 0;
+  padding: clamp(0.9rem, 2.5vh, 1.5rem);
+  overflow-y: auto;
+}
+
+.xc-label {
+  margin: 0 0 0.45rem;
+  font-size: 0.5rem;
+  letter-spacing: 0.32em;
+  color: var(--green-dim);
+}
+
+.xc-label:not(:first-child) {
+  margin-top: 1.4rem;
+}
+
+/* The message. Glowing, wide-tracked, and allowed to wrap at a word. */
+.xc-cipher {
+  margin: 0;
+  font-size: clamp(1.1rem, 3.6vw, 1.85rem);
+  letter-spacing: 0.32em;
+  line-height: 1.5;
+  word-break: break-word;
+  text-shadow: 0 0 14px rgba(91, 255, 168, 0.55);
+}
+
+.xc-hint {
+  margin: 0.55rem 0 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--green-dim);
+}
+
+/* --- The key -------------------------------------------------------------- */
+
+.xc-key {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.25rem, 1fr));
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xc-key li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.2rem;
+  border: 1px solid var(--green-deep);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+}
+
+.xc-key-from {
+  color: var(--green);
+}
+
+.xc-key-arrow {
+  color: var(--green-dim);
+}
+
+.xc-key-to {
+  color: var(--green);
+  opacity: 0.72;
+}
+
+/* --- The answer ----------------------------------------------------------- */
+
+.xc-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.xc-box {
+  width: 1.9rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid var(--green-dim);
+  border-radius: 2px;
+  background: rgba(12, 44, 28, 0.35);
+  font: inherit;
+  font-size: 1rem;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--green);
+  caret-color: var(--green);
+}
+
+.xc-box:focus-visible {
+  outline: none;
+  border-color: var(--green);
+  background: rgba(91, 255, 168, 0.14);
+  box-shadow: 0 0 12px rgba(91, 255, 168, 0.35);
+}
+
+.xc-box:disabled {
+  border-color: color-mix(in srgb, var(--red) 40%, transparent);
+  color: color-mix(in srgb, var(--red) 80%, transparent);
+}
+
+/* A word break. Rendered so the shape of the answer is visible, and skipped
+   when tabbing, because typing a space to cross one costs the clock. */
+.xc-gap {
+  width: 1.1rem;
+}
+
+/* --- Foot ----------------------------------------------------------------- */
+
+.xc-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem clamp(0.9rem, 2.5vw, 1.5rem);
+  border-top: 1px solid var(--green-dim);
+}
+
+.xc-go {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid var(--green);
+  background: rgba(91, 255, 168, 0.1);
+  font: inherit;
+  font-size: 0.625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--green);
+  cursor: pointer;
+}
+
+.xc-go:hover,
+.xc-go:focus-visible {
+  background: rgba(91, 255, 168, 0.22);
+}
+
+.xc-status {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  color: var(--green-dim);
+}
+
+.xc-status.is-ok {
+  color: var(--green);
+  text-shadow: 0 0 12px rgba(91, 255, 168, 0.6);
+}
+
+.xc-locked {
+  margin: 0;
+  font-size: 0.9375rem;
+  letter-spacing: 0.34em;
+  color: var(--red);
+  text-shadow: 0 0 16px rgba(255, 95, 86, 0.6);
+  animation: xc-tick 1.1s steps(2) infinite;
+}
+
+.xc-back {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green-dim);
+  cursor: pointer;
+}
+
+.xc-back:hover,
+.xc-back:focus-visible {
+  color: var(--green);
+}
+
+/* --- The glass ------------------------------------------------------------ */
+
+.xc-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.32) 0 1px,
+    transparent 1px 3px
+  );
+  pointer-events: none;
+}
+
+/* One line sweeping down, the way a tube refreshes. */
+.xc-bloom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 22%;
+  background: linear-gradient(180deg, transparent, rgba(91, 255, 168, 0.05), transparent);
+  animation: xc-sweep 5.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes xc-sweep {
+  from { top: -22%; }
+  to { top: 100%; }
+}
+
+@media (max-width: 560px) {
+  .xc-hud {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .xc-hud-cell:nth-child(3),
+  .xc-hud-cell:nth-child(4) {
+    border-top: 1px solid var(--green-deep);
+  }
+
+  .xc-hud-cell:nth-child(3) {
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xc-crt {
+    animation: none;
+  }
+
+  .xc-bloom,
+  .xc-clock.is-low,
+  .xc-locked {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
    The evidence board, full screen
 
    Nothing here is positioned in this file. A force simulation decides where
