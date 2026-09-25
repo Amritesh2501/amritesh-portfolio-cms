@@ -984,40 +984,26 @@ body {
   width: 55%;
 }
 
-/* --- The spread -----------------------------------------------------------
+/* --- What is in the file ---------------------------------------------------
 
-   The pages, arrived. It grows out of roughly where the open book was standing
-   — that is the zoom, and it is why it is a scale from small rather than a
-   panel fading up: the reader goes INTO the book instead of the book being
-   swapped for a dialog.
+   Ink on black, like the room it came out of.
 
-   And it is PAPER. Everything else in this room is ink on black, but a page
-   out of a case file is a typed sheet in a binder, so the spread inverts:
-   manila stock, a ruled margin, punch holes down the gutter and a typewriter
-   face. The board did the same thing when it came off the wall, and for the
-   same reason — the things you take out of this room to read are lit, and the
-   room is not.
+   This was a case-file docket on manila stock: punch holes down the bound
+   edge, a red margin rule, a file number, a classification, an empty
+   photograph box, a signature line and a CONFIDENTIAL stamp. All of it was
+   dressing around four sections of a CV, and all of it was louder than what it
+   was carrying. What is left is the heading and the content.
    --------------------------------------------------------------------------- */
 
-.xk-spread {
-  --page: #e7e0cc;
-  --page-edge: #d6cdb4;
-  --page-ink: #211c12;
-  --page-dim: #6d6250;
-  --page-rule: rgba(90, 76, 52, 0.22);
-  --page-red: #9d3427;
-
+.xk-sheet {
   position: absolute;
   inset: clamp(0.75rem, 3vh, 2.5rem) clamp(0.75rem, 4vw, 3rem);
   display: grid;
-  grid-template-columns: minmax(0, 0.82fr) auto minmax(0, 1.18fr);
+  grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
-  border-radius: 2px;
-  background: var(--page);
-  color: var(--page-ink);
-  box-shadow:
-    0 0 0 1px rgba(40, 30, 14, 0.5),
-    0 60px 120px -40px rgba(0, 0, 0, 1);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: #05060a;
+  box-shadow: 0 60px 120px -40px rgba(0, 0, 0, 1);
   animation: xk-zoom 700ms cubic-bezier(0.22, 0.9, 0.24, 1) both;
 }
 
@@ -1025,334 +1011,55 @@ body {
   from {
     opacity: 0;
     /* Roughly the open book's footprint, coming at the camera. */
-    transform: scale(0.34) translateZ(0);
+    transform: scale(0.34);
   }
   to {
     opacity: 1;
-    transform: scale(1) translateZ(0);
+    transform: scale(1);
   }
 }
 
-.xk-page {
-  position: relative;
-  min-height: 0;
-  padding: clamp(1.4rem, 4.5vh, 3rem) clamp(1.25rem, 3.5vw, 2.75rem);
-  overflow-y: auto;
-  /* Faint horizontal ruling, the way a typed form is printed. Subtle enough to
-     be stock rather than lined paper. */
-  background-image: repeating-linear-gradient(
-    180deg,
-    transparent 0 27px,
-    var(--page-rule) 27px 28px
-  );
-  background-position: 0 clamp(1.4rem, 4.5vh, 3rem);
+.xk-sheet-head {
+  display: grid;
+  gap: 0.35rem;
+  padding: clamp(1.1rem, 3.5vh, 2rem) clamp(1.1rem, 3.5vw, 2.4rem) clamp(0.9rem, 2.5vh, 1.4rem);
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
 }
 
-/* Punch holes, down the bound edge of each page. Two rings and nothing else:
-   a hole in paper is a shadow and a highlight. */
-.xk-page::before {
-  content: "";
-  position: absolute;
-  top: 18%;
-  bottom: 18%;
-  width: 11px;
-  background-image: radial-gradient(
-    circle at 50% 50%,
-    rgba(20, 14, 6, 0.55) 0 45%,
-    transparent 52%
-  );
-  background-size: 11px 120px;
-  background-repeat: repeat-y;
-  pointer-events: none;
-}
-
-.xk-page.is-left::before {
-  right: 9px;
-}
-
-.xk-page.is-right::before {
-  left: 9px;
-}
-
-.xk-page.is-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  /* The verso catches less light than the recto on a book lying open. */
-  background-color: var(--page-edge);
-}
-
-/* The red margin rule down the recto, which is the one thing that makes a
-   sheet read as a FORM rather than as a page of a novel. */
-.xk-page.is-right::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: clamp(2.4rem, 5vw, 4rem);
-  width: 1px;
-  background: color-mix(in srgb, var(--page-red) 45%, transparent);
-  pointer-events: none;
-}
-
-.xk-page-n {
+.xk-sheet-n {
   margin: 0;
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
   letter-spacing: 0.32em;
-  color: var(--page-red);
+  color: var(--xp-hot);
 }
 
-.xk-page-title {
+.xk-sheet-title {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: clamp(1.1rem, 2.6vh, 1.6rem);
+  font-size: clamp(1.3rem, 4vh, 2.1rem);
   font-weight: 400;
-  line-height: 1.1;
+  line-height: 1.05;
   letter-spacing: 0.16em;
-  color: var(--page-ink);
+  color: var(--xp-fg);
 }
 
-.xk-page-brief {
+.xk-sheet-sub {
   margin: 0;
-  font-size: 0.875rem;
-  line-height: 1.75;
-  color: var(--page-ink);
-}
-
-/* Pinned to the foot of the verso, the way a folio number is. */
-.xk-page-foot {
-  margin-top: auto;
-  padding-top: 1.5rem;
-  font-size: 0.5625rem;
-  letter-spacing: 0.26em;
-  color: var(--page-dim);
-}
-
-/* --- The docket ------------------------------------------------------------
-
-   The verso is a cover sheet, not a title page. Everything on it is a field
-   with a rule under it, because a filled-in form is what makes a sheet read as
-   a record rather than as a design — a name in 40px over a subtitle is a book
-   jacket, and this is supposed to be paperwork.
-   --------------------------------------------------------------------------- */
-
-.xk-docket {
-  display: grid;
-  gap: 0.9rem;
-}
-
-.xk-docket-org {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid rgba(90, 76, 52, 0.55);
-  font-size: 0.5625rem;
-  letter-spacing: 0.22em;
-  color: var(--page-dim);
-}
-
-/* --- Fields ---------------------------------------------------------------
-
-   A label above a rule, and the value sitting ON the rule rather than under
-   it, the way a typewriter lands a line into a printed form. */
-
-.xk-fields {
-  display: grid;
-  gap: 0.7rem;
-  margin: 0;
-}
-
-.xk-fields > div {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.xk-fields dt {
-  font-size: 0.5rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--page-dim);
-}
-
-.xk-fields dd {
-  margin: 0;
-  padding-bottom: 0.2rem;
-  border-bottom: 1px solid rgba(90, 76, 52, 0.45);
   font-size: 0.8125rem;
-  letter-spacing: 0.04em;
-  color: var(--page-ink);
+  line-height: 1.5;
+  color: var(--xp-dim);
 }
 
-/* The photograph that is not here. Every case file has one of these boxes and
-   most of them are empty. */
-.xk-plate {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 4 / 3;
-  max-height: 11rem;
-  border: 1px dashed rgba(90, 76, 52, 0.55);
-  font-size: 0.5rem;
-  letter-spacing: 0.22em;
-  color: var(--page-dim);
+.xk-sheet-body {
+  min-height: 0;
+  padding: clamp(1.1rem, 3vh, 1.8rem) clamp(1.1rem, 3.5vw, 2.4rem) clamp(1.4rem, 4vh, 2.4rem);
+  overflow-y: auto;
 }
 
-/* A signature line with nothing on it. */
-.xk-sign {
-  display: grid;
-  gap: 0.25rem;
-  margin: 0;
-  font-size: 0.5rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--page-dim);
-}
-
-.xk-sign-rule {
-  height: 1px;
-  margin-top: 1.3rem;
-  background: rgba(90, 76, 52, 0.55);
-}
-
-/* Stamped across the sheet at the angle a stamp lands, and bled to the edge
-   of the page so it reads as ink on paper rather than as a label. */
-.xk-confidential {
-  position: absolute;
-  right: -0.4rem;
-  bottom: 14%;
-  padding: 0.35rem 1.1rem;
-  border: 2px solid rgba(157, 52, 39, 0.55);
-  border-radius: 2px;
-  font-size: 0.8125rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(157, 52, 39, 0.62);
-  transform: rotate(-9deg);
-  pointer-events: none;
-}
-
-/* The seam: the shadow where two leaves meet at the binding. */
-.xk-gutter {
-  width: clamp(16px, 2.6vw, 38px);
-  background:
-    linear-gradient(90deg, rgba(40, 30, 14, 0.3), rgba(40, 30, 14, 0.06) 42%, rgba(40, 30, 14, 0.06) 58%, rgba(40, 30, 14, 0.3)),
-    linear-gradient(90deg, transparent 49%, rgba(40, 30, 14, 0.35) 50%, transparent 51%);
-}
-
-/* --- What the pages are typed with ---------------------------------------
-
-   The file contents share one set of rules with the room's own panels, so
-   inside a page every one of them has to be repainted for paper. Scoped to
-   .xk-page rather than rewritten, because the same markup is the same markup —
-   it is the stock under it that changed.
-   --------------------------------------------------------------------------- */
-
-.xk-page .xf-pages {
-  gap: 1.6rem;
-}
-
-.xk-page .xf-lede,
-.xk-page .xf-entry-title,
-.xk-page .xf-bullets,
-.xk-page .xf-index li {
-  color: var(--page-ink);
-  opacity: 1;
-}
-
-.xk-page .xf-lede {
-  font-size: 0.9375rem;
-  line-height: 1.8;
-}
-
-.xk-page .xf-entry {
-  padding-left: 1rem;
-  border-left: 2px solid color-mix(in srgb, var(--page-red) 40%, transparent);
-}
-
-.xk-page .xf-entry-when,
-.xk-page .xf-entry-sub,
-.xk-page .xf-facts dt,
-.xk-page .xf-index-state,
-.xk-page .xf-blank {
-  color: var(--page-dim);
-}
-
-.xk-page .xf-entry-tech,
-.xk-page .xf-link,
-.xk-page .xf-sub h4,
-.xk-page .xf-index-n {
-  color: var(--page-red);
-}
-
-.xk-page .xf-facts,
-.xk-page .xf-sub {
-  border-color: rgba(90, 76, 52, 0.4);
-}
-
-.xk-page .xf-facts dd {
-  color: var(--page-ink);
-}
-
-/* Chips become the boxes a form has you tick, not the pills a website has. */
-.xk-page .xf-chips li {
-  border-color: rgba(90, 76, 52, 0.5);
-  color: var(--page-ink);
-}
-
-.xk-page .xf-index li {
-  border-left-color: var(--page-red);
-  background: rgba(90, 76, 52, 0.08);
-}
-
-.xk-page .xf-entry-title a,
-.xk-page .prose-tech a {
-  color: var(--page-ink);
-  text-decoration-color: color-mix(in srgb, var(--page-red) 60%, transparent);
-}
-
-.xk-page .prose-tech,
-.xk-page .prose-tech p,
-.xk-page .prose-tech li {
-  color: var(--page-ink);
-}
-
-/* The one button on a page. A rubber stamp, not a web button. */
-.xk-page .btn {
-  border-color: color-mix(in srgb, var(--page-red) 55%, transparent);
-  background: transparent;
-  color: var(--page-red);
-}
-
-.xk-page .btn:hover {
-  background: color-mix(in srgb, var(--page-red) 12%, transparent);
-  color: var(--page-red);
-}
-
-@media (max-width: 860px) {
-  /* One page at this width. A spread whose gutter is a third of the screen is
-     not a book, it is two narrow columns. */
-  .xk-spread {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
-  }
-
-  .xk-page::before,
-  .xk-page.is-right::after {
-    display: none;
-  }
-
-  .xk-page.is-left {
-    border-bottom: 1px solid rgba(90, 76, 52, 0.4);
-  }
-
-  .xk-page-foot {
-    display: none;
-  }
-
-  .xk-gutter {
-    display: none;
-  }
+/* The content is set for a column now rather than for a recto, so it gets a
+   measure rather than the full width of a screen. */
+.xk-sheet-body .xf-pages {
+  max-width: 78ch;
 }
 
 /* Once the pages are up the book behind them is just boards. */
@@ -1363,13 +1070,13 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .xk-sheet {
+    animation-duration: 0.01ms;
+  }
+
   .xk-cover,
   .xk.is-spread .xk-book {
     transition-duration: 0.01ms;
-  }
-
-  .xk-spread {
-    animation-duration: 0.01ms;
   }
 }
 
@@ -3143,6 +2850,129 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .xs-sheet,
   .xs-photo {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   What the room gives up
+
+   Two panels: the books on the shelf, which open on a click, and what the
+   terminal was protecting, which does not. Same shape and same ink as the room
+   they are found in — the paper is gone from this project, and these were
+   never going to be sheets of it.
+   ------------------------------------------------------------------------- */
+
+.xa {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 3vw, 2rem);
+  overflow-y: auto;
+  background: color-mix(in srgb, #05060a 86%, transparent);
+  font-family: var(--font-mono);
+}
+
+.xa-card {
+  display: grid;
+  gap: 1.1rem;
+  justify-items: start;
+  width: min(62ch, 100%);
+  max-height: 100%;
+  padding: clamp(1.4rem, 4vw, 2.4rem);
+  overflow-y: auto;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: #05060a;
+  box-shadow: 0 40px 100px -30px rgba(0, 0, 0, 0.95);
+  animation: xa-in 0.42s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+@keyframes xa-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+.xa-head {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+}
+
+.xa-kicker {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-hot);
+}
+
+.xa-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(1.2rem, 4vw, 1.7rem);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--xp-fg);
+}
+
+.xa-body {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+
+.xa-lede {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--xp-fg);
+}
+
+.xa-body .prose-tech,
+.xa-body .prose-tech p,
+.xa-body .prose-tech li {
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  color: var(--xp-fg);
+  opacity: 0.88;
+}
+
+.xa-body .prose-tech strong {
+  color: var(--xp-hot);
+  font-weight: 400;
+}
+
+.xa-foot {
+  margin: 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 14%, transparent);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--xp-dim);
+}
+
+.xa-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--xp-dim);
+}
+
+.xa-empty strong {
+  font-weight: 400;
+  color: var(--xp-hot);
+}
+
+/* The shelf of books is a thing you can press. */
+.xw-bed-books .xw-hit {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xa-card {
     animation: none;
   }
 }

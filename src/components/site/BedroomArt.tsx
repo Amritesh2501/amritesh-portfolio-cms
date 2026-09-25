@@ -67,7 +67,7 @@ export function BedroomRoom({
   /** Once the poster is solved it is a photograph rather than a poster. */
   posterDone: boolean;
   onStation: (id: string) => void;
-  onPuzzle: (id: "poster" | "drawer" | "terminal") => void;
+  onPuzzle: (id: "poster" | "drawer" | "terminal" | "books") => void;
   onLamp: () => void;
 }) {
   const atPosters = at === "posters";
@@ -123,7 +123,7 @@ export function BedroomRoom({
         onOpen={() => onPuzzle("drawer")}
         onLamp={onLamp}
       />
-      <Shelf />
+      <Shelf onOpen={() => onPuzzle("books")} />
       <Desk at={atDesk} onStation={onStation} onOpen={() => onPuzzle("terminal")} />
     </svg>
   );
@@ -357,9 +357,19 @@ function SideTable({
 }
 
 /** Books, on a shelf that is only a shelf. Nothing here opens. */
-function Shelf() {
+/**
+ * Books, and one of them is his.
+ *
+ * The only thing in this room that opens on a plain click — no lock, no sum,
+ * no cipher. ABOUT is the door to the room rather than a file with pages, so
+ * the long version of who he is has to live in here somewhere, and a shelf of
+ * books is where a person's own account of themselves belongs. Making it a
+ * fourth puzzle would be making somebody earn the thing they came for.
+ */
+function Shelf({ onOpen }: { onOpen: () => void }) {
   return (
-    <g className="xw-line">
+    <g className="xw-bed-books">
+      <g className="xw-line">
       <path d="M1352 470 L1620 466 L1620 492 L1352 496 Z" className="xw-solid" />
       <path d="M1620 466 L1650 452 L1650 478 L1620 492 Z" className="xw-solid" />
       {/* Spines, leaning the way a half-empty shelf does. */}
@@ -375,8 +385,18 @@ function Shelf() {
         />
       ))}
       {/* A few laid flat on the end. */}
-      <path d="M1540 470 L1610 469 L1610 458 L1540 459 Z" className="xw-thin" />
-      <path d="M1544 458 L1606 457 L1606 448 L1544 449 Z" className="xw-thin" />
+        <path d="M1540 470 L1610 469 L1610 458 L1540 459 Z" className="xw-thin" />
+        <path d="M1544 458 L1606 457 L1606 448 L1544 449 Z" className="xw-thin" />
+      </g>
+
+      <rect
+        className="xw-hit"
+        x={1344}
+        y={382}
+        width={320}
+        height={120}
+        onClick={onOpen}
+      />
     </g>
   );
 }

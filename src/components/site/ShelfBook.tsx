@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
-import { FILES, type CaseFile } from "@/lib/world";
+import type { CaseFile } from "@/lib/world";
 import type { CaseRoomData } from "@/lib/content";
 import * as sound from "@/lib/sound";
 import { CaseFilePages } from "./CaseFilePages";
@@ -40,9 +40,8 @@ import { CaseFilePages } from "./CaseFilePages";
  * spread  two pages, and what is written on them
  * through the leaves go over one after another and the room changes
  *
- * Only the index file reaches "through". The five section files hold the
- * portfolio and stop at "spread"; the sixth holds nothing of its own, which is
- * exactly why it is the one that is a door.
+ * Only ABOUT reaches "through". The other four hold a section of the portfolio
+ * and stop at "spread".
  */
 type Stage = "take" | "open" | "spread" | "through";
 
@@ -81,7 +80,6 @@ export function ShelfBook({
   from,
   view,
   data,
-  read,
   done,
   onRead,
   onThrough,
@@ -91,7 +89,6 @@ export function ShelfBook({
   from: BookFrom;
   view: { w: number; h: number };
   data: CaseRoomData;
-  read: readonly string[];
   done: boolean;
   /** Called once the pages are actually in front of the reader. */
   onRead: () => void;
@@ -129,8 +126,9 @@ export function ShelfBook({
 
   /* Opening ---------------------------------------------------------------- */
 
-  /** The index file has nothing of its own to show, so it does not stop. */
-  const isDoor = file.topic === "dossier";
+  /** ABOUT does not render pages. Everything a person is outside their CV is
+   *  in the room he lives in rather than in a file about the room. */
+  const isDoor = file.topic === "about";
 
   const open = useCallback(() => {
     if (stage !== "take") return;
@@ -239,68 +237,23 @@ export function ShelfBook({
       {/* The spread: the pages, arrived. It grows out of roughly where the
           open book was standing, which is the zoom — the reader goes into the
           book rather than the book being swapped for a panel. */}
+      {/* What is in the file.
+
+          Paper is gone. It was a case-file docket on manila stock with punch
+          holes, a classification, an empty photograph box and a stamp — all
+          of it dressing around four sections of a CV, and all of it louder
+          than what it was carrying. This is the room's own language: ink on
+          black, the heading, and the content. */}
       {spread ? (
-        <div className="xk-spread" ref={spreadRef} tabIndex={-1}>
-          {/* The verso is the docket: the typed cover sheet a case file opens
-              with, not a title page. Everything on it is a field with a rule
-              under it, because that is what makes a sheet read as having been
-              filled in rather than designed. */}
-          <div className="xk-page is-left">
-            <div className="xk-docket">
-              <p className="xk-docket-org">
-                CASE ROOM — RECORDS DIVISION
-                <span aria-hidden>AMR/{file.index}</span>
-              </p>
-              <h2 className="xk-page-title">{file.name}</h2>
+        <div className="xk-sheet" ref={spreadRef} tabIndex={-1}>
+          <header className="xk-sheet-head">
+            <p className="xk-sheet-n">FILE {file.index}</p>
+            <h2 className="xk-sheet-title">{file.name}</h2>
+            <p className="xk-sheet-sub">{file.subject}</p>
+          </header>
 
-              <dl className="xk-fields">
-                <div>
-                  <dt>Subject</dt>
-                  <dd>{file.subject}</dd>
-                </div>
-                <div>
-                  <dt>File no.</dt>
-                  <dd>AMR-001-{file.index}</dd>
-                </div>
-                <div>
-                  <dt>Classification</dt>
-                  <dd>{file.needs?.length ? "RESTRICTED" : "OPEN"}</dd>
-                </div>
-                <div>
-                  <dt>Status</dt>
-                  <dd>{done ? "REVIEWED" : "PENDING REVIEW"}</dd>
-                </div>
-              </dl>
-
-              <p className="xk-page-brief">{file.brief}</p>
-
-              {/* The photograph that is not here. Every case file has one of
-                  these boxes and most of them are empty. */}
-              <div className="xk-plate" aria-hidden>
-                <span>NO PHOTOGRAPH ON FILE</span>
-              </div>
-
-              <p className="xk-sign" aria-hidden>
-                <span className="xk-sign-rule" />
-                Filed by
-              </p>
-            </div>
-
-            <span className="xk-page-foot" aria-hidden>
-              SHEET {file.index} OF {String(FILES.length).padStart(2, "0")}
-            </span>
-
-            <span className="xk-confidential" aria-hidden>
-              Confidential
-            </span>
-          </div>
-
-          {/* The seam. Two gradients meeting, which is what the inside of a
-              bound spine looks like from directly above it. */}
-          <div className="xk-gutter" aria-hidden />
-
-          <div className="xk-page is-right">
-            <CaseFilePages file={file} data={data} read={read} />
+          <div className="xk-sheet-body">
+            <CaseFilePages file={file} data={data} />
           </div>
         </div>
       ) : null}

@@ -81,7 +81,7 @@ export const STATIONS: Station[] = [
   {
     id: "shelf",
     name: "The shelf",
-    blurb: "Six files, standing upright. Names down the spines.",
+    blurb: "Five files, standing upright. The first one is not a file.",
     cam: { x: 1440, y: 620, z: 2.3 },
   },
 ];
@@ -97,16 +97,15 @@ export const stationById = (id: string) => STATIONS.find((s) => s.id === id);
  *
  * The room does not carry its own copy of any of this. A topic is a pointer at
  * a table that the CMS already fills, so a file cannot go stale against the
- * site it is a file about — and the one file that is not a topic, `dossier`,
- * is the index over the other five.
+ * site it is a file about. ABOUT is the exception and does not render pages at
+ * all: it opens onto the room instead.
  */
 export type FileTopic =
   | "about"
   | "experience"
   | "projects"
   | "stack"
-  | "certifications"
-  | "dossier";
+  | "certifications";
 
 export type CaseFile = {
   id: string;
@@ -133,17 +132,16 @@ export type CaseFile = {
 };
 
 /**
- * Six files: the portfolio, taken apart and put on a shelf.
+ * Five files: the portfolio, taken apart and put on a shelf.
  *
- * The shelf used to hold four puzzles. It does not any more — a visitor who
- * has come this far wants the work, not a second lock — and the puzzles moved
- * intact to the machine on the desk, where being optional is the point. What
- * is left here is the site itself, one section per spine, in the order the
- * page reads.
+ * Four of them hold a section and open onto it. The first one does not — ABOUT
+ * opens onto the room he actually lives in, because everything a person is
+ * outside their CV is in the room rather than in a file about the room. That
+ * is also why nothing on this shelf is sealed any more: the most interesting
+ * thing here is the first thing you can reach.
  *
- * Only the last one is gated, and on having READ the others rather than on
- * having solved anything: it is the summary, and a summary handed over before
- * the thing it summarises is just the site with extra steps.
+ * There used to be a sixth, a sealed index that became a sealed door. It is
+ * gone. A door nobody can find is worse than no door.
  */
 export const FILES: CaseFile[] = [
   {
@@ -151,9 +149,10 @@ export const FILES: CaseFile[] = [
     index: "01",
     name: "ABOUT",
     subject: "Who the room belongs to",
-    brief: "The short version, the long version, and what he is currently into.",
+    brief:
+      "Not pages. Whoever lives here left the light on, and there is more of him in that room than there is in any file.",
     topic: "about",
-    spine: { x: 1188, y: 492, w: 62, h: 178, tilt: -1.6 },
+    spine: { x: 1200, y: 492, w: 64, h: 178, tilt: -1.6 },
   },
   {
     id: "experience",
@@ -162,7 +161,7 @@ export const FILES: CaseFile[] = [
     subject: "Where the time went",
     brief: "Roles, dates, and what each one was actually for. Education at the back.",
     topic: "experience",
-    spine: { x: 1272, y: 488, w: 64, h: 184, tilt: 0.9 },
+    spine: { x: 1296, y: 488, w: 62, h: 184, tilt: 0.9 },
   },
   {
     id: "projects",
@@ -171,7 +170,7 @@ export const FILES: CaseFile[] = [
     subject: "The things that shipped",
     brief: "Everything published, with what it was built out of and where it lives.",
     topic: "projects",
-    spine: { x: 1358, y: 494, w: 60, h: 176, tilt: -0.7 },
+    spine: { x: 1392, y: 494, w: 60, h: 176, tilt: -0.7 },
   },
   {
     id: "stack",
@@ -180,7 +179,7 @@ export const FILES: CaseFile[] = [
     subject: "The tools, by how often they are reached for",
     brief: "Languages, frameworks and infrastructure, grouped the way they are used.",
     topic: "stack",
-    spine: { x: 1442, y: 490, w: 58, h: 180, tilt: 1.4 },
+    spine: { x: 1488, y: 490, w: 64, h: 180, tilt: 1.4 },
   },
   {
     id: "certifications",
@@ -189,25 +188,16 @@ export const FILES: CaseFile[] = [
     subject: "Paper, and who issued it",
     brief: "The credentials, with the issuer and the date on each one.",
     topic: "certifications",
-    spine: { x: 1522, y: 492, w: 62, h: 178, tilt: -1.1 },
-  },
-  {
-    id: "dossier",
-    index: "06",
-    name: "THE FILE",
-    subject: "Everything above, in one place",
-    brief:
-      "Sealed until the other five have been read. It is the index, and an index is no use before the thing it indexes.",
-    topic: "dossier",
-    needs: ["about", "experience", "projects", "stack", "certifications"],
-    spine: { x: 1608, y: 488, w: 60, h: 182, tilt: 1.8 },
+    spine: { x: 1584, y: 492, w: 62, h: 178, tilt: -1.1 },
   },
 ];
 
 export const fileById = (id: string) => FILES.find((f) => f.id === id);
 
-/** What the HUD counts: the files that are content rather than the index. */
-export const FILE_COUNT = FILES.filter((f) => f.topic !== "dossier").length;
+/** What the HUD counts. Every file on the shelf is a section now — the sixth,
+ *  which was a sealed index and then a sealed door, is gone: ABOUT is the door,
+ *  and a door nobody can find is worse than no door. */
+export const FILE_COUNT = FILES.length;
 
 /** Can this file be taken off the shelf yet? */
 export function isUnlocked(file: CaseFile, solved: readonly string[]) {
