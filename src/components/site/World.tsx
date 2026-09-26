@@ -15,6 +15,7 @@ import {
   isUnlocked,
   stationById,
   type CaseFile,
+  type Place,
 } from "@/lib/world";
 import type { CaseRoomData } from "@/lib/content";
 import * as sound from "@/lib/sound";
@@ -110,7 +111,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
    * underneath, so coming back lands on the same shelf with the same files
    * read rather than on a room that has forgotten the last ten minutes.
    */
-  const [place, setPlace] = useState<"case" | "bedroom" | "office" | "lab">("case");
+  const [place, setPlace] = useState<"case" | Place>("case");
   /** The blind. Down on arrival: it is the middle of the night out there. */
   const [blindDown, setBlindDown] = useState(true);
   /** The two lights, both off. A room somebody left in a hurry is a dark one. */
@@ -574,15 +575,10 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
           data={data}
           done={read.includes(picked.id)}
           onRead={markRead}
-          onThrough={() =>
-            setPlace(
-              picked.topic === "experience"
-                ? "office"
-                : picked.topic === "projects"
-                  ? "lab"
-                  : "bedroom",
-            )
-          }
+          // Where it opens onto is the file's own business. ShelfBook only
+          // calls this for a file that has somewhere to open onto, so the
+          // fallback is unreachable rather than a default.
+          onThrough={() => setPlace(picked.opens ?? "bedroom")}
           onBack={closeFile}
         />
       ) : null}
