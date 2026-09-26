@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SUMS_SECONDS, SUMS_TO_PASS, asText, makeRun } from "@/lib/sums";
 import * as sound from "@/lib/sound";
+import { Help } from "./Help";
 import type { CaseRoomData } from "@/lib/content";
 
 /**
@@ -160,6 +161,7 @@ export function Sums({
               <p className="xs-tally">
                 {at} / {SUMS_TO_PASS} right{wrong > 0 ? ` · ${wrong} wrong` : ""}
               </p>
+              <Help title="The poster" text={HELP} />
               <button type="button" className="btn btn-sm" onClick={onClose}>
                 Leave it
               </button>
@@ -218,3 +220,14 @@ function Portrait({ data, onClose }: { data: CaseRoomData; onClose: () => void }
     </div>
   );
 }
+
+const HELP = {
+  what:
+    "A times-table poster on a bedroom wall, and it wants its own sums back. Addition, subtraction, multiplication and division, one at a time, against a clock.",
+  controls: [
+    "Type the answer and press Enter, or use the Answer button.",
+    "Digits only. Every answer is a whole positive number — no fractions, no negatives, nothing to round.",
+    "Getting one wrong costs you nothing but the seconds.",
+  ],
+  win: `Get ${SUMS_TO_PASS} right before the clock runs out and the poster comes off the wall. Run out of time and you start the run again, not the game.`,
+};

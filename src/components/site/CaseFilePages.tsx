@@ -9,10 +9,17 @@ import { Markdown } from "./Markdown";
 /**
  * What is actually inside a file off the shelf.
  *
- * Six covers, one renderer each, and no copy of the portfolio anywhere in here:
- * every one of these reads the same rows the front page reads. That is the only
- * version of this that stays true — a room with its own hand-typed "about"
- * paragraph is a room that is wrong the first time the CMS is edited.
+ * Two covers now, one renderer each, and no copy of the portfolio anywhere in
+ * here: both read the same rows the front page reads. That is the only version
+ * of this that stays true — a room with its own hand-typed "about" paragraph is
+ * a room that is wrong the first time the CMS is edited.
+ *
+ * The other three files are doors and have no pages at all. ABOUT opens the
+ * bedroom, EXPERIENCE the office and PROJECTS the lab, because a room somebody
+ * worked in is a better answer to any of those three questions than a list.
+ * `CaseFile["topic"]` still has all five, so this switch is deliberately
+ * non-exhaustive: the missing cases fall through to nothing, which is correct —
+ * a door has nothing to render.
  *
  * Each one also handles being empty out loud rather than rendering a blank
  * page, because on a fresh install every one of these tables is empty and a
@@ -28,8 +35,6 @@ export function CaseFilePages({
   switch (file.topic) {
     case "experience":
       return <ExperiencePages data={data} />;
-    case "projects":
-      return <ProjectPages data={data} />;
     case "stack":
       return <StackPages data={data} />;
     case "certifications":
@@ -86,34 +91,6 @@ function ExperiencePages({ data }: { data: CaseRoomData }) {
           ))}
         </section>
       ) : null}
-    </div>
-  );
-}
-
-function ProjectPages({ data }: { data: CaseRoomData }) {
-  if (data.projects.length === 0) return <Blank>No project is published.</Blank>;
-
-  return (
-    <div className="xf-pages">
-      {data.projects.map((p) => (
-        <article key={p.id} className="xf-entry">
-          <p className="xf-entry-when">{p.year ?? ""}</p>
-          <h4 className="xf-entry-title">
-            <Link href={`/projects/${p.slug}`}>{p.title}</Link>
-          </h4>
-          <p className="xf-entry-sub">{p.shortDescription}</p>
-          {p.technologies.length > 0 ? (
-            <p className="xf-entry-tech">
-              {p.technologies.map((t) => t.name).join(" · ")}
-            </p>
-          ) : null}
-          {p.liveUrl ? (
-            <a href={p.liveUrl} target="_blank" rel="noreferrer" className="xf-link">
-              {p.liveUrl.replace(/^https?:\/\//, "")}
-            </a>
-          ) : null}
-        </article>
-      ))}
     </div>
   );
 }

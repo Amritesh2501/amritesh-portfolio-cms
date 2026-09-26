@@ -11,8 +11,8 @@ const LINES = [
   "",
   "What is through here is not finished, and some of it is not serious.",
   "There is a room. A board with string on it, a window with a cord, a",
-  "machine somebody left running, and a shelf with six files. The files",
-  "are this portfolio, taken apart.",
+  "machine somebody left running, and a shelf with five files. The files",
+  "are this portfolio, taken apart. Three of them are doors.",
   "",
   "It has sound. There is a switch for that in the corner.",
   "",
@@ -24,6 +24,22 @@ const LINES = [
 const CHAR_MS = 18;
 // A held beat at the end of a line, so the text breathes instead of pouring.
 const LINE_MS = 260;
+
+/**
+ * The same thing, hurried, for somebody who has asked for less movement.
+ *
+ * It used to skip the typing entirely and put the whole block on screen at
+ * once — which on a machine with animations turned off meant the warning never
+ * typed at all and the button was there before you had read a word. That reads
+ * as the effect being broken, and it was reported as exactly that.
+ *
+ * `prefers-reduced-motion` is a request not to be moved, and text arriving in
+ * place is not movement — it is the same argument as a progress bar. So the
+ * reveal stays and the waiting goes: the whole block lands in under half a
+ * second, with no held beat at the line ends. Anybody who cannot wait even for
+ * that has the full text already, in the visually hidden block below.
+ */
+const CHAR_MS_CALM = 4;
 
 /** How long the screen stays black before the room arrives. */
 const BLACK_MS = 1900;
@@ -47,8 +63,8 @@ const BLACK_MS = 1900;
  */
 export function ExperimentsIntro({ data }: { data: CaseRoomData }) {
   const reduce = useReducedMotion();
-  const [typed, setTyped] = useState(reduce ? LINES.join("\n") : "");
-  const [done, setDone] = useState(Boolean(reduce));
+  const [typed, setTyped] = useState("");
+  const [done, setDone] = useState(false);
   const [started, setStarted] = useState(false);
   const [entering, setEntering] = useState(false);
   const timer = useRef<number>(0);
@@ -59,13 +75,11 @@ export function ExperimentsIntro({ data }: { data: CaseRoomData }) {
     // buttons that are already on screen.
     if (started || done) return;
 
-    if (reduce) {
-      setTyped(LINES.join("\n"));
-      setDone(true);
-      return;
-    }
-
     const full = LINES.join("\n");
+    const per = reduce ? CHAR_MS_CALM : CHAR_MS;
+    // The held beat at a line end is waiting rather than reading, so it is the
+    // part that goes when somebody has asked for less.
+    const beat = reduce ? CHAR_MS_CALM : LINE_MS;
     let i = 0;
     let t: number;
 
@@ -77,10 +91,10 @@ export function ExperimentsIntro({ data }: { data: CaseRoomData }) {
         return;
       }
       // A newline is a beat, not a character.
-      t = window.setTimeout(step, full[i] === "\n" ? LINE_MS : CHAR_MS);
+      t = window.setTimeout(step, full[i] === "\n" ? beat : per);
     };
 
-    t = window.setTimeout(step, 600);
+    t = window.setTimeout(step, reduce ? 80 : 600);
     return () => window.clearTimeout(t);
   }, [reduce, started, done]);
 

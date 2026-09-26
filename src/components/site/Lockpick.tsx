@@ -12,6 +12,7 @@ import {
   tensionAt,
 } from "@/lib/lockpick";
 import * as sound from "@/lib/sound";
+import { Help } from "./Help";
 import { monthYear } from "@/lib/utils";
 import { Markdown } from "./Markdown";
 import type { CaseRoomData } from "@/lib/content";
@@ -171,6 +172,7 @@ export function Lockpick({
           <p className="xl-slips">
             {done} / {pins.length} set · {SLIPS_ALLOWED - slips} before it binds
           </p>
+          <Help title="The drawer" text={HELP} />
           <button type="button" className="btn btn-sm" onClick={onClose}>
             Leave it
           </button>
@@ -275,3 +277,14 @@ function Diary({ data, onClose }: { data: CaseRoomData; onClose: () => void }) {
     </div>
   );
 }
+
+const HELP = {
+  what:
+    "The drawer in his side table, five pins deep. You cannot see where a pin gives — the only thing the lock tells you is tension, and tension rises the nearer the pick is to the point.",
+  controls: [
+    "Move the mouse along the track to slide the pick. Watch the tension bar.",
+    "Set the pin when the tension is at its highest. Follow it up; when it stops rising, you have gone past.",
+    "Pins are set in order, one at a time.",
+  ],
+  win: `All ${PINS} pins set. Slip ${SLIPS_ALLOWED} times and the lock rebinds and drops every pin — it never locks you out permanently. It is a drawer in somebody's bedroom, not a safe.`,
+};

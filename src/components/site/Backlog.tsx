@@ -14,6 +14,7 @@ import {
   type Board,
 } from "@/lib/match3";
 import * as sound from "@/lib/sound";
+import { Help } from "./Help";
 
 /**
  * The backlog.
@@ -182,6 +183,7 @@ export function Backlog({ onSolved, onClose }: { onSolved: () => void; onClose: 
         )}
 
         <footer className="xt-foot">
+          <Help title="The backlog" text={HELP} />
           <button type="button" className="btn btn-sm" onClick={onClose}>
             Step back
           </button>
@@ -190,3 +192,14 @@ export function Backlog({ onSolved, onClose }: { onSolved: () => void; onClose: 
     </div>
   );
 }
+
+const HELP = {
+  what:
+    "A match-three, played straight, because it is a backlog and the joke only works if it plays like the thing it is named after. Every ticket is a kind, and three of a kind in a line closes them.",
+  controls: [
+    "Click a ticket to pick it up, then click a neighbour to swap the two.",
+    "While one is picked, the neighbours it can legally swap with are outlined.",
+    "A swap that would clear nothing is refused rather than taken back — the board will not move, and the ticket you aimed at flashes red.",
+  ],
+  win: `Close ${TARGET} tickets. Clears cascade, and if the board ever runs out of legal moves it is dealt again rather than left stuck.`,
+};

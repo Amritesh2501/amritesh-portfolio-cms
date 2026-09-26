@@ -20,9 +20,11 @@ import sharp from "sharp";
 import { Room } from "../src/components/site/RoomArt";
 import { BedroomRoom } from "../src/components/site/BedroomArt";
 import { OfficeRoom } from "../src/components/site/OfficeArt";
+import { LabRoom } from "../src/components/site/LabArt";
 import { WORLD, stationById } from "../src/lib/world";
 import { BEDROOM, bedStationById } from "../src/lib/bedroom";
 import { OFFICE, officeStationById } from "../src/lib/office";
+import { LAB, labStationById } from "../src/lib/lab";
 
 /**
  * The ink, inlined.
@@ -97,6 +99,17 @@ const INK = `
   .xw-office-slats.is-open rect { fill: #101218; }
   .xw-office-bloom ellipse, .xw-office-bloom-eye { fill: #e0a33c; stroke: none; opacity: .62; }
   .xw-office-bloom-eye { opacity: .95; }
+  .xw-lab-note { fill: #16171d; stroke: #8b8578; stroke-width: 1; }
+  .xw-lab-pin { fill: #d9a05b; stroke: none; opacity: .8; }
+  .xw-lab-crt-glass { fill: #071016; stroke: #6b7076; stroke-width: 1.4; }
+  .xw-lab-crt-art path, .xw-lab-crt-art rect { fill: #7fe0d8; stroke: none; opacity: .72; }
+  .xw-lab-glass rect { fill: #14161c; stroke: none; }
+  .xw-lab-rig.is-open .xw-lab-glass rect { fill: #101a26; }
+  .xw-lab-lock rect { fill: none; stroke: #4a4f55; stroke-width: .8; }
+  .xw-lab-bar { fill: #4fb477; stroke: none; opacity: .75; }
+  .xw-lab-chip { fill: #d9a05b; stroke: none; opacity: .8; }
+  .xw-lab-row { fill: none; stroke: #e4ddcb; stroke-width: 3; opacity: .45; }
+  .xw-lab-play path, .xw-lab-play rect { fill: #7fe0d8; stroke: none; opacity: .8; }
 `;
 
 const noop = () => {};
@@ -106,6 +119,7 @@ type Shot = {
    *  script shoots all three. */
   bed?: boolean;
   office?: boolean;
+  lab?: boolean;
   blindDown: boolean;
   ceiling: boolean;
   lamp: boolean;
@@ -117,8 +131,21 @@ type Shot = {
 };
 
 async function shoot(name: string, shot: Shot) {
-  const world = shot.office ? OFFICE : shot.bed ? BEDROOM : WORLD;
-  const body = shot.office
+  const world = shot.lab ? LAB : shot.office ? OFFICE : shot.bed ? BEDROOM : WORLD;
+  const body = shot.lab
+    ? renderToStaticMarkup(
+        createElement(LabRoom, {
+          at: shot.at,
+          lights: shot.ceiling,
+          blindOpen: !shot.blindDown,
+          rigOpen: shot.lamp,
+          onStation: noop,
+          onPuzzle: noop,
+          onLights: noop,
+          onBlind: noop,
+        }),
+      )
+    : shot.office
     ? renderToStaticMarkup(
         createElement(OfficeRoom, {
           at: shot.at,
@@ -182,7 +209,9 @@ async function shoot(name: string, shot: Shot) {
     h: world.h,
   };
   const station = shot.through
-    ? shot.office
+    ? shot.lab
+      ? labStationById(shot.through)
+      : shot.office
       ? officeStationById(shot.through)
       : shot.bed
         ? bedStationById(shot.through)
@@ -253,6 +282,12 @@ const SHOTS: Record<string, Shot> = {
   "office-board": { office: true, blindDown: false, ceiling: true, lamp: false, at: "board", through: "board" },
   "office-rack": { office: true, blindDown: false, ceiling: true, lamp: false, at: "rack", through: "rack" },
   "office-desk": { office: true, blindDown: false, ceiling: true, lamp: false, at: "desk", through: "desk" },
+  // The lab, through the PROJECTS book.
+  lab: { lab: true, blindDown: false, ceiling: false, lamp: true, at: null },
+  "lab-dark": { lab: true, blindDown: true, ceiling: false, lamp: false, at: null },
+  "lab-rig": { lab: true, blindDown: false, ceiling: false, lamp: true, at: "rig", through: "rig" },
+  "lab-arcade": { lab: true, blindDown: false, ceiling: false, lamp: false, at: "arcade", through: "arcade" },
+  "lab-board": { lab: true, blindDown: false, ceiling: false, lamp: false, at: "board", through: "board" },
 };
 
 async function main() {

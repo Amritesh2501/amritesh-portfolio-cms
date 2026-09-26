@@ -24,6 +24,7 @@ import { Desktop } from "./Desktop";
 import { ShelfBook, type BookFrom } from "./ShelfBook";
 import { Bedroom } from "./Bedroom";
 import { Office } from "./Office";
+import { Lab } from "./Lab";
 
 /**
  * An officer's room, drawn in ink, with four things in it worth walking to.
@@ -109,7 +110,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
    * underneath, so coming back lands on the same shelf with the same files
    * read rather than on a room that has forgotten the last ten minutes.
    */
-  const [place, setPlace] = useState<"case" | "bedroom" | "office">("case");
+  const [place, setPlace] = useState<"case" | "bedroom" | "office" | "lab">("case");
   /** The blind. Down on arrival: it is the middle of the night out there. */
   const [blindDown, setBlindDown] = useState(true);
   /** The two lights, both off. A room somebody left in a hurry is a dark one. */
@@ -359,8 +360,10 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
     };
     return place === "bedroom" ? (
       <Bedroom data={data} onBack={back} />
-    ) : (
+    ) : place === "office" ? (
       <Office data={data} onBack={back} />
+    ) : (
+      <Lab data={data} onBack={back} />
     );
   }
 
@@ -572,7 +575,13 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
           done={read.includes(picked.id)}
           onRead={markRead}
           onThrough={() =>
-            setPlace(picked.topic === "experience" ? "office" : "bedroom")
+            setPlace(
+              picked.topic === "experience"
+                ? "office"
+                : picked.topic === "projects"
+                  ? "lab"
+                  : "bedroom",
+            )
           }
           onBack={closeFile}
         />
