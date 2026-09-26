@@ -12,6 +12,7 @@ import {
   slotsFor,
 } from "@/lib/cipher";
 import * as sound from "@/lib/sound";
+import { Help } from "./Help";
 
 /**
  * The terminal on his desk.
@@ -251,6 +252,8 @@ export function Cipher({ onSolved, onClose }: { onSolved: () => void; onClose: (
 
         {/* What the machine says back. */}
         <div className="xc-foot">
+          <Help title="The terminal" text={HELP} />
+
           {phase === "running" ? (
             <>
               <button type="button" className="xc-go" onClick={submit}>
@@ -307,3 +310,15 @@ export function Cipher({ onSolved, onClose }: { onSolved: () => void; onClose: (
     </div>
   );
 }
+
+const HELP = {
+  what:
+    "His machine is asleep behind a substitution cipher. The decoder on screen is the key: every letter of the scrambled message stands for a different letter, and the decoder tells you which.",
+  controls: [
+    "Read the message. Look each of its letters up in the decoder and type what it stands for.",
+    "Type your answer and press Enter, or use Transmit.",
+    "The decoder is sorted by the CIPHER letter, not the plain one, so you can look up what you are reading rather than what you are writing.",
+    "Each stage has a new key. Nothing you learnt on the last one carries over — that is the point of a new key.",
+  ],
+  win: "Clear all three stages and the machine wakes up. There is a clock, and running it out restarts the stage rather than the game.",
+};

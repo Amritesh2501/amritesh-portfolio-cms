@@ -128,10 +128,13 @@ export function ShelfBook({
 
   /** ABOUT does not render pages. Everything a person is outside their CV is
    *  in the room he lives in rather than in a file about the room. */
-  // Two of the five are doors rather than files. ABOUT opens onto the room he
-  // lives in; EXPERIENCE opens onto the office he worked in. Both are places
-  // rather than pages, which is the whole reason they are not spreads.
-  const isDoor = file.topic === "about" || file.topic === "experience";
+  // Three of the five are doors rather than files. ABOUT opens onto the room he
+  // lives in, EXPERIENCE onto the office he worked in, and PROJECTS onto the
+  // lab the work was actually made in. All three are places rather than pages,
+  // which is the whole reason they are not spreads — and a list of projects is
+  // a worse answer to "what have you built" than the room you built it in.
+  const isDoor =
+    file.topic === "about" || file.topic === "experience" || file.topic === "projects";
 
   const open = useCallback(() => {
     if (stage !== "take") return;

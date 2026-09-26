@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LEVELS, buildBoard, countCrossings } from "@/lib/untangle";
+import { Help } from "./Help";
 
 /**
  * Untangle: drag the nodes until no two wires cross.
@@ -191,7 +192,19 @@ export function Untangle({ onSolved }: { onSolved?: (level: number) => void } = 
         <button type="button" className="btn btn-sm" onClick={() => reset(level)}>
           Shuffle
         </button>
+        <Help title="The architecture" text={HELP} />
       </div>
     </div>
   );
 }
+
+const HELP = {
+  what:
+    "An architecture diagram nobody has redrawn since it stopped being true. The boxes are all connected to the right things — they are just in the wrong places, so the lines cross.",
+  controls: [
+    "Drag a box to move it. The lines follow.",
+    "Keyboard: tab to a box, then use the arrow keys to move it.",
+    "Shuffle deals the same graph from new positions if you have tied it in a knot.",
+  ],
+  win: "No two lines crossing. Every one of these can be untangled — the layout is generated from a solved one, so a position with no crossings always exists.",
+};

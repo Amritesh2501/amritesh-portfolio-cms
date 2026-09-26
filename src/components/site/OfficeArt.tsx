@@ -108,6 +108,9 @@ export function OfficeRoom({
         <path d="M180 1180 L2220 1180" className="xw-faint" />
       </g>
 
+      {/* Light before the things it falls on, so the wash is under the ink
+          rather than over it. */}
+      <Daylight open={blindOpen} />
       <Ceiling on={lights} onToggle={onLights} />
       <Window open={blindOpen} onToggle={onBlind} />
       <Whiteboard
@@ -211,6 +214,25 @@ function Ceiling({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 /* ---------------------------------------------------------------------------
    The window
    ------------------------------------------------------------------------- */
+
+/**
+ * What comes in when the louvres turn.
+ *
+ * The blind opening used to reveal the city and change nothing else, so the
+ * room stayed exactly as dark with the window open as with it shut — which
+ * reads as the window being a picture of a window. Same three shapes the other
+ * rooms use: a slab through the glass, a pool where it lands, a bloom on the
+ * glass itself.
+ */
+function Daylight({ open }: { open: boolean }) {
+  return (
+    <g className={`xw-day ${open ? "is-on" : ""}`} aria-hidden>
+      <path d="M1440 350 L1900 346 L2170 1350 L1000 1350 Z" className="xw-day-shaft" />
+      <ellipse cx={1580} cy={1180} rx={490} ry={165} className="xw-day-pool" />
+      <rect x={1440} y={348} width={462} height={280} className="xw-day-glow" />
+    </g>
+  );
+}
 
 /**
  * Vertical louvres, and the wand that turns them.

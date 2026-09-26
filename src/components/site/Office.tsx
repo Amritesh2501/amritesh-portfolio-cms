@@ -20,6 +20,7 @@ import { BLOOMS, OfficeRoom } from "./OfficeArt";
 import { Untangle } from "./Untangle";
 import { Wires } from "./Wires";
 import { Backlog } from "./Backlog";
+import { ScrewLock } from "./ScrewLock";
 import { Markdown } from "./Markdown";
 
 /**
@@ -262,7 +263,7 @@ export function Office({
               >
                 <span>{p.name.toUpperCase()}</span>
                 <span className="xw-file-s">
-                  {p.id === "record" ? "OPEN" : solved.includes(p.id) ? "DONE" : "LOCKED"}
+                  {solved.includes(p.id) ? "DONE" : "LOCKED"}
                 </span>
               </button>
             </div>
@@ -270,10 +271,13 @@ export function Office({
         </div>
       </div>
 
-      {/* The record has no lock; the other three do, and each shows what it was
-          guarding once it gives. */}
+      {/* Each lock shows what it was guarding once it gives. */}
       {open === "record" ? (
-        <Record data={data} onClose={() => setOpen(null)} />
+        solved.includes("record") ? (
+          <Record data={data} onClose={() => setOpen(null)} />
+        ) : (
+          <ScrewLock onOpened={() => solve("record")} onClose={() => setOpen(null)} />
+        )
       ) : open === "wiring" ? (
         solved.includes("wiring") ? (
           <Roles data={data} onClose={() => setOpen(null)} />

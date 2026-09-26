@@ -76,12 +76,14 @@ export type OfficePuzzle = {
 };
 
 /**
- * Three locks and one thing that is not locked.
+ * Four locks.
  *
- * The same shape the bedroom settled on, and for the same reason: a room where
- * every single thing is a puzzle is a corridor of puzzles, and the piece
- * somebody actually came for — the record of where he worked — should not be
- * behind any of them.
+ * The cabinet used to be the one thing in here with no lock on it, on the
+ * argument that the piece somebody actually came for should not be behind a
+ * puzzle. It has one now because it was asked for, and the argument has not
+ * gone away — so the lock on it is the most forgiving in the building: nothing
+ * is timed, a wrong notch costs nothing, and the whole record is also reachable
+ * from the whiteboard and the patch panel, which are two separate ways in.
  */
 export const OFFICE_PUZZLES: OfficePuzzle[] = [
   {
@@ -106,7 +108,7 @@ export const OFFICE_PUZZLES: OfficePuzzle[] = [
     id: "record",
     at: "cabinet",
     name: "The personnel file",
-    holds: "The whole record, in order. No lock on this one.",
+    holds: "The whole record, in order, behind a cam lock and a screwdriver.",
   },
 ];
 

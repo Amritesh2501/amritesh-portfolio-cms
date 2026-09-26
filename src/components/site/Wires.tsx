@@ -16,6 +16,7 @@ import {
   type StrandId,
 } from "@/lib/wires";
 import * as sound from "@/lib/sound";
+import { Help } from "./Help";
 
 /**
  * The patch panel.
@@ -238,12 +239,16 @@ export function Wires({ onSolved, onClose }: { onSolved: () => void; onClose: ()
         ) : null}
         <circle className="xg-socket" cx={x} cy={y} r={12} />
         <circle className="xg-pin" cx={x} cy={y} r={5} />
-        {/* The whole row is grabbable, not just the 11px circle. */}
+        {/* The whole row is grabbable, not just the 11px circle — and on the
+            left it has to reach past the socket to the END of the loose cable,
+            because the loose end is the thing that looks grabbable and it hangs
+            30 units clear of the terminal. It used to stop at the socket, so
+            the last third of the most inviting object on screen did nothing. */}
         <rect
           className="xg-grab"
-          x={side === "left" ? 4 : RIGHT_X - 16}
+          x={side === "left" ? 4 : RIGHT_X - 18}
           y={y - 19}
-          width={116}
+          width={side === "left" ? LEFT_X + 38 : 120}
           height={38}
         />
       </g>
@@ -307,6 +312,7 @@ export function Wires({ onSolved, onClose }: { onSolved: () => void; onClose: ()
         </svg>
 
         <footer className="xg-foot">
+          <Help title="The patch panel" text={HELP} />
           {done ? null : (
             <p className="xg-tally">
               {made.length} / {PANEL_SIZE} in
@@ -340,3 +346,15 @@ export function Wires({ onSolved, onClose }: { onSolved: () => void; onClose: ()
     </div>
   );
 }
+
+const HELP = {
+  what:
+    "Somebody pulled every cable out of the rack and did not label them. The loose ends are down the left; the empty sockets are down the right, in a different order.",
+  controls: [
+    "Drag a loose end across to the socket of the same colour and let go. It snaps in if you are near enough.",
+    "Or click one end and then click the other — no dragging needed.",
+    "Keyboard: tab to a terminal and press Enter or Space to take it, then tab to its partner and press again.",
+    "Every terminal is labelled with its colour's name, so none of this depends on telling the colours apart.",
+  ],
+  win: `All ${PANEL_SIZE} strands back where they belong. Nothing is timed, nothing locks, and a wrong socket just lets go.`,
+};
