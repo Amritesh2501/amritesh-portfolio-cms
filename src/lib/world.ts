@@ -107,6 +107,9 @@ export type FileTopic =
   | "stack"
   | "certifications";
 
+/** The rooms a file can open onto. */
+export type Place = "bedroom" | "office" | "lab";
+
 export type CaseFile = {
   id: string;
   /** The number inked on the spine. */
@@ -119,6 +122,23 @@ export type CaseFile = {
   brief: string;
   /** Which part of the portfolio the pages hold. */
   topic: FileTopic;
+  /**
+   * The room this file is a door onto, if it is one.
+   *
+   * This is the ONE place that knows. It used to be spelled out in four:
+   * ShelfBook decided whether to turn the leaves or lay out a spread, World
+   * decided which room to go to, CaseFilePages decided whether to render
+   * anything, and this list decided what the cover promised. Four copies of
+   * one fact, none of them checked against the others — so a file could be a
+   * door in one of them and a page in another, which is not a crash, just a
+   * book that opens onto the wrong thing. PROJECTS spent a release exactly
+   * like that: routed to the lab, and still advertising a list of pages on its
+   * own cover.
+   *
+   * Present means a door and no pages; absent means a spread. See
+   * scripts/check-world.ts, which now refuses one without the other.
+   */
+  opens?: Place;
   /** Files that must be read before this one comes off the shelf. */
   needs?: string[];
   /**
@@ -152,6 +172,7 @@ export const FILES: CaseFile[] = [
     brief:
       "Not pages. Whoever lives here left the light on, and there is more of him in that room than there is in any file.",
     topic: "about",
+    opens: "bedroom",
     spine: { x: 1200, y: 492, w: 64, h: 178, tilt: -1.6 },
   },
   {
@@ -160,8 +181,9 @@ export const FILES: CaseFile[] = [
     name: "EXPERIENCE",
     subject: "Where the time went",
     brief:
-      "Not pages either. The office he worked in is still standing, and the work is still on the walls.",
+      "Not pages. The office he worked in is still standing, and the work is still on the walls.",
     topic: "experience",
+    opens: "office",
     spine: { x: 1296, y: 488, w: 62, h: 184, tilt: 0.9 },
   },
   {
@@ -169,8 +191,10 @@ export const FILES: CaseFile[] = [
     index: "03",
     name: "PROJECTS",
     subject: "The things that shipped",
-    brief: "Everything published, with what it was built out of and where it lives.",
+    brief:
+      "Not pages either. The room it was all made in is still there, and the machine is still locked.",
     topic: "projects",
+    opens: "lab",
     spine: { x: 1392, y: 494, w: 60, h: 176, tilt: -0.7 },
   },
   {

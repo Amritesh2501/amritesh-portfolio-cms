@@ -171,6 +171,63 @@ function rng(seed: number) {
       `${f.id} waits on another file, and nothing on this shelf should`,
     );
   }
+
+  /* Doors and pages -------------------------------------------------------- */
+
+  /**
+   * A file is EITHER a door onto a room OR a spread of pages. Never both, never
+   * neither.
+   *
+   * This exists because it was neither, once. PROJECTS was made a door — routed
+   * to the lab, its page renderer deleted — and its cover was left promising
+   * "everything published, with what it was built out of and where it lives",
+   * which is a description of the pages that no longer existed. Nothing caught
+   * it: it is not a type error, it does not throw, and the room renders fine.
+   * It just tells the reader the wrong thing about what is behind the cover.
+   *
+   * `opens` is the single source now, and this is what holds the other three
+   * consumers to it: the room it names has to be one that exists, a door must
+   * not also have a page renderer, and a file with no pages must be a door.
+   */
+  const PLACES = ["bedroom", "office", "lab"];
+  /** Topics CaseFilePages actually has a `case` for. Kept here by hand on
+   *  purpose — it is the thing being checked, so reading it from the component
+   *  would only check the component against itself. */
+  const HAS_PAGES = ["stack", "certifications"];
+
+  const doors = FILES.filter((f) => f.opens);
+  assert.ok(doors.length > 0, "no file opens onto a room, so the rooms are unreachable");
+
+  for (const f of FILES) {
+    const isDoor = Boolean(f.opens);
+    const hasPages = HAS_PAGES.includes(f.topic);
+
+    if (isDoor) {
+      assert.ok(
+        PLACES.includes(f.opens as string),
+        `${f.id} opens onto "${f.opens}", which is not a room that exists`,
+      );
+      assert.ok(
+        !hasPages,
+        `${f.id} is a door AND has a page renderer, so which one you get depends ` +
+          `on which file you read`,
+      );
+      assert.ok(
+        /not pages/i.test(f.brief),
+        `${f.id} is a door, but its cover still describes pages: "${f.brief}"`,
+      );
+    } else {
+      assert.ok(
+        hasPages,
+        `${f.id} is not a door and has no page renderer, so opening it shows nothing`,
+      );
+    }
+  }
+
+  // Two files must not open onto the same room, which would be two covers
+  // promising different things and delivering the same one.
+  const rooms = doors.map((f) => f.opens as string);
+  assert.equal(new Set(rooms).size, rooms.length, "two files open onto the same room");
 }
 
 /* The machine on the desk ------------------------------------------------- */
@@ -419,6 +476,7 @@ function rng(seed: number) {
 
 console.log(
   `check-world: OK — ${STATIONS.length} places to stand, ${FILES.length} files ` +
-    `(${FILE_COUNT} of them a section), ${DESKTOP_APPS.length} icons on the machine ` +
+    `(${FILES.filter((f) => f.opens).length} doors, ${FILES.filter((f) => !f.opens).length} spreads), ` +
+    `${DESKTOP_APPS.length} icons on the machine ` +
     `(${PUZZLE_COUNT} puzzles), ${BULBS.length} bulbs, room ${WORLD.w}x${WORLD.h}.`,
 );

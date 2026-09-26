@@ -33,66 +33,11 @@ export function CaseFilePages({
   data: CaseRoomData;
 }) {
   switch (file.topic) {
-    case "experience":
-      return <ExperiencePages data={data} />;
     case "stack":
       return <StackPages data={data} />;
     case "certifications":
       return <CertificationPages data={data} />;
   }
-}
-
-/* ------------------------------------------------------------------------- */
-
-function ExperiencePages({ data }: { data: CaseRoomData }) {
-  const { experience, education } = data;
-  if (experience.length === 0 && education.length === 0) {
-    return <Blank>Nothing published under experience or education.</Blank>;
-  }
-
-  return (
-    <div className="xf-pages">
-      {experience.map((job) => (
-        <article key={job.id} className="xf-entry">
-          <p className="xf-entry-when">
-            {dateRange(job.startDate, job.endDate, job.currentlyWorking)}
-          </p>
-          <h4 className="xf-entry-title">{job.role}</h4>
-          <p className="xf-entry-sub">
-            {[job.company, job.location].filter(Boolean).join(" · ")}
-          </p>
-          {job.description ? <Markdown content={job.description} /> : null}
-          {job.achievements.length > 0 ? (
-            <ul className="xf-bullets">
-              {job.achievements.map((a) => (
-                <li key={a}>{a}</li>
-              ))}
-            </ul>
-          ) : null}
-          {job.technologies.length > 0 ? (
-            <p className="xf-entry-tech">
-              {job.technologies.map((t) => t.name).join(" · ")}
-            </p>
-          ) : null}
-        </article>
-      ))}
-
-      {education.length > 0 ? (
-        <section className="xf-sub">
-          <h4>Education</h4>
-          {education.map((e) => (
-            <article key={e.id} className="xf-entry">
-              <p className="xf-entry-when">{dateRange(e.startDate, e.endDate, false)}</p>
-              <h4 className="xf-entry-title">{e.degree}</h4>
-              <p className="xf-entry-sub">
-                {[e.institution, e.field].filter(Boolean).join(" · ")}
-              </p>
-            </article>
-          ))}
-        </section>
-      ) : null}
-    </div>
-  );
 }
 
 function StackPages({ data }: { data: CaseRoomData }) {
