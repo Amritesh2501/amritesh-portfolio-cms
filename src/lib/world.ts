@@ -81,8 +81,10 @@ export const STATIONS: Station[] = [
   {
     id: "shelf",
     name: "The shelf",
-    blurb: "Five files. The first two are not files — they are doors.",
-    cam: { x: 1440, y: 620, z: 2.3 },
+    blurb: "Six files, and not one of them is paper. Every one is a door.",
+    // Centred on the six spines rather than the board, so a laptop-width
+    // frame still has SKILLS in it at the right-hand end.
+    cam: { x: 1470, y: 620, z: 2.3 },
   },
 ];
 
@@ -105,10 +107,11 @@ export type FileTopic =
   | "experience"
   | "projects"
   | "stack"
-  | "certifications";
+  | "certifications"
+  | "skills";
 
-/** The rooms a file can open onto. */
-export type Place = "bedroom" | "office" | "lab";
+/** The rooms a file can open onto. The last three are lib/archives. */
+export type Place = "bedroom" | "office" | "lab" | "college" | "vault" | "training";
 
 export type CaseFile = {
   id: string;
@@ -127,7 +130,7 @@ export type CaseFile = {
    *
    * This is the ONE place that knows. It used to be spelled out in four:
    * ShelfBook decided whether to turn the leaves or lay out a spread, World
-   * decided which room to go to, CaseFilePages decided whether to render
+   * decided which room to go to, the page renderer decided whether to render
    * anything, and this list decided what the cover promised. Four copies of
    * one fact, none of them checked against the others — so a file could be a
    * door in one of them and a page in another, which is not a crash, just a
@@ -135,10 +138,11 @@ export type CaseFile = {
    * like that: routed to the lab, and still advertising a list of pages on its
    * own cover.
    *
-   * Present means a door and no pages; absent means a spread. See
-   * scripts/check-world.ts, which now refuses one without the other.
+   * Required now: STACK, CERTIFICATIONS and SKILLS were the last files with
+   * pages, and they open onto the archives in lib/archives instead. There is
+   * no such thing as a spread any more.
    */
-  opens?: Place;
+  opens: Place;
   /** Files that must be read before this one comes off the shelf. */
   needs?: string[];
   /**
@@ -152,16 +156,13 @@ export type CaseFile = {
 };
 
 /**
- * Five files: the portfolio, taken apart and put on a shelf.
+ * Six files: the portfolio, taken apart and put on a shelf.
  *
- * Four of them hold a section and open onto it. The first one does not — ABOUT
- * opens onto the room he actually lives in, because everything a person is
- * outside their CV is in the room rather than in a file about the room. That
- * is also why nothing on this shelf is sealed any more: the most interesting
- * thing here is the first thing you can reach.
- *
- * There used to be a sixth, a sealed index that became a sealed door. It is
- * gone. A door nobody can find is worse than no door.
+ * Every one is a door onto a room, and none of them is paper: ABOUT the
+ * bedroom, EXPERIENCE the office, PROJECTS the lab, STACK the college archive,
+ * CERTIFICATIONS the locked archives and SKILLS the training facility. Nothing
+ * on this shelf is sealed: the most interesting thing here is the first thing
+ * you can reach.
  */
 export const FILES: CaseFile[] = [
   {
@@ -201,9 +202,11 @@ export const FILES: CaseFile[] = [
     id: "stack",
     index: "04",
     name: "STACK",
-    subject: "The tools, by how often they are reached for",
-    brief: "Languages, frameworks and infrastructure, grouped the way they are used.",
+    subject: "Where the tools were learned",
+    brief:
+      "Not pages. The college kept everything — the records, the yearbooks, the frame on the wall — and the archive is still open.",
     topic: "stack",
+    opens: "college",
     spine: { x: 1488, y: 490, w: 64, h: 180, tilt: 1.4 },
   },
   {
@@ -211,17 +214,28 @@ export const FILES: CaseFile[] = [
     index: "05",
     name: "CERTIFICATIONS",
     subject: "Paper, and who issued it",
-    brief: "The credentials, with the issuer and the date on each one.",
+    brief:
+      "Not pages. The certificates are in the locked archives, in a cage, behind a lock you will have to pick.",
     topic: "certifications",
+    opens: "vault",
     spine: { x: 1584, y: 492, w: 62, h: 178, tilt: -1.1 },
+  },
+  {
+    id: "skills",
+    index: "06",
+    name: "SKILLS",
+    subject: "What gets practised",
+    brief:
+      "Not pages. There is a training floor down the hall, and every skill has a locker on it.",
+    topic: "skills",
+    opens: "training",
+    spine: { x: 1680, y: 490, w: 60, h: 180, tilt: 0.8 },
   },
 ];
 
 export const fileById = (id: string) => FILES.find((f) => f.id === id);
 
-/** What the HUD counts. Every file on the shelf is a section now — the sixth,
- *  which was a sealed index and then a sealed door, is gone: ABOUT is the door,
- *  and a door nobody can find is worse than no door. */
+/** What the HUD counts. */
 export const FILE_COUNT = FILES.length;
 
 /** Can this file be taken off the shelf yet? */
