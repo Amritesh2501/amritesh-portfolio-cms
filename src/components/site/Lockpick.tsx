@@ -38,10 +38,13 @@ export function Lockpick({
   data,
   onOpened,
   onClose,
+  name = "The drawer",
 }: {
   data: CaseRoomData;
   onOpened: () => void;
   onClose: () => void;
+  /** What is locked. The locked archives use this on the cage. */
+  name?: string;
 }) {
   const [pins, setPins] = useState(() => makePins());
   const [done, setDone] = useState(0);
@@ -121,9 +124,9 @@ export function Lockpick({
   }
 
   return (
-    <div className="xl" role="dialog" aria-modal="true" aria-label="The drawer">
+    <div className="xl" role="dialog" aria-modal="true" aria-label={name}>
       <div className="xl-card" key={bind}>
-        <p className="xl-kicker">THE DRAWER</p>
+        <p className="xl-kicker">{name.toUpperCase()}</p>
         <h2 className="xl-title">Locked</h2>
         <p className="xl-note">
           Five pins. Move the pick and feel for where each one gives — the
@@ -172,7 +175,7 @@ export function Lockpick({
           <p className="xl-slips">
             {done} / {pins.length} set · {SLIPS_ALLOWED - slips} before it binds
           </p>
-          <Help title="The drawer" text={HELP} />
+          <Help title={name} text={HELP} />
           <button type="button" className="btn btn-sm" onClick={onClose}>
             Leave it
           </button>

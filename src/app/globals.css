@@ -7678,6 +7678,230 @@ html {
 }
 
 /* ---------------------------------------------------------------------------
+   The archives: college, locked, and the training facility
+
+   Every prop is a .xw-ar-prop and takes .is-on when used. The classes below
+   are the handful of things a used prop can do — slide, fold open, turn, swing,
+   light up — so a new prop is drawn out of these rather than given its own.
+   ------------------------------------------------------------------------- */
+
+.xw-ar-prop {
+  cursor: pointer;
+}
+
+/* A drawer out, a book pulled, a lid off, a dumbbell up. */
+.xw-ar-slide {
+  transition: transform 0.7s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.xw-ar-prop.is-on .xw-ar-slide {
+  transform: translate(var(--dx, 0px), var(--dy, 0px));
+}
+
+/* A door or a gate swinging back on its left hinge. */
+.xw-ar-fold {
+  transform-box: fill-box;
+  transform-origin: left center;
+  transition: transform 0.8s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.xw-ar-prop.is-on .xw-ar-fold {
+  transform: scaleX(0.16);
+}
+
+/* The vault wheel: one full turn, and back when you let go. */
+.xw-ar-turn {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 2.4s cubic-bezier(0.45, 0, 0.2, 1);
+}
+.xw-ar-prop.is-on .xw-ar-turn {
+  transform: rotate(360deg);
+}
+
+/* The globe and the round clock: going round for as long as they are on. */
+.xw-ar-tick {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.xw-ar-prop.is-on .xw-ar-tick {
+  animation: xw-ar-tick 6s linear infinite;
+}
+@keyframes xw-ar-tick {
+  to { transform: rotate(360deg); }
+}
+
+/* The diploma, crooked until straightened. */
+.xw-ar-tilt {
+  transform-box: fill-box;
+  transform-origin: center top;
+  transform: rotate(-4deg);
+  transition: transform 0.6s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.xw-ar-prop.is-on .xw-ar-tilt {
+  transform: none;
+}
+
+/* The heavy bag: three swings off one hit, then still. */
+.xw-ar-swing {
+  transform-box: fill-box;
+  transform-origin: center top;
+}
+.xw-ar-prop.is-on .xw-ar-swing {
+  animation: xw-ar-swing 1.3s ease-in-out 3;
+}
+@keyframes xw-ar-swing {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(7deg); }
+  75% { transform: rotate(-5deg); }
+}
+
+/* The treadmill belt. */
+.xw-ar-belt {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 2;
+  stroke-dasharray: 16 18;
+  opacity: 0.5;
+}
+.xw-ar-prop.is-on .xw-ar-belt {
+  animation: xw-ar-belt 0.6s linear infinite;
+}
+@keyframes xw-ar-belt {
+  to { stroke-dashoffset: 34; }
+}
+
+/* Anything that only exists while the prop is on: the lamp's pool, the
+   microfiche text, the circle on the whiteboard, the glint on a trophy. */
+.xw-ar-glow {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.xw-ar-prop.is-on .xw-ar-glow {
+  opacity: 1;
+}
+
+.xw-ar-warm {
+  fill: #ffd98a;
+  stroke: none;
+}
+.xw-ar-prop.is-on .xw-ar-warm {
+  opacity: 0.16;
+}
+
+.xw-ar-shade {
+  fill: color-mix(in srgb, #05060a 70%, #3f8f5a);
+}
+.xw-ar-prop.is-on .xw-ar-shade {
+  fill: color-mix(in srgb, #05060a 30%, #5fcf86);
+}
+
+.xw-ar-screen {
+  fill: color-mix(in srgb, #05060a 88%, var(--xp-fg));
+  stroke: none;
+  transition: fill 0.6s ease;
+}
+.xw-ar-prop.is-on .xw-ar-screen {
+  fill: color-mix(in srgb, #05060a 62%, #7fe0d8);
+}
+
+.xw-ar-seal {
+  fill: var(--xp-hot);
+  stroke: none;
+  opacity: 0.7;
+}
+
+.xw-ar-marker {
+  fill: none;
+  stroke: var(--xp-hot);
+  stroke-width: 2.4;
+}
+
+.xw-ar-glint {
+  stroke: #fff4d6;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.xw-ar-hand {
+  stroke: var(--xp-hot);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* Chain link. Drawn with a pattern, so it is lines like everything else. */
+.xw-ar-mesh {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 1;
+  opacity: 0.4;
+}
+
+.xw-ar-lock {
+  fill: color-mix(in srgb, #05060a 60%, var(--xp-hot));
+}
+
+/* Paper left behind a door: what you see once it folds back. */
+.xw-ar-paper {
+  fill: color-mix(in srgb, #05060a 72%, var(--xp-fg));
+  stroke: color-mix(in srgb, var(--xp-fg) 40%, transparent);
+  stroke-width: 1;
+}
+
+/* The camera's recording light. */
+.xw-ar-led {
+  fill: #ff4a3d;
+  stroke: none;
+  opacity: 0.15;
+}
+.xw-ar-prop.is-on .xw-ar-led {
+  animation: xw-ar-led 1.1s steps(1) infinite;
+}
+@keyframes xw-ar-led {
+  0% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+/* The shelf lights: a strip under each board and the light it throws down. */
+.xw-ar-strip {
+  fill: var(--xw-bulb);
+  stroke: none;
+  opacity: 0.15;
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+.xw-ar-spill {
+  fill: var(--xw-bulb);
+  stroke: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.xw-ar-shelves.is-on .xw-ar-strip {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px var(--xw-bulb));
+}
+.xw-ar-shelves.is-on .xw-ar-spill {
+  opacity: 0.12;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xw-ar-slide,
+  .xw-ar-fold,
+  .xw-ar-turn,
+  .xw-ar-tilt {
+    transition: none;
+  }
+  .xw-ar-prop.is-on .xw-ar-tick,
+  .xw-ar-prop.is-on .xw-ar-swing,
+  .xw-ar-prop.is-on .xw-ar-belt,
+  .xw-ar-prop.is-on .xw-ar-led {
+    animation: none;
+  }
+  .xw-ar-prop.is-on .xw-ar-led {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Remember the route
 
    A nine by nine that lights a path and then asks for it back. The lit state

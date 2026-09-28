@@ -37,6 +37,7 @@ import {
   swapAt,
   type Shot,
 } from "../src/lib/world";
+import { ARCHIVES } from "../src/lib/archives";
 
 /** Deterministic, so a failure here is reproducible rather than a mood. */
 function rng(seed: number) {
@@ -172,62 +173,39 @@ function rng(seed: number) {
     );
   }
 
-  /* Doors and pages -------------------------------------------------------- */
+  /* Doors ------------------------------------------------------------------ */
 
   /**
-   * A file is EITHER a door onto a room OR a spread of pages. Never both, never
-   * neither.
+   * Every file is a door onto a room, and the cover has to say so.
    *
-   * This exists because it was neither, once. PROJECTS was made a door — routed
-   * to the lab, its page renderer deleted — and its cover was left promising
-   * "everything published, with what it was built out of and where it lives",
-   * which is a description of the pages that no longer existed. Nothing caught
-   * it: it is not a type error, it does not throw, and the room renders fine.
-   * It just tells the reader the wrong thing about what is behind the cover.
-   *
-   * `opens` is the single source now, and this is what holds the other three
-   * consumers to it: the room it names has to be one that exists, a door must
-   * not also have a page renderer, and a file with no pages must be a door.
+   * The cover check exists because it went wrong once: PROJECTS was made a
+   * door and its cover was left promising a list of pages that no longer
+   * existed. Nothing throws when that happens; the file just tells the reader
+   * the wrong thing about what is behind it.
    */
-  const PLACES = ["bedroom", "office", "lab"];
-  /** Topics CaseFilePages actually has a `case` for. Kept here by hand on
-   *  purpose — it is the thing being checked, so reading it from the component
-   *  would only check the component against itself. */
-  const HAS_PAGES = ["stack", "certifications"];
-
-  const doors = FILES.filter((f) => f.opens);
-  assert.ok(doors.length > 0, "no file opens onto a room, so the rooms are unreachable");
+  const PLACES = ["bedroom", "office", "lab", ...ARCHIVES.map((a) => a.id)];
 
   for (const f of FILES) {
-    const isDoor = Boolean(f.opens);
-    const hasPages = HAS_PAGES.includes(f.topic);
-
-    if (isDoor) {
-      assert.ok(
-        PLACES.includes(f.opens as string),
-        `${f.id} opens onto "${f.opens}", which is not a room that exists`,
-      );
-      assert.ok(
-        !hasPages,
-        `${f.id} is a door AND has a page renderer, so which one you get depends ` +
-          `on which file you read`,
-      );
-      assert.ok(
-        /not pages/i.test(f.brief),
-        `${f.id} is a door, but its cover still describes pages: "${f.brief}"`,
-      );
-    } else {
-      assert.ok(
-        hasPages,
-        `${f.id} is not a door and has no page renderer, so opening it shows nothing`,
-      );
-    }
+    assert.ok(
+      PLACES.includes(f.opens),
+      `${f.id} opens onto "${f.opens}", which is not a room that exists`,
+    );
+    assert.ok(
+      /not pages/i.test(f.brief),
+      `${f.id} is a door, but its cover still describes pages: "${f.brief}"`,
+    );
   }
 
   // Two files must not open onto the same room, which would be two covers
   // promising different things and delivering the same one.
-  const rooms = doors.map((f) => f.opens as string);
+  const rooms = FILES.map((f) => f.opens);
   assert.equal(new Set(rooms).size, rooms.length, "two files open onto the same room");
+
+  // And every archive has a book that opens onto it, or it is a room nobody
+  // can get into.
+  for (const a of ARCHIVES) {
+    assert.ok(rooms.includes(a.id), `nothing on the shelf opens onto the ${a.id} room`);
+  }
 }
 
 /* The machine on the desk ------------------------------------------------- */
@@ -475,8 +453,7 @@ function rng(seed: number) {
 }
 
 console.log(
-  `check-world: OK — ${STATIONS.length} places to stand, ${FILES.length} files ` +
-    `(${FILES.filter((f) => f.opens).length} doors, ${FILES.filter((f) => !f.opens).length} spreads), ` +
+  `check-world: OK — ${STATIONS.length} places to stand, ${FILES.length} files, all doors, ` +
     `${DESKTOP_APPS.length} icons on the machine ` +
     `(${PUZZLE_COUNT} puzzles), ${BULBS.length} bulbs, room ${WORLD.w}x${WORLD.h}.`,
 );

@@ -26,6 +26,7 @@ import { ShelfBook, type BookFrom } from "./ShelfBook";
 import { Bedroom } from "./Bedroom";
 import { Office } from "./Office";
 import { Lab } from "./Lab";
+import { Archive } from "./Archive";
 
 /**
  * An officer's room, drawn in ink, with four things in it worth walking to.
@@ -38,7 +39,7 @@ import { Lab } from "./Lab";
  *   the board   pins and thread, full screen, laid out by a force simulation
  *   the window  a cord that raises the blind and lets the night in or shuts it out
  *   the desk    a machine that boots, with files on it
- *   the shelf   six files, which are the sections of this portfolio
+ *   the shelf   six files, each a door onto a room of this portfolio
  *
  * Two things carry the room itself and are worth knowing before reading on:
  *
@@ -363,8 +364,10 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
       <Bedroom data={data} onBack={back} />
     ) : place === "office" ? (
       <Office data={data} onBack={back} />
-    ) : (
+    ) : place === "lab" ? (
       <Lab data={data} onBack={back} />
+    ) : (
+      <Archive id={place} data={data} onBack={back} />
     );
   }
 
@@ -572,13 +575,10 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
           file={picked}
           from={bookFrom(picked, shot, view)}
           view={view}
-          data={data}
           done={read.includes(picked.id)}
           onRead={markRead}
-          // Where it opens onto is the file's own business. ShelfBook only
-          // calls this for a file that has somewhere to open onto, so the
-          // fallback is unreachable rather than a default.
-          onThrough={() => setPlace(picked.opens ?? "bedroom")}
+          // Where it opens onto is the file's own business.
+          onThrough={() => setPlace(picked.opens)}
           onBack={closeFile}
         />
       ) : null}

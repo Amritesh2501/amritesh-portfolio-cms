@@ -649,14 +649,14 @@ function Shelf({
 
       {/* Clutter, so the shelf is a shelf and not a rack of six files. It
           starts to the right of the last spine, which is why these numbers
-          moved when the shelf went from four files to six. */}
+          move whenever a file is added — SKILLS ends at 1740. */}
       <g className="xw-line">
-        <path d="M1700 498 L1782 496 L1782 674 L1700 676 Z" className="xw-solid" />
-        <path d="M1710 520 L1772 518" className="xw-thin" />
-        <path d="M1710 536 L1772 534" className="xw-thin" />
-        <path d="M1798 560 L1844 558 L1856 674 L1798 674 Z" className="xw-thin xw-solid" />
+        <path d="M1756 498 L1826 496 L1826 674 L1756 676 Z" className="xw-solid" />
+        <path d="M1764 520 L1818 518" className="xw-thin" />
+        <path d="M1764 536 L1818 534" className="xw-thin" />
+        <path d="M1838 560 L1870 558 L1878 674 L1838 674 Z" className="xw-thin xw-solid" />
         {/* A leaning ledger. */}
-        <path d="M1872 540 L1914 532 L1936 672 L1880 674 Z" className="xw-solid" />
+        <path d="M1888 540 L1918 534 L1940 672 L1894 674 Z" className="xw-solid" />
         {/* Stacked paper on the lower board. */}
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <path

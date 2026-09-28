@@ -3,9 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import type { CaseFile } from "@/lib/world";
-import type { CaseRoomData } from "@/lib/content";
 import * as sound from "@/lib/sound";
-import { CaseFilePages } from "./CaseFilePages";
 
 /**
  * A file, from the shelf to the page.
@@ -22,12 +20,11 @@ import { CaseFilePages } from "./CaseFilePages";
  *      cover ── the wide face, pointing at the camera
  *      edge  ── the paper block, on the right
  *
- * and it goes through four stages, each one a thing a hand does:
+ * and it goes through three stages, each one a thing a hand does:
  *
- *      take    out of the row and a quarter turn, spine to cover
- *      open    the cover swings back on the spine, the way a cover hinges
- *      zoom    the open pages come at the camera until they are all there is
- *      spread  two pages, and what is written on them
+ *      take     out of the row and a quarter turn, spine to cover
+ *      open     the cover swings back on the spine, the way a cover hinges
+ *      through  the leaves go over and the room on the other side arrives
  *
  * The first stage begins at the exact place on screen the drawn spine was
  * standing — World projects it through the same camera the room is using — so
@@ -37,13 +34,12 @@ import { CaseFilePages } from "./CaseFilePages";
 /**
  * take    out of the row and a quarter turn, spine to cover
  * open    the cover swings back on the spine
- * spread  two pages, and what is written on them
  * through the leaves go over one after another and the room changes
  *
- * Only ABOUT reaches "through". The other four hold a section of the portfolio
- * and stop at "spread".
+ * Every file reaches "through": each one is a door onto a room. There used to
+ * be a "spread" stage for the files that held pages, and none do any more.
  */
-type Stage = "take" | "open" | "spread" | "through";
+type Stage = "take" | "open" | "through";
 
 /** The leaves going over, and the room on the other side. Matches `xk-flight`
  *  and `xk-fade` in CSS. */
@@ -79,7 +75,6 @@ export function ShelfBook({
   file,
   from,
   view,
-  data,
   done,
   onRead,
   onThrough,
@@ -88,12 +83,10 @@ export function ShelfBook({
   file: CaseFile;
   from: BookFrom;
   view: { w: number; h: number };
-  data: CaseRoomData;
   done: boolean;
-  /** Called once the pages are actually in front of the reader. */
+  /** Called once the book has been opened. */
   onRead: () => void;
-  /** Only ever called by the index file: the pages carry the reader out of
-   *  this room entirely. */
+  /** The pages carry the reader out of this room entirely. */
   onThrough: () => void;
   onBack: () => void;
 }) {
@@ -101,7 +94,6 @@ export function ShelfBook({
   const [stage, setStage] = useState<Stage>("take");
   const [settled, setSettled] = useState(Boolean(reduce));
   const coverRef = useRef<HTMLButtonElement>(null);
-  const spreadRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
 
   const size = sizeFor(view);
@@ -126,31 +118,18 @@ export function ShelfBook({
 
   /* Opening ---------------------------------------------------------------- */
 
-  /** ABOUT does not render pages. Everything a person is outside their CV is
-   *  in the room he lives in rather than in a file about the room. */
-  // Three of the five are doors rather than files: ABOUT onto the room he lives
-  // in, EXPERIENCE onto the office he worked in, PROJECTS onto the lab it was
-  // all made in. Which ones is not decided here — `opens` on the file is the one
-  // place that knows, because this test used to be a list of topics kept by hand
-  // and it drifted out of step with the cover copy the first time it changed.
-  const isDoor = Boolean(file.opens);
-
   const open = useCallback(() => {
     if (stage !== "take") return;
     setStage("open");
     sound.page();
 
+    // The leaves go over one after another, the camera goes into them, and
+    // the room on the other side is a different room. Which room is `opens` on
+    // the file.
     const arrive = () => {
-      if (isDoor) {
-        // Not a spread. The leaves go over one after another, the camera goes
-        // into them, and the room on the other side is a different room.
-        setStage("through");
-        onRead();
-        timers.current.push(window.setTimeout(onThrough, reduce ? 0 : FLIGHT_MS));
-        return;
-      }
-      setStage("spread");
+      setStage("through");
       onRead();
+      timers.current.push(window.setTimeout(onThrough, reduce ? 0 : FLIGHT_MS));
     };
 
     if (reduce) {
@@ -161,26 +140,18 @@ export function ShelfBook({
     // it rather than being one board moving.
     timers.current.push(window.setTimeout(sound.page, 340));
     timers.current.push(window.setTimeout(arrive, OPEN_MS));
-  }, [stage, reduce, isDoor, onRead, onThrough]);
-
-  /* Focus follows the thing that is actually readable -----------------------*/
+  }, [stage, reduce, onRead, onThrough]);
 
   useEffect(() => {
-    if (stage === "spread") spreadRef.current?.focus();
-    else if (settled) coverRef.current?.focus();
-  }, [stage, settled]);
-
-  const spread = stage === "spread";
+    if (settled) coverRef.current?.focus();
+  }, [settled]);
 
   return (
-    <div className={`xk ${spread ? "is-spread" : ""}`} role="dialog" aria-modal="true" aria-label={file.name}>
-      {/* The book. Hidden once the spread has taken over — by then the pages
-          have come all the way to the camera and the boards are behind it. */}
+    <div className="xk" role="dialog" aria-modal="true" aria-label={file.name}>
       <div
         className={`xk-book ${settled ? "is-settled" : ""} ${reduce ? "is-still" : ""} ${
           stage === "take" ? "" : "is-open"
         }`}
-        aria-hidden={spread}
         style={{
           width: size.w,
           height: size.h,
@@ -210,7 +181,6 @@ export function ShelfBook({
           ref={coverRef}
           className="xk-face xk-cover"
           onClick={open}
-          tabIndex={spread ? -1 : 0}
           aria-label={`${file.name}. ${file.subject}. Open the file.`}
         >
           <span className="xk-cover-rule" aria-hidden />
@@ -239,30 +209,6 @@ export function ShelfBook({
         <span className="xk-face xk-edge" aria-hidden />
       </div>
 
-      {/* The spread: the pages, arrived. It grows out of roughly where the
-          open book was standing, which is the zoom — the reader goes into the
-          book rather than the book being swapped for a panel. */}
-      {/* What is in the file.
-
-          Paper is gone. It was a case-file docket on manila stock with punch
-          holes, a classification, an empty photograph box and a stamp — all
-          of it dressing around four sections of a CV, and all of it louder
-          than what it was carrying. This is the room's own language: ink on
-          black, the heading, and the content. */}
-      {spread ? (
-        <div className="xk-sheet" ref={spreadRef} tabIndex={-1}>
-          <header className="xk-sheet-head">
-            <p className="xk-sheet-n">FILE {file.index}</p>
-            <h2 className="xk-sheet-title">{file.name}</h2>
-            <p className="xk-sheet-sub">{file.subject}</p>
-          </header>
-
-          <div className="xk-sheet-body">
-            <CaseFilePages file={file} data={data} />
-          </div>
-        </div>
-      ) : null}
-
       {/* Going through.
 
           Six leaves over one after another, the whole book coming at the
@@ -286,7 +232,7 @@ export function ShelfBook({
 
       {stage === "through" ? null : (
       <button type="button" className="xk-back" onClick={onBack}>
-        {spread ? "Close the file" : "Put it back"}
+        Put it back
       </button>
       )}
     </div>
