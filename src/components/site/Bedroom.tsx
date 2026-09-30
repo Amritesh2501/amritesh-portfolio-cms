@@ -14,6 +14,9 @@ import {
 } from "@/lib/bedroom";
 import { frameFor } from "@/lib/world";
 import * as sound from "@/lib/sound";
+import { useSaved } from "@/lib/save";
+import { SLOT } from "@/lib/casebook";
+import { Skip } from "./Casebook";
 import { BedroomRoom } from "./BedroomArt";
 import { Cipher } from "./Cipher";
 import { Lockpick } from "./Lockpick";
@@ -53,7 +56,7 @@ export function Bedroom({
   const [ready, setReady] = useState(false);
 
   const [open, setOpen] = useState<PuzzleId | null>(null);
-  const [solved, setSolved] = useState<PuzzleId[]>([]);
+  const [solved, setSolved] = useSaved<PuzzleId[]>(SLOT.bedroom, []);
   const [lamp, setLamp] = useState(false);
   /** The pendant over the floor, and the blind on the window behind the bed. */
   const [ceiling, setCeiling] = useState(false);
@@ -311,20 +314,38 @@ export function Bedroom({
         solved.includes("terminal") ? (
           <HisMachine data={data} onClose={() => setOpen(null)} />
         ) : (
-          <Cipher onSolved={() => solve("terminal")} onClose={() => setOpen(null)} />
+          <>
+            <Cipher onSolved={() => solve("terminal")} onClose={() => setOpen(null)} />
+            <Skip onSkip={() => solve("terminal")} />
+          </>
         )
       ) : open === "drawer" ? (
-        <Lockpick
-          data={data}
-          onOpened={() => setSolved((prev) => (prev.includes("drawer") ? prev : [...prev, "drawer"]))}
-          onClose={() => setOpen(null)}
-        />
+        <>
+          <Lockpick
+            // Remounts on a skip, so the lock opens onto the diary.
+            key={String(solved.includes("drawer"))}
+            data={data}
+            solved={solved.includes("drawer")}
+            onOpened={() => setSolved((prev) => (prev.includes("drawer") ? prev : [...prev, "drawer"]))}
+            onClose={() => setOpen(null)}
+          />
+          {solved.includes("drawer") ? null : (
+            <Skip onSkip={() => setSolved((prev) => (prev.includes("drawer") ? prev : [...prev, "drawer"]))} />
+          )}
+        </>
       ) : open === "poster" ? (
-        <Sums
-          data={data}
-          onSolved={() => setSolved((prev) => (prev.includes("poster") ? prev : [...prev, "poster"]))}
-          onClose={() => setOpen(null)}
-        />
+        <>
+          <Sums
+            key={String(solved.includes("poster"))}
+            data={data}
+            solved={solved.includes("poster")}
+            onSolved={() => setSolved((prev) => (prev.includes("poster") ? prev : [...prev, "poster"]))}
+            onClose={() => setOpen(null)}
+          />
+          {solved.includes("poster") ? null : (
+            <Skip onSkip={() => setSolved((prev) => (prev.includes("poster") ? prev : [...prev, "poster"]))} />
+          )}
+        </>
       ) : null}
     </div>
   );

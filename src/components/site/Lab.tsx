@@ -18,6 +18,9 @@ import {
 import { frameFor } from "@/lib/world";
 import type { CaseRoomData } from "@/lib/content";
 import * as sound from "@/lib/sound";
+import { useSaved } from "@/lib/save";
+import { SLOT } from "@/lib/casebook";
+import { Skip } from "./Casebook";
 import { LabRoom } from "./LabArt";
 import { PathLock } from "./PathLock";
 import { Arcade } from "./Arcade";
@@ -46,7 +49,7 @@ export function Lab({ data, onBack }: { data: CaseRoomData; onBack: () => void }
 
   const [open, setOpen] = useState<LabPuzzleId | null>(null);
   /** The machine, once the route has been walked. */
-  const [rigOpen, setRigOpen] = useState(false);
+  const [rigOpen, setRigOpen] = useSaved(SLOT.labRig, false);
   const [lights, setLights] = useState(false);
   const [blindOpen, setBlindOpen] = useState(false);
 
@@ -251,7 +254,10 @@ export function Lab({ data, onBack }: { data: CaseRoomData; onBack: () => void }
         rigOpen ? (
           <Rig data={data} onClose={() => setOpen(null)} />
         ) : (
-          <PathLock onSolved={() => setRigOpen(true)} onClose={() => setOpen(null)} />
+          <>
+            <PathLock onSolved={() => setRigOpen(true)} onClose={() => setOpen(null)} />
+            <Skip onSkip={() => setRigOpen(true)} />
+          </>
         )
       ) : open === "board" ? (
         <Planned data={data} onClose={() => setOpen(null)} />

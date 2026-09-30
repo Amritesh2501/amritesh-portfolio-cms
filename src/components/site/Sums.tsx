@@ -23,10 +23,13 @@ import type { CaseRoomData } from "@/lib/content";
 export function Sums({
   data,
   onSolved,
+  solved = false,
   onClose,
 }: {
   data: CaseRoomData;
   onSolved: () => void;
+  /** Already solved (saved, or skipped): go straight to what it holds. */
+  solved?: boolean;
   onClose: () => void;
 }) {
   const [seed, setSeed] = useState(0);
@@ -35,7 +38,7 @@ export function Sums({
   const [at, setAt] = useState(0);
   const [typed, setTyped] = useState("");
   const [left, setLeft] = useState(SUMS_SECONDS);
-  const [phase, setPhase] = useState<"running" | "won" | "lost">("running");
+  const [phase, setPhase] = useState<"running" | "won" | "lost">(solved ? "won" : "running");
   const [wrong, setWrong] = useState(0);
   const box = useRef<HTMLInputElement>(null);
 

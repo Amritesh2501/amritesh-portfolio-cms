@@ -15,6 +15,9 @@ import {
 import { frameFor } from "@/lib/world";
 import type { CaseRoomData } from "@/lib/content";
 import * as sound from "@/lib/sound";
+import { useSaved } from "@/lib/save";
+import { SLOT } from "@/lib/casebook";
+import { Skip } from "./Casebook";
 import { dateRange } from "@/lib/utils";
 import { BLOOMS, OfficeRoom } from "./OfficeArt";
 import { Untangle } from "./Untangle";
@@ -53,7 +56,7 @@ export function Office({
   const [ready, setReady] = useState(false);
 
   const [open, setOpen] = useState<OfficePuzzleId | null>(null);
-  const [solved, setSolved] = useState<OfficePuzzleId[]>([]);
+  const [solved, setSolved] = useSaved<OfficePuzzleId[]>(SLOT.office, []);
   const [lights, setLights] = useState(false);
   /** The louvres. Shut on arrival: it is an office after everybody has gone. */
   const [blindOpen, setBlindOpen] = useState(false);
@@ -276,7 +279,10 @@ export function Office({
         solved.includes("record") ? (
           <Record data={data} onClose={() => setOpen(null)} />
         ) : (
-          <ScrewLock onOpened={() => solve("record")} onClose={() => setOpen(null)} />
+          <>
+            <ScrewLock onOpened={() => solve("record")} onClose={() => setOpen(null)} />
+            <Skip onSkip={() => solve("record")} />
+          </>
         )
       ) : open === "wiring" ? (
         solved.includes("wiring") ? (
@@ -288,19 +294,26 @@ export function Office({
             onClose={() => setOpen(null)}
           >
             <Untangle onSolved={() => solve("wiring")} />
+            <Skip onSkip={() => solve("wiring")} />
           </Frame>
         )
       ) : open === "patch" ? (
         solved.includes("patch") ? (
           <Stacks data={data} onClose={() => setOpen(null)} />
         ) : (
-          <Wires onSolved={() => solve("patch")} onClose={() => setOpen(null)} />
+          <>
+            <Wires onSolved={() => solve("patch")} onClose={() => setOpen(null)} />
+            <Skip onSkip={() => solve("patch")} />
+          </>
         )
       ) : open === "backlog" ? (
         solved.includes("backlog") ? (
           <Schooling data={data} onClose={() => setOpen(null)} />
         ) : (
-          <Backlog onSolved={() => solve("backlog")} onClose={() => setOpen(null)} />
+          <>
+            <Backlog onSolved={() => solve("backlog")} onClose={() => setOpen(null)} />
+            <Skip onSkip={() => solve("backlog")} />
+          </>
         )
       ) : null}
     </div>

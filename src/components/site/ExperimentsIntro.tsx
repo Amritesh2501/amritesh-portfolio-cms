@@ -139,13 +139,6 @@ export function ExperimentsIntro({ data }: { data: CaseRoomData }) {
 
   return (
     <div className={`xp is-intake ${entering ? "is-entering" : ""}`}>
-      <div aria-hidden className="xp-tape xp-tape-a">
-        CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS ·
-      </div>
-      <div aria-hidden className="xp-tape xp-tape-b">
-        POLICE LINE · DO NOT CROSS · POLICE LINE · DO NOT CROSS · POLICE LINE · DO NOT CROSS ·
-      </div>
-
       <div className="xp-inner">
         <p className="sr-only">{LINES.join(" ")}</p>
 
