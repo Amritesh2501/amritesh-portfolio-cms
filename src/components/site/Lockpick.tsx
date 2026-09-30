@@ -39,19 +39,22 @@ export function Lockpick({
   onOpened,
   onClose,
   name = "The drawer",
+  solved = false,
 }: {
   data: CaseRoomData;
   onOpened: () => void;
   onClose: () => void;
   /** What is locked. The locked archives use this on the cage. */
   name?: string;
+  /** Already opened (saved, or skipped): go straight to what it holds. */
+  solved?: boolean;
 }) {
   const [pins, setPins] = useState(() => makePins());
   const [done, setDone] = useState(0);
   const [pick, setPick] = useState(TRACK / 2);
   const [slips, setSlips] = useState(0);
   const [bind, setBind] = useState(0);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(solved);
 
   const trackRef = useRef<HTMLDivElement>(null);
 

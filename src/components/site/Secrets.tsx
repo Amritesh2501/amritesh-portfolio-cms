@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as sound from "@/lib/sound";
+import { useSaved } from "@/lib/save";
+import { SLOT } from "@/lib/casebook";
 import {
   CONSOLE_WORD,
   HIDDEN,
@@ -22,7 +24,7 @@ import {
  * above it.
  */
 export function useSecrets() {
-  const [found, setFound] = useState<string[]>([]);
+  const [found, setFound] = useSaved<string[]>(SLOT.hidden, []);
   const [shown, setShown] = useState<Hidden | null>(null);
   const [uv, setUv] = useState(false);
   const [pin, setPin] = useState(false);
@@ -31,7 +33,7 @@ export function useSecrets() {
   useEffect(() => {
     // For whoever opens DevTools. Printed once per visit to the room.
     console.log(
-      "%cCRIME SCENE — DO NOT CROSS",
+      "%cCASE ROOM — EVIDENCE LOG",
       "background:#f2c200;color:#000;font:700 14px monospace;padding:4px 10px;letter-spacing:.2em",
     );
     console.log(

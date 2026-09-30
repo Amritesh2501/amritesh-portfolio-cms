@@ -331,32 +331,6 @@ body {
     #05060a;
 }
 
-.xp-tape {
-  position: absolute;
-  left: -10%;
-  width: 120%;
-  padding: 0.45rem 0;
-  background: var(--xp-tape);
-  color: #0b0b0b;
-  font-weight: 700;
-  font-size: 0.75rem;
-  letter-spacing: 0.35em;
-  white-space: nowrap;
-  overflow: hidden;
-  pointer-events: none;
-  box-shadow: 0 6px 18px rgb(0 0 0 / 0.6);
-}
-
-.xp-tape-a {
-  top: 1.25rem;
-  transform: rotate(-2.5deg);
-}
-
-.xp-tape-b {
-  bottom: 1.5rem;
-  transform: rotate(1.8deg);
-}
-
 .xp-sheet {
   position: relative;
   margin-top: 2rem;
@@ -426,14 +400,6 @@ body {
 }
 
 /* --- The room's secrets (components/site/Secrets) ------------------------ */
-
-.xw-title {
-  padding: 0.2rem 0.6rem;
-  background: var(--xp-tape);
-  color: #0b0b0b;
-  font-weight: 700;
-  opacity: 1;
-}
 
 .xs-layer {
   position: absolute;
@@ -8821,4 +8787,472 @@ html {
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--xp-dim);
+}
+
+/* ---------------------------------------------------------------------------
+   Reading what a room gave up
+
+   The locks are the game; what is behind them is the portfolio, and it has to
+   read like one. So once a panel is open the room's ink steps back: body copy
+   in the sans at a real reading size and full contrast, titles in the serif,
+   and the mono kept only for small labels (dates, kickers, chips) where it
+   still says "case file" without costing anyone a sentence.
+
+   Applies to .xa (office, archives, bedroom books, lab board) and .xr2 (the
+   lab rig, and the lists the archives borrow from it). The bedroom machine
+   keeps its green screen and only gets a bigger body size.
+   ------------------------------------------------------------------------- */
+
+.xa,
+.xr2 {
+  --read-fg: #efe9dc;
+  --read-soft: #b9b2a3;
+  --read-line: color-mix(in srgb, #efe9dc 14%, transparent);
+  --read-card: #0d0e12;
+  background: color-mix(in srgb, #05060a 92%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.xa-card,
+.xr2-card {
+  width: min(44rem, 100%);
+  max-height: min(90vh, 100%);
+  padding: 0;
+  gap: 0;
+  border: 1px solid var(--read-line);
+  border-top: 3px solid var(--xp-hot);
+  border-radius: 6px;
+  background: var(--read-card);
+  font-family: var(--font-display);
+  color: var(--read-fg);
+}
+
+/* Pinned header and footer; only the middle scrolls, so "Step back" is never
+   thirty entries below the fold. */
+.xa-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.xa-head,
+.xr2-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 1.5rem clamp(1.25rem, 4vw, 2.25rem) 1rem;
+  border-bottom: 1px solid var(--read-line);
+  background: var(--read-card);
+}
+
+.xa-kicker,
+.xr2-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+}
+
+.xa-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.6rem, 4.5vw, 2.2rem);
+  line-height: 1.15;
+  letter-spacing: 0;
+  color: var(--read-fg);
+}
+
+.xa-body,
+.xr2-body {
+  padding: 1.5rem clamp(1.25rem, 4vw, 2.25rem);
+  gap: 1.25rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.xa-lede {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--read-fg);
+}
+
+.xa-body .prose-tech,
+.xa-body .prose-tech p,
+.xa-body .prose-tech li,
+.xr2-body .prose-tech,
+.xr2-body .prose-tech p,
+.xr2-body .prose-tech li {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--read-fg);
+  opacity: 1;
+}
+
+.xa-body .prose-tech strong,
+.xr2-body .prose-tech strong {
+  font-weight: 600;
+}
+
+.xa-body a,
+.xr2-body a {
+  color: var(--xp-hot);
+  text-underline-offset: 3px;
+}
+
+.xa-card > .btn {
+  position: sticky;
+  bottom: 0;
+  align-self: flex-end;
+  margin: 0 clamp(1.25rem, 4vw, 2.25rem) 1.25rem;
+}
+
+.xa-foot {
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  color: var(--read-soft);
+}
+
+.xa-empty {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  color: var(--read-soft);
+}
+
+/* Entries: each job, degree, project or certificate is its own card. */
+.xo-entry,
+.xr2-item {
+  gap: 0.4rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--read-line);
+  border-left: 3px solid var(--xp-hot);
+  border-radius: 4px;
+  background: color-mix(in srgb, #efe9dc 3%, transparent);
+}
+
+.xo-entry + .xo-entry {
+  margin-top: 0;
+}
+
+.xo-entry.is-school {
+  border-left-color: var(--read-soft);
+}
+
+.xo-when,
+.xr2-when {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--xp-hot);
+}
+
+.xo-role,
+.xr2-name {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.35;
+  color: var(--read-fg);
+}
+
+.xo-where,
+.xr2-sub {
+  font-size: 0.9375rem;
+  color: var(--read-soft);
+}
+
+.xo-bullets {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--read-fg);
+  opacity: 1;
+}
+
+.xo-chips li,
+.xr2-chips li {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0;
+  color: var(--read-soft);
+}
+
+.xr2-list {
+  gap: 0.9rem;
+}
+
+.xr2-note,
+.xr2-play-note,
+.xr2-notes li {
+  font-size: 0.9375rem;
+  color: var(--read-soft);
+}
+
+.xr2-notes-n {
+  font-size: 0.75rem;
+}
+
+.xr2-tab {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  border-radius: 999px;
+}
+
+.xr2-tile-k {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+}
+
+.xm-window-body .prose-tech,
+.xm-window-body .prose-tech p,
+.xm-window-body .prose-tech li {
+  font-size: 0.9375rem;
+}
+
+.xm-window-bar {
+  font-size: 0.6875rem;
+}
+
+.xr2-card {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.xr2-card > .btn {
+  justify-self: end;
+  margin: 0 clamp(1.25rem, 4vw, 2.25rem) 1.25rem;
+}
+
+/* ---------------------------------------------------------------------------
+   The casebook (components/site/Casebook)
+
+   A tab on the right edge of every room, the notebook it opens, the three
+   questions that close the case, and the rank at the end. The notebook is an
+   .xa panel, so it reads like everything else the rooms give up.
+   ------------------------------------------------------------------------- */
+
+.xq-tab {
+  position: fixed;
+  z-index: 12;
+  right: 0;
+  top: 50%;
+  translate: 0 -50%;
+  writing-mode: vertical-rl;
+  padding: 1rem 0.55rem;
+  border: 1px solid color-mix(in srgb, #e4ddcb 30%, transparent);
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+  background: #0d0e12;
+  color: #e4ddcb;
+  font: 600 0.75rem var(--font-mono);
+  letter-spacing: 0.18em;
+  cursor: pointer;
+}
+
+.xq-tab:hover,
+.xq-tab:focus-visible {
+  border-color: #d9a05b;
+  color: #d9a05b;
+}
+
+.xq-tab.has-news::before {
+  content: "";
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: 0 auto 0.6rem;
+  border-radius: 50%;
+  background: #d9a05b;
+}
+
+.xq-toast {
+  position: fixed;
+  z-index: 13;
+  left: 50%;
+  top: 1rem;
+  translate: -50% 0;
+  width: min(34rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid color-mix(in srgb, #e4ddcb 20%, transparent);
+  border-left: 3px solid #d9a05b;
+  border-radius: 6px;
+  background: #0d0e12;
+  color: #efe9dc;
+  font: 0.9375rem/1.5 var(--font-display);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 0.6);
+  animation: xa-in 0.35s ease both;
+}
+
+.xq-skip {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: 1rem;
+  translate: -50% 0;
+  padding: 0.55rem 1rem;
+  border: 1px dashed color-mix(in srgb, #e4ddcb 45%, transparent);
+  border-radius: 999px;
+  background: rgb(13 14 18 / 0.92);
+  color: #e4ddcb;
+  font: 0.8125rem var(--font-display);
+  cursor: pointer;
+}
+
+.xq-skip:hover,
+.xq-skip:focus-visible {
+  border-style: solid;
+  border-color: #d9a05b;
+  color: #d9a05b;
+}
+
+.xq {
+  z-index: 16;
+}
+
+.xq-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin: 0;
+  font: 0.8125rem var(--font-mono);
+  color: var(--read-soft);
+}
+
+.xq-news {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, #d9a05b 12%, transparent);
+  color: var(--read-fg);
+}
+
+.xq-entries {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xq-entries li {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px dashed var(--read-line);
+  border-radius: 4px;
+}
+
+.xq-entries li.is-in {
+  border-style: solid;
+  border-left: 3px solid #d9a05b;
+  background: color-mix(in srgb, #efe9dc 3%, transparent);
+}
+
+.xq-entries p {
+  margin: 0;
+}
+
+.xq-entry-title {
+  font: 600 0.75rem var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d9a05b;
+}
+
+.xq-entry-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--read-fg);
+}
+
+.xq-redacted {
+  color: color-mix(in srgb, #efe9dc 22%, transparent);
+  letter-spacing: -0.05em;
+  user-select: none;
+}
+
+.xq-lead {
+  font-size: 0.875rem;
+  color: var(--read-soft);
+}
+
+.xq-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.xq-options {
+  display: grid;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.xq-option {
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--read-line);
+  border-radius: 6px;
+  background: color-mix(in srgb, #efe9dc 3%, transparent);
+  color: var(--read-fg);
+  font: 1rem var(--font-display);
+  text-align: left;
+  cursor: pointer;
+}
+
+.xq-option:hover,
+.xq-option:focus-visible {
+  border-color: #d9a05b;
+  background: color-mix(in srgb, #d9a05b 10%, transparent);
+}
+
+.xq-miss {
+  margin: 0;
+  color: #e58a7f;
+}
+
+.xq-stamp {
+  justify-self: end;
+  padding: 0.2rem 0.7rem;
+  border: 3px double #c8413b;
+  color: #c8413b;
+  font: 700 1rem var(--font-mono);
+  letter-spacing: 0.3em;
+  rotate: -8deg;
+}
+
+.xq-rank {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.xq-rank p {
+  margin: 0;
+}
+
+.xq-rank-title {
+  font: 2rem/1.1 var(--font-serif);
+  color: #d9a05b;
+}
+
+.xq-rank-score {
+  font: 1rem var(--font-mono);
+  color: var(--read-soft);
+}
+
+.xb-new {
+  position: absolute;
+  z-index: 4;
+  top: -10px;
+  right: -8px;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  background: #d9a05b;
+  color: #0b0b0b;
+  font: 700 0.625rem var(--font-mono);
+  letter-spacing: 0.12em;
+  rotate: 8deg;
 }

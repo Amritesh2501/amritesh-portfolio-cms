@@ -33,6 +33,7 @@ const PREFIXES = [
   "xb-", // the evidence board
   "xd-", // the machine on the case-room desk
   "xk-", // a file off the shelf
+  "xq-", // the casebook, the skip button and the ending
   "xf-", // what is written on its pages
   "xr-", // his room, through the book
   "xc-", // the cipher terminal in it

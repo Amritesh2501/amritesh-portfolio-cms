@@ -14,6 +14,9 @@ import { frameFor } from "@/lib/world";
 import type { CaseRoomData } from "@/lib/content";
 import { dateRange, monthYear } from "@/lib/utils";
 import * as sound from "@/lib/sound";
+import { useSaved } from "@/lib/save";
+import { SLOT } from "@/lib/casebook";
+import { Skip } from "./Casebook";
 import { ArchiveRoom } from "./ArchiveArt";
 import { Lockpick } from "./Lockpick";
 import { Markdown } from "./Markdown";
@@ -49,10 +52,10 @@ export function Archive({
   const [ready, setReady] = useState(false);
 
   const [on, setOn] = useState<Record<string, boolean>>({});
-  const [used, setUsed] = useState<string[]>([]);
+  const [used, setUsed] = useSaved<string[]>(SLOT.archiveUsed(id), []);
   const [note, setNote] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useSaved(SLOT.archiveUnlocked(id), false);
   const [lights, setLights] = useState(false);
   const [shelfLights, setShelfLights] = useState(false);
   const [blindOpen, setBlindOpen] = useState(false);
@@ -303,12 +306,15 @@ export function Archive({
 
       {opened ? (
         opened.locked && !unlocked ? (
-          <Lockpick
-            data={data}
-            name={opened.name}
-            onOpened={unlock}
-            onClose={() => setOpen(null)}
-          />
+          <>
+            <Lockpick
+              data={data}
+              name={opened.name}
+              onOpened={unlock}
+              onClose={() => setOpen(null)}
+            />
+            <Skip onSkip={unlock} />
+          </>
         ) : opened.shows ? (
           <div className="xa" role="dialog" aria-modal="true" aria-label={opened.name}>
             <article className="xa-card">

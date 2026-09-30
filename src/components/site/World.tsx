@@ -19,6 +19,8 @@ import {
 } from "@/lib/world";
 import type { CaseRoomData } from "@/lib/content";
 import * as sound from "@/lib/sound";
+import { useSaved } from "@/lib/save";
+import { SLOT } from "@/lib/casebook";
 import { Board } from "./Board";
 import { Room } from "./RoomArt";
 import { Desktop } from "./Desktop";
@@ -28,6 +30,8 @@ import { Office } from "./Office";
 import { Lab } from "./Lab";
 import { Archive } from "./Archive";
 import { Hideouts, SecretCards, useSecrets } from "./Secrets";
+import { CaseHud, useVisit } from "./Casebook";
+import { fresh } from "@/lib/casebook";
 import { HIDDEN } from "@/lib/secrets";
 
 /**
@@ -91,7 +95,7 @@ function bookFrom(
 export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void }) {
   const reduce = useReducedMotion();
   /** Files taken off the shelf and actually opened. Gates the index file. */
-  const [read, setRead] = useState<string[]>([]);
+  const [read, setRead] = useSaved<string[]>(SLOT.read, []);
   /** null is the arrival shot, before the camera has been given to the player. */
   const [at, setAt] = useState<string | null>(null);
   const [cam, setCam] = useState(ARRIVAL);
@@ -124,6 +128,9 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
   const view = useViewport();
   const secrets = useSecrets();
+  const since = useVisit();
+  const freshPins = useMemo(() => fresh(data, since).pins, [data, since]);
+  const hud = <CaseHud facts={data} since={since} />;
   const timers = useRef<number[]>([]);
 
   const after = useCallback((ms: number, fn: () => void) => {
@@ -363,14 +370,19 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
       setPlace("case");
       closeFile();
     };
-    return place === "bedroom" ? (
-      <Bedroom data={data} onBack={back} />
-    ) : place === "office" ? (
-      <Office data={data} onBack={back} />
-    ) : place === "lab" ? (
-      <Lab data={data} onBack={back} />
-    ) : (
-      <Archive id={place} data={data} onBack={back} />
+    return (
+      <>
+        {place === "bedroom" ? (
+          <Bedroom data={data} onBack={back} />
+        ) : place === "office" ? (
+          <Office data={data} onBack={back} />
+        ) : place === "lab" ? (
+          <Lab data={data} onBack={back} />
+        ) : (
+          <Archive id={place} data={data} onBack={back} />
+        )}
+        {hud}
+      </>
     );
   }
 
@@ -423,7 +435,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
       <div className={`xw-hud ${ready ? "is-in" : ""}`}>
         <div className="xw-hud-top">
-          <p className="xw-title">CRIME SCENE · DO NOT CROSS</p>
+          <p className="xw-title">CASE ROOM</p>
           <p className="xw-count">
             {got} / {FILE_COUNT} files read
           </p>
@@ -597,12 +609,13 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
       {/* The board and the machine, each full screen ------------------------- */}
 
       {boardOpen ? (
-        <Board evidence={data.evidence} onClose={() => setBoardOpen(false)} />
+        <Board evidence={data.evidence} fresh={freshPins} onClose={() => setBoardOpen(false)} />
       ) : null}
 
       {deskOpen ? <Desktop data={data} onClose={() => setDeskOpen(false)} /> : null}
 
       <SecretCards s={secrets} profile={data.profile} />
+      {hud}
     </div>
   );
 }

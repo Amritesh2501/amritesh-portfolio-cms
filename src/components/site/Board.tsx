@@ -73,6 +73,7 @@ type Link = SimulationLinkDatum<Node>;
 
 export function Board({
   evidence,
+  fresh = [],
   onClose,
 }: {
   evidence: readonly {
@@ -84,6 +85,8 @@ export function Board({
     kind?: string | null;
     linksTo?: readonly string[] | null;
   }[];
+  /** Pin codes added since the last visit, tagged NEW. */
+  fresh?: readonly string[];
   onClose: () => void;
 }) {
   const reduce = useReducedMotion();
@@ -353,6 +356,7 @@ export function Board({
                     pin={pin}
                     at={places[i]}
                     open={open === i}
+                    isNew={fresh.includes(pin.code)}
                     dim={open !== null && open !== i && !isLinked(threads, open, i)}
                     onGrab={(e) => drag(i, e)}
                     onOpen={() => {
@@ -402,12 +406,14 @@ export function Board({
 function PinCard({
   pin,
   at,
+  isNew,
   open,
   dim,
   onGrab,
   onOpen,
 }: {
   pin: Pin;
+  isNew?: boolean;
   at: { x: number; y: number };
   open: boolean;
   dim: boolean;
@@ -434,6 +440,7 @@ function PinCard({
       onPointerDown={onGrab}
     >
       <span className="xb-tack" aria-hidden />
+      {isNew ? <span className="xb-new">NEW</span> : null}
 
       <button
         type="button"
