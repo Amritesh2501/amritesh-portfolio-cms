@@ -317,6 +317,256 @@ body {
   transform: scale(0.99);
 }
 
+/* --- The intake: a case file behind police tape -------------------------- */
+
+.xp {
+  --xp-tape: #f2c200;
+}
+
+.xp.is-intake {
+  overflow-x: hidden;
+  /* A bare bulb over a table, and nothing else lit. */
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 30%, #17140f 0%, #05060a 70%),
+    #05060a;
+}
+
+.xp-tape {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  padding: 0.45rem 0;
+  background: var(--xp-tape);
+  color: #0b0b0b;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.35em;
+  white-space: nowrap;
+  overflow: hidden;
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.6);
+}
+
+.xp-tape-a {
+  top: 1.25rem;
+  transform: rotate(-2.5deg);
+}
+
+.xp-tape-b {
+  bottom: 1.5rem;
+  transform: rotate(1.8deg);
+}
+
+.xp-sheet {
+  position: relative;
+  margin-top: 2rem;
+  padding: 1.5rem clamp(1rem, 4vw, 2rem);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  border-left: 4px solid var(--xp-hot);
+  background: color-mix(in srgb, var(--xp-fg) 4%, transparent);
+}
+
+.xp-stamp {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.25rem 0.6rem;
+  border: 3px double #c8413b;
+  color: #c8413b;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.25em;
+  transform: rotate(-12deg) scale(1.6);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.xp-stamp.is-in {
+  opacity: 0.85;
+  transform: rotate(-12deg) scale(1);
+}
+
+.xp-ask {
+  display: grid;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.xp-log p {
+  margin: 0 0 0.6rem;
+  line-height: 1.6;
+}
+
+.xp-q {
+  color: var(--xp-dim);
+}
+
+.xp-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--xp-hot);
+  letter-spacing: 0.12em;
+}
+
+.xp-prompt input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0;
+  border: 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--xp-fg) 35%, transparent);
+  background: none;
+  color: var(--xp-fg);
+  font: inherit;
+}
+
+.xp-prompt input:focus {
+  outline: none;
+  border-bottom-color: var(--xp-hot);
+}
+
+/* --- The room's secrets (components/site/Secrets) ------------------------ */
+
+.xw-title {
+  padding: 0.2rem 0.6rem;
+  background: var(--xp-tape);
+  color: #0b0b0b;
+  font-weight: 700;
+  opacity: 1;
+}
+
+.xs-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Invisible until the pointer is on it, and then only a glint: found by
+   looking, not by reading a list. */
+.xs-spot {
+  position: absolute;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: zoom-in;
+  pointer-events: auto;
+}
+
+.xs-spot:hover,
+.xs-spot:focus-visible {
+  background: radial-gradient(circle, rgb(255 255 255 / 0.14), transparent 65%);
+  outline: none;
+}
+
+/* The yellow tent an investigator leaves where something was. */
+.xs-tent {
+  position: absolute;
+  left: 50%;
+  bottom: 30%;
+  translate: -50% 0;
+  width: 2.4rem;
+  height: 2rem;
+  display: grid;
+  place-items: end center;
+  padding-bottom: 0.15rem;
+  background: var(--xp-tape, #f2c200);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  color: #0b0b0b;
+  font: 700 1rem var(--font-mono);
+}
+
+.xs-card,
+.xs-uv {
+  position: absolute;
+  z-index: 9;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: min(30rem, calc(100vw - 2rem));
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  padding: 1.75rem 1.5rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  background: #0c0b09;
+  color: var(--xp-fg);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.7);
+}
+
+.xs-card p,
+.xs-uv p {
+  margin: 0;
+}
+
+.xs-card-title {
+  color: var(--xp-hot);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.xs-card-foot {
+  color: var(--xp-dim);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+}
+
+.xs-card-links {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.xs-card-links a {
+  color: var(--xp-hot);
+}
+
+.xs-stamp {
+  position: absolute;
+  top: -0.8rem;
+  right: 1rem;
+  padding: 0.15rem 0.5rem;
+  border: 2px solid #c8413b;
+  background: #0c0b09;
+  color: #c8413b;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  rotate: 4deg;
+}
+
+/* Blacklight. The room goes violet and the ink nobody was meant to see
+   comes up green-white. */
+.xw.is-uv .xw-viewport {
+  filter: hue-rotate(220deg) saturate(1.6) brightness(0.8);
+}
+
+.xs-uv {
+  border-color: #8f5cff;
+  background: rgb(20 8 40 / 0.92);
+}
+
+.xs-uv-head {
+  color: #b78cff;
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+}
+
+.xs-uv-note {
+  color: #d9ffe8;
+  text-shadow: 0 0 6px #6dffb0, 0 0 18px #6dffb0;
+  font-size: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xp-stamp {
+    transition: none;
+  }
+}
+
 /* ---------------------------------------------------------------------------
    The experiments room
 
