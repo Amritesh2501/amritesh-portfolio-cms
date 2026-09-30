@@ -27,6 +27,8 @@ import { Bedroom } from "./Bedroom";
 import { Office } from "./Office";
 import { Lab } from "./Lab";
 import { Archive } from "./Archive";
+import { Hideouts, SecretCards, useSecrets } from "./Secrets";
+import { HIDDEN } from "@/lib/secrets";
 
 /**
  * An officer's room, drawn in ink, with four things in it worth walking to.
@@ -121,6 +123,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   const [bulb, setBulb] = useState(BULBS[0]);
 
   const view = useViewport();
+  const secrets = useSecrets();
   const timers = useRef<number[]>([]);
 
   const after = useCallback((ms: number, fn: () => void) => {
@@ -375,7 +378,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
     <div
       // Lit by any of the three, because the room getting brighter is about
       // how much light is in it and not about where the light came from.
-      className={`xw ${!blindDown || ceiling || lamp ? "is-lit" : ""}`}
+      className={`xw ${!blindDown || ceiling || lamp ? "is-lit" : ""} ${secrets.uv ? "is-uv" : ""}`}
       // Two properties, read by every glow in the drawing. Changing the bulb
       // is this string changing; nothing downstream knows it happened. Both
       // come out of lib/world, so the colours have one home rather than being
@@ -410,6 +413,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
             onCeiling={toggleCeiling}
             onLamp={toggleLamp}
           />
+          <Hideouts s={secrets} />
         </div>
       </div>
 
@@ -419,10 +423,17 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
       <div className={`xw-hud ${ready ? "is-in" : ""}`}>
         <div className="xw-hud-top">
-          <p className="xw-title">CASE ROOM</p>
+          <p className="xw-title">CRIME SCENE · DO NOT CROSS</p>
           <p className="xw-count">
-            {got} / {FILE_COUNT} read
+            {got} / {FILE_COUNT} files read
           </p>
+          {/* Only once something has turned up: before that, a count would
+              give the game away. */}
+          {secrets.found.length ? (
+            <p className="xw-count">
+              {secrets.found.length} / {HIDDEN.length} hidden
+            </p>
+          ) : null}
           {/* The lights.
               The fittings themselves take the click in the drawing; this is
               the same two switches somewhere a keyboard can reach them, plus
@@ -590,6 +601,8 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
       ) : null}
 
       {deskOpen ? <Desktop data={data} onClose={() => setDeskOpen(false)} /> : null}
+
+      <SecretCards s={secrets} profile={data.profile} />
     </div>
   );
 }

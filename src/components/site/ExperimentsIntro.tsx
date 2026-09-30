@@ -1,23 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import * as sound from "@/lib/sound";
 import type { CaseRoomData } from "@/lib/content";
+import { intakeLines, interrogate } from "@/lib/secrets";
 import { World } from "./World";
 
-const LINES = [
-  "You have left the portfolio.",
-  "",
-  "What is through here is not finished, and some of it is not serious.",
-  "There is a room. A board with string on it, a window with a cord, a",
-  "machine somebody left running, and a shelf with six files. The files",
-  "are this portfolio, taken apart. Every one of them is a door.",
-  "",
-  "It has sound. There is a switch for that in the corner.",
-  "",
-  "Nothing you do here can break anything. Nothing is saved.",
-];
+/** The intake sheet, from the CMS rows the page already read. */
+function linesFor(data: CaseRoomData) {
+  return intakeLines(data.profile, {
+    projects: data.projects.length,
+    roles: data.experience.length,
+    certifications: data.certifications.length,
+    skills: data.skillGroups.reduce((n, g) => n + g.skills.length, 0),
+    evidence: data.evidence.length,
+  });
+}
 
 // Per character. Slow enough to read along with, fast enough that the whole
 // block lands in a few seconds.
@@ -68,6 +67,19 @@ export function ExperimentsIntro({ data }: { data: CaseRoomData }) {
   const [started, setStarted] = useState(false);
   const [entering, setEntering] = useState(false);
   const timer = useRef<number>(0);
+  const LINES = useMemo(() => linesFor(data), [data]);
+  /** The interrogation: what was typed at the prompt and what came back. */
+  const [log, setLog] = useState<{ q: string; a: string }[]>([]);
+  const [q, setQ] = useState("");
+
+  const ask = (e: React.FormEvent) => {
+    e.preventDefault();
+    const a = interrogate(q, data.profile);
+    if (a === null) setLog([]);
+    else if (q.trim()) setLog((l) => [...l, { q: q.trim(), a }].slice(-6));
+    setQ("");
+    sound.keypress();
+  };
 
   useEffect(() => {
     // `done` guards the way BACK: leaving the world remounts the terminal, and
@@ -96,7 +108,7 @@ export function ExperimentsIntro({ data }: { data: CaseRoomData }) {
 
     t = window.setTimeout(step, reduce ? 80 : 600);
     return () => window.clearTimeout(t);
-  }, [reduce, started, done]);
+  }, [reduce, started, done, LINES]);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -126,29 +138,68 @@ export function ExperimentsIntro({ data }: { data: CaseRoomData }) {
   }
 
   return (
-    <div className={`xp ${entering ? "is-entering" : ""}`}>
+    <div className={`xp is-intake ${entering ? "is-entering" : ""}`}>
+      <div aria-hidden className="xp-tape xp-tape-a">
+        CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS ·
+      </div>
+      <div aria-hidden className="xp-tape xp-tape-b">
+        POLICE LINE · DO NOT CROSS · POLICE LINE · DO NOT CROSS · POLICE LINE · DO NOT CROSS ·
+      </div>
+
       <div className="xp-inner">
         <p className="sr-only">{LINES.join(" ")}</p>
 
-        <pre className="xp-text" aria-hidden>
-          {typed}
-          {!done ? <span className="xp-caret" /> : null}
-        </pre>
+        <div className="xp-sheet">
+          <span aria-hidden className={`xp-stamp ${done ? "is-in" : ""}`}>
+            CONFIDENTIAL
+          </span>
+          {/* Reserve the whole sheet so the buttons don't walk down as it types. */}
+          <pre className="xp-text" aria-hidden style={{ minHeight: `${LINES.length * 1.85}em` }}>
+            {typed}
+            {!done ? <span className="xp-caret" /> : null}
+          </pre>
+        </div>
 
         {done ? (
-          <div className="xp-actions">
-            <button
-              type="button"
-              className="btn btn-solid"
-              onClick={enter}
-              disabled={entering}
-            >
-              {entering ? "…" : "Start exploring"}
-            </button>
-            <a href="/" className="btn btn-sm">
-              Back to the portfolio
-            </a>
-          </div>
+          <>
+            <div className="xp-actions">
+              <button
+                type="button"
+                className="btn btn-solid"
+                onClick={enter}
+                disabled={entering}
+              >
+                {entering ? "…" : "Enter the scene"}
+              </button>
+              <a href="/" className="btn btn-sm">
+                Back to the portfolio
+              </a>
+            </div>
+
+            <form className="xp-ask" onSubmit={ask}>
+              <div className="xp-log" aria-live="polite">
+                {log.map((l, i) => (
+                  <p key={i}>
+                    <span className="xp-q">&gt; {l.q}</span>
+                    <br />
+                    {l.a}
+                  </p>
+                ))}
+              </div>
+              <label className="xp-prompt">
+                <span aria-hidden>INTERROGATE &gt;</span>
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="type 'help'"
+                  aria-label="Question the file. Type help for commands."
+                  autoComplete="off"
+                  spellCheck={false}
+                  maxLength={60}
+                />
+              </label>
+            </form>
+          </>
         ) : null}
       </div>
 
