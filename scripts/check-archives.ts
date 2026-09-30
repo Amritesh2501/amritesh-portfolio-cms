@@ -68,9 +68,13 @@ for (const room of ARCHIVES) {
     );
   }
 
+  // Locks are saved per prop now, so a room can hold a few; more than three
+  // and the room stops being a room and becomes a corridor of puzzles.
   const locks = room.props.filter((p) => p.locked);
-  assert.ok(locks.length <= 1, `${r}: more than one lock is a corridor of puzzles`);
-  for (const p of locks) assert.ok(p.shows, `${r}/${p.id} is locked and guards nothing`);
+  assert.ok(locks.length <= 3, `${r}: more than three locks is a corridor of puzzles`);
+  // The decoder is its own reward: the line it decodes.
+  for (const p of locks) assert.ok(p.shows || p.lock === "decoder", `${r}/${p.id} is locked and guards nothing`);
+  assert.ok(room.props.some((p) => !p.locked), `${r}: everything is locked`);
 
   for (const p of room.props) {
     props++;

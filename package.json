@@ -32,6 +32,8 @@
     "check:resources": "tsx scripts/check-resources.ts",
     "check:secrets": "tsx scripts/check-secrets.ts",
     "check:casebook": "tsx scripts/check-casebook.ts",
+    "check:dial": "tsx scripts/check-dial.ts",
+    "check:games": "tsx scripts/check-games.ts",
     "room": "tsx --tsconfig scripts/tsconfig.json scripts/render-room.ts"
   },
   "prisma": {

@@ -14,9 +14,9 @@ type When = Date | string;
 /** The rows this file reads. CaseRoomData satisfies it structurally. */
 export type Facts = {
   profile: Subject | null;
-  experience: { role: string; company: string; currentlyWorking: boolean; createdAt?: When }[];
-  education: { degree: string; institution: string }[];
-  projects: { title: string; createdAt: When }[];
+  experience: { role: string; company: string; currentlyWorking: boolean; startDate?: When }[];
+  education: { degree: string; institution: string; startDate?: When }[];
+  projects: { title: string; createdAt: When; shortDescription?: string }[];
   certifications: { name: string; issuer: string }[];
   skillGroups: { name: string; skills: { name: string }[] }[];
   evidence: { code: string; createdAt: When }[];
@@ -33,7 +33,8 @@ export const SLOT = {
   office: "office",
   bedroom: "bedroom",
   labRig: "lab:rig",
-  archiveUnlocked: (id: string) => `archive:${id}:unlocked`,
+  /** Locked archive props that have been opened, by id. */
+  archiveOpen: (id: string) => `archive:${id}:open`,
   archiveUsed: (id: string) => `archive:${id}:used`,
   hidden: "hidden",
   skips: "skips",
@@ -41,6 +42,14 @@ export const SLOT = {
   startedAt: "startedAt",
   lastVisit: "lastVisit",
   closed: "closed",
+  /** One-off discoveries: the mugshot, the witness, the voicemail. */
+  flags: "flags",
+  /** The daily-lock streak. */
+  daily: "daily",
+  /** Things carried between rooms: the UV torch. */
+  items: "items",
+  /** Achievements already announced, so a reload does not toast them again. */
+  seen: "seen",
 } as const;
 
 const list = (s: Save, k: string) => (Array.isArray(s[k]) ? (s[k] as string[]) : []);
@@ -139,7 +148,7 @@ export const ENTRIES: Entry[] = [
     id: "papers",
     title: "Papers",
     where: "The locked archives (file 05): the cage needs picking.",
-    done: (s) => s[SLOT.archiveUnlocked("vault")] === true,
+    done: (s) => list(s, SLOT.archiveOpen("vault")).includes("cage"),
     text: (f) =>
       f.certifications.length
         ? `${f.certifications.length} certification${f.certifications.length === 1 ? "" : "s"}: ${join(f.certifications.map((c) => `${c.name} (${c.issuer})`), 2)}.`
@@ -149,7 +158,7 @@ export const ENTRIES: Entry[] = [
     id: "training",
     title: "Training",
     where: "The training floor (file 06): open the lockers.",
-    done: (s) => list(s, SLOT.archiveUsed("training")).includes("lockers"),
+    done: (s) => list(s, SLOT.archiveOpen("training")).includes("lockers"),
     text: (f) => {
       const n = f.skillGroups.reduce((a, g) => a + g.skills.length, 0);
       return n ? `${n} skills across ${join(f.skillGroups.map((g) => g.name))}.` : "Nothing in the lockers.";

@@ -174,11 +174,11 @@ export function Lab({ data, onBack }: { data: CaseRoomData; onBack: () => void }
             onPuzzle={reach}
             onLights={() => {
               setLights((on) => !on);
-              sound.latch();
+              sound.flick();
             }}
             onBlind={() => {
               setBlindOpen((on) => !on);
-              sound.latch();
+              sound.rattle();
             }}
           />
         </div>
@@ -196,7 +196,7 @@ export function Lab({ data, onBack }: { data: CaseRoomData; onBack: () => void }
               className={`xw-mute ${lights ? "is-on" : ""}`}
               onClick={() => {
                 setLights((on) => !on);
-                sound.latch();
+                sound.flick();
               }}
               aria-pressed={lights}
             >

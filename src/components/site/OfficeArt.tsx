@@ -62,6 +62,8 @@ export function OfficeRoom({
   onLights,
   onBlind,
   onBloom,
+  onPhone,
+  ringing = false,
 }: {
   at: string | null;
   lights: boolean;
@@ -73,6 +75,10 @@ export function OfficeRoom({
   onLights: () => void;
   onBlind: () => void;
   onBloom: () => void;
+  /** The answering machine on the desk. Optional so the CCTV feed can omit it. */
+  onPhone?: () => void;
+  /** Messages nobody has played yet: the light blinks. */
+  ringing?: boolean;
 }) {
   const atBoard = at === "board";
   const atRack = at === "rack";
@@ -133,6 +139,7 @@ export function OfficeRoom({
         onStation={onStation}
         onOpen={() => onPuzzle("backlog")}
       />
+      <Phone ringing={ringing} onPick={onPhone} />
     </svg>
   );
 }
@@ -670,6 +677,26 @@ function Desk({
         height={264}
         onClick={at ? onOpen : () => onStation("desk")}
       />
+    </g>
+  );
+}
+
+/**
+ * A desk phone with an answering machine, on the right-hand end of the desk.
+ * Drawn after the desk so its hit box sits on top of the desk's own.
+ */
+function Phone({ ringing, onPick }: { ringing: boolean; onPick?: () => void }) {
+  return (
+    <g className={`xw-phone ${ringing ? "is-ringing" : ""}`}>
+      <g className="xw-line">
+        <path d="M1748 838 L1846 834 L1834 806 L1760 808 Z" className="xw-solid" />
+        <path d="M1756 804 Q1760 788 1776 790 L1818 788 Q1834 786 1838 802 L1826 806 L1768 808 Z" className="xw-solid xw-thin" />
+        <path d="M1774 820 L1800 819 M1774 828 L1800 827" className="xw-thin xw-faint" />
+      </g>
+      <circle cx={1822} cy={824} r={5} className="xw-phone-light" />
+      {onPick ? (
+        <rect className="xw-hit" x={1740} y={782} width={114} height={62} onClick={(e) => { e.stopPropagation(); onPick(); }} />
+      ) : null}
     </g>
   );
 }

@@ -14,11 +14,19 @@ import { frameFor } from "@/lib/world";
 import type { CaseRoomData } from "@/lib/content";
 import { dateRange, monthYear } from "@/lib/utils";
 import * as sound from "@/lib/sound";
-import { useSaved } from "@/lib/save";
 import { SLOT } from "@/lib/casebook";
 import { Skip } from "./Casebook";
 import { ArchiveRoom } from "./ArchiveArt";
 import { Lockpick } from "./Lockpick";
+import { DialLock } from "./DialLock";
+import { Cctv } from "./Cctv";
+import { Decoder, Prints, Timeline } from "./ArchiveGames";
+import { addTo, getSave, useSaved, writeSlot } from "@/lib/save";
+import { makeCombo } from "@/lib/dial";
+import { bumpStreak, dailyRnd, dayKey, decoderPlain, decoderShift, type Streak } from "@/lib/games";
+
+/** A prop's line, with today's decoder key filled in where it is hidden. */
+const noteFor = (p: ArchiveProp) => p.note.replace("{shift}", String(decoderShift()));
 import { Markdown } from "./Markdown";
 
 /**
@@ -55,7 +63,16 @@ export function Archive({
   const [used, setUsed] = useSaved<string[]>(SLOT.archiveUsed(id), []);
   const [note, setNote] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
-  const [unlocked, setUnlocked] = useSaved(SLOT.archiveUnlocked(id), false);
+  /** The last thing touched, and a counter so touching it again replays. */
+  const [poke, setPoke] = useState({ id: "", n: 0 });
+  /** Locked props opened so far, saved. */
+  const [opens, setOpens] = useSaved<string[]>(SLOT.archiveOpen(id), []);
+  const isShut = useCallback((p: ArchiveProp) => !!p.locked && !opens.includes(p.id), [opens]);
+  /** Today's numbers for the daily locks, the same all day. */
+  const combos = useMemo(
+    () => ({ dial: makeCombo(dailyRnd("locker")), safe: makeCombo(dailyRnd("safe")) }),
+    [],
+  );
   const [lights, setLights] = useState(false);
   const [shelfLights, setShelfLights] = useState(false);
   const [blindOpen, setBlindOpen] = useState(false);
@@ -115,19 +132,21 @@ export function Archive({
 
   const act = useCallback(
     (prop: ArchiveProp) => {
-      sound.latch();
-      if (prop.locked && !unlocked) {
+      sound.PROP_SOUNDS[prop.sfx]();
+      setPoke((p) => ({ id: prop.id, n: p.n + 1 }));
+      if (isShut(prop)) {
         setOpen(prop.id);
         return;
       }
       const next = !on[prop.id];
       setOn((prev) => ({ ...prev, [prop.id]: next }));
       setUsed((prev) => (prev.includes(prop.id) ? prev : [...prev, prop.id]));
-      setNote(prop.note);
+      setNote(noteFor(prop));
+      if (prop.gives && next) addTo(SLOT.items, prop.gives);
       // Putting a thing back does not open it again.
-      if (prop.shows && next) setOpen(prop.id);
+      if ((prop.shows || prop.opens) && next) setOpen(prop.id);
     },
-    [on, unlocked],
+    [on, isShut],
   );
 
   /** Clicking a thing is using the thing: from across the floor this walks
@@ -148,16 +167,22 @@ export function Archive({
 
   const unlock = useCallback(() => {
     const prop = room.props.find((p) => p.id === open);
-    setUnlocked(true);
     if (!prop) return;
+    setOpens((prev) => (prev.includes(prop.id) ? prev : [...prev, prop.id]));
     setOn((prev) => ({ ...prev, [prop.id]: true }));
     setUsed((prev) => (prev.includes(prop.id) ? prev : [...prev, prop.id]));
-    setNote(prop.note);
-  }, [room, open]);
+    setNote(noteFor(prop));
+    // The daily locks count toward the streak.
+    if (prop.lock === "dial" || prop.lock === "safe") {
+      writeSlot(SLOT.daily, bumpStreak(getSave()[SLOT.daily] as Streak | undefined, dayKey()));
+    }
+    // A lock that guards no card (the decoder) is its own reward: close it.
+    if (!prop.shows && !prop.opens) setOpen(null);
+  }, [room, open, setOpens, setUsed]);
 
-  const toggle = (set: (fn: (v: boolean) => boolean) => void) => () => {
+  const toggle = (set: (fn: (v: boolean) => boolean) => void, fx: () => void = sound.flick) => () => {
     set((v) => !v);
-    sound.latch();
+    fx();
   };
 
   /* Keyboard ---------------------------------------------------------------- */
@@ -206,6 +231,7 @@ export function Archive({
             room={room}
             at={at}
             on={on}
+            poke={poke}
             lights={lights}
             shelfLights={shelfLights}
             blindOpen={blindOpen}
@@ -213,7 +239,7 @@ export function Archive({
             onProp={use}
             onLights={toggle(setLights)}
             onShelfLights={toggle(setShelfLights)}
-            onBlind={toggle(setBlindOpen)}
+            onBlind={toggle(setBlindOpen, sound.rattle)}
           />
         </div>
       </div>
@@ -246,7 +272,7 @@ export function Archive({
             <button
               type="button"
               className={`xw-mute ${blindOpen ? "is-on" : ""}`}
-              onClick={toggle(setBlindOpen)}
+              onClick={toggle(setBlindOpen, sound.rattle)}
               aria-pressed={blindOpen}
             >
               BLIND
@@ -295,7 +321,7 @@ export function Archive({
                   >
                     <span>{p.name.toUpperCase()}</span>
                     <span className="xw-file-s">
-                      {p.locked && !unlocked ? "LOCKED" : on[p.id] ? "PUT BACK" : "USE"}
+                      {isShut(p) ? "LOCKED" : on[p.id] ? "PUT BACK" : "USE"}
                     </span>
                   </button>
                 ))}
@@ -305,16 +331,42 @@ export function Archive({
       </div>
 
       {opened ? (
-        opened.locked && !unlocked ? (
+        isShut(opened) ? (
           <>
-            <Lockpick
-              data={data}
-              name={opened.name}
-              onOpened={unlock}
-              onClose={() => setOpen(null)}
-            />
+            {opened.lock === "dial" ? (
+              <DialLock name={opened.name} combo={combos.dial} onOpened={unlock} onClose={() => setOpen(null)} />
+            ) : opened.lock === "safe" ? (
+              <DialLock
+                name={opened.name}
+                combo={combos.safe}
+                seconds={90}
+                onOpened={unlock}
+                onClose={() => setOpen(null)}
+              />
+            ) : opened.lock === "prints" ? (
+              <Prints name={opened.name} onOpened={unlock} onClose={() => setOpen(null)} />
+            ) : opened.lock === "decoder" ? (
+              <Decoder
+                name={opened.name}
+                plain={decoderPlain(data)}
+                shift={decoderShift()}
+                onOpened={unlock}
+                onClose={() => setOpen(null)}
+              />
+            ) : opened.lock === "timeline" ? (
+              <Timeline name={opened.name} facts={data} onOpened={unlock} onClose={() => setOpen(null)} />
+            ) : (
+              <Lockpick
+                data={data}
+                name={opened.name}
+                onOpened={unlock}
+                onClose={() => setOpen(null)}
+              />
+            )}
             <Skip onSkip={unlock} />
           </>
+        ) : opened.opens === "cctv" ? (
+          <Cctv data={data} onClose={() => setOpen(null)} />
         ) : opened.shows ? (
           <div className="xa" role="dialog" aria-modal="true" aria-label={opened.name}>
             <article className="xa-card">
@@ -465,6 +517,20 @@ function Contents({ shows, data }: { shows: Shows; data: CaseRoomData }) {
             </li>
           ))}
         </ul>
+      );
+
+    case "achievements":
+      if (data.achievements.length === 0) return <Empty table="Achievements" />;
+      return (
+        <div className="xr2-list">
+          {data.achievements.map((a) => (
+            <article key={a.id} className="xr2-item">
+              <p className="xr2-when">{a.value}</p>
+              <h3 className="xr2-name">{a.label}</h3>
+              {a.description ? <p className="xr2-sub">{a.description}</p> : null}
+            </article>
+          ))}
+        </div>
       );
 
     case "skills":

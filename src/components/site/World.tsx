@@ -130,7 +130,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
   const secrets = useSecrets();
   const since = useVisit();
   const freshPins = useMemo(() => fresh(data, since).pins, [data, since]);
-  const hud = <CaseHud facts={data} since={since} />;
+  const hud = <CaseHud facts={data} since={since} place={place} />;
   const timers = useRef<number[]>([]);
 
   const after = useCallback((ms: number, fn: () => void) => {
@@ -263,7 +263,7 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
   const pullCord = useCallback(() => {
     setBlindDown((down) => !down);
-    sound.latch();
+    sound.rattle();
   }, []);
 
   /* The board --------------------------------------------------------------- */
@@ -290,12 +290,12 @@ export function World({ data, onExit }: { data: CaseRoomData; onExit: () => void
 
   const toggleCeiling = useCallback(() => {
     setCeiling((on) => !on);
-    sound.latch();
+    sound.flick();
   }, []);
 
   const toggleLamp = useCallback(() => {
     setLamp((on) => !on);
-    sound.latch();
+    sound.flick();
   }, []);
 
   /** Picking a colour also turns the fitting on: nobody picks a bulb to

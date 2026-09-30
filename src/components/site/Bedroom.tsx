@@ -64,17 +64,17 @@ export function Bedroom({
 
   const toggleCeiling = useCallback(() => {
     setCeiling((on) => !on);
-    sound.latch();
+    sound.flick();
   }, []);
 
   const toggleLamp = useCallback(() => {
     setLamp((on) => !on);
-    sound.latch();
+    sound.flick();
   }, []);
 
   const pullCord = useCallback(() => {
     setBlindDown((down) => !down);
-    sound.latch();
+    sound.rattle();
   }, []);
 
   /* Arriving ---------------------------------------------------------------- */

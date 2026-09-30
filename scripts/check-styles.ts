@@ -34,6 +34,9 @@ const PREFIXES = [
   "xd-", // the machine on the case-room desk
   "xk-", // a file off the shelf
   "xq-", // the casebook, the skip button and the ending
+  "xz-", // the combination dial on the lockers
+  "xv-", // the security camera: footage wall and live camera
+  "xn-", // archive minigames (prints, decoder, timeline) and the phone
   "xf-", // what is written on its pages
   "xr-", // his room, through the book
   "xc-", // the cipher terminal in it
