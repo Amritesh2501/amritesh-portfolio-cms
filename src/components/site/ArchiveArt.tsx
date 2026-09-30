@@ -18,6 +18,8 @@ type Props = {
   room: Room;
   at: string | null;
   on: Record<string, boolean>;
+  /** The prop touched last; its counter restarts the touch animation. */
+  poke?: { id: string; n: number };
   lights: boolean;
   shelfLights: boolean;
   blindOpen: boolean;
@@ -33,7 +35,8 @@ export function ArchiveRoom(p: Props) {
   /** Draw a prop by id: its art, the state class, and its hit box on top. */
   const P = (id: string, art: ReactNode) => {
     const prop = room.props.find((x) => x.id === id)!;
-    return <Prop key={id} prop={prop} on={Boolean(p.on[id])} onUse={p.onProp} art={art} />;
+    const poked = p.poke?.id === id ? p.poke.n : 0;
+    return <Prop key={id} prop={prop} on={Boolean(p.on[id])} poked={poked} onUse={p.onProp} art={art} />;
   };
 
   return (
@@ -64,18 +67,24 @@ type Draw = (id: string, art: ReactNode) => ReactNode;
 function Prop({
   prop,
   on,
+  poked,
   onUse,
   art,
 }: {
   prop: ArchiveProp;
   on: boolean;
+  poked: number;
   onUse: (id: string) => void;
   art: ReactNode;
 }) {
   const { x, y, w, h } = prop.hit;
   return (
     <g className={`xw-ar-prop ${on ? "is-on" : ""}`}>
-      {art}
+      {/* Two identical animations, alternated, so every touch replays the
+          nudge without remounting the art (which would cut its transitions). */}
+      <g className={poked ? `xw-ar-poke-${poked % 2 ? "a" : "b"}` : undefined}>
+        {art}
+      </g>
       <rect
         className="xw-hit"
         x={x}

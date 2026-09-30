@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as sound from "@/lib/sound";
-import { getSave, resetSave, useSave, useSaved, writeSlot } from "@/lib/save";
+import { addTo, getSave, resetSave, useSave, useSaved, writeSlot } from "@/lib/save";
 import {
   ENTRIES,
   SLOT,
@@ -16,6 +16,8 @@ import {
   type Facts,
 } from "@/lib/casebook";
 import { HIDDEN } from "@/lib/secrets";
+import { ACHIEVEMENTS, dayKey, earned, pairs, testimony, type Streak } from "@/lib/games";
+import { shuffleOrder } from "@/lib/world";
 
 /**
  * The game layer over every room: a notebook that fills in as locks give, a
@@ -52,16 +54,33 @@ export function Skip({ onSkip }: { onSkip: () => void }) {
   );
 }
 
-type View = null | "book" | "quiz" | "closed";
+type View = null | "book" | "quiz" | "closed" | "match" | "witness";
 
-export function CaseHud({ facts, since }: { facts: Facts; since: number | undefined }) {
+export function CaseHud({
+  facts,
+  since,
+  place = "case",
+}: {
+  facts: Facts;
+  since: number | undefined;
+  /** Which room is on screen: the UV torch shows that room's notes. */
+  place?: string;
+}) {
   const save = useSave();
   const [view, setView] = useState<View>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef(0);
   const done = doneEntries(save);
   const closed = !!save[SLOT.closed];
   const news = fresh(facts, since);
   const newCount = news.projects.length + news.pins.length;
+
+  const say = useCallback((m: string) => {
+    setToast(m);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 6500);
+  }, []);
+  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
   // A new entry: say what went in and where to go next.
   const count = useRef(done.length);
@@ -69,16 +88,23 @@ export function CaseHud({ facts, since }: { facts: Facts; since: number | undefi
     if (done.length > count.current) {
       const added = done[done.length - 1];
       const next = lead(save);
-      setToast(`Added to casebook: ${added.title}.${next ? ` Next lead: ${next}` : " The notebook is full. Close the case."}`);
-      const t = window.setTimeout(() => setToast(null), 6500);
-      count.current = done.length;
-      return () => window.clearTimeout(t);
+      say(`Added to casebook: ${added.title}.${next ? ` Next lead: ${next}` : " The notebook is full. Close the case."}`);
     }
     count.current = done.length;
-    // Keyed on the count alone: any other write to the save re-renders this,
-    // and re-running would cancel the timer and leave the toast up for good.
+    // Keyed on the count alone: every other write to the save re-renders this.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [done.length]);
+
+  // A new achievement: announced once, ever (the seen list is saved).
+  const got = earned(save).map((a) => a.id).join(",");
+  useEffect(() => {
+    const seen = (getSave()[SLOT.seen] as string[] | undefined) ?? [];
+    const fresh = ACHIEVEMENTS.filter((a) => got.split(",").includes(a.id) && !seen.includes(a.id));
+    if (!fresh.length) return;
+    writeSlot(SLOT.seen, [...seen, ...fresh.map((a) => a.id)]);
+    sound.chime();
+    say(`Achievement unlocked: ${fresh.map((a) => a.title).join(", ")}.`);
+  }, [got, say]);
 
   useEffect(() => {
     if (!view) return;
@@ -90,6 +116,8 @@ export function CaseHud({ facts, since }: { facts: Facts; since: number | undefi
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, [view]);
+
+  const book = () => setView("book");
 
   return (
     <>
@@ -104,6 +132,8 @@ export function CaseHud({ facts, since }: { facts: Facts; since: number | undefi
         CASEBOOK {done.length}/{ENTRIES.length}
       </button>
 
+      <UvTorch facts={facts} place={place} />
+
       {toast ? (
         <p className="xq-toast" role="status">
           {toast}
@@ -111,11 +141,22 @@ export function CaseHud({ facts, since }: { facts: Facts; since: number | undefi
       ) : null}
 
       {view === "book" ? (
-        <Book facts={facts} news={news} onQuiz={() => setView("quiz")} onClose={() => setView(null)} />
+        <Book
+          facts={facts}
+          news={news}
+          onQuiz={() => setView("quiz")}
+          onMatch={() => setView("match")}
+          onWitness={() => setView("witness")}
+          onClose={() => setView(null)}
+        />
       ) : view === "quiz" ? (
-        <Quiz facts={facts} onClosed={() => setView("closed")} onBack={() => setView("book")} />
+        <Quiz facts={facts} onClosed={() => setView("closed")} onBack={book} />
       ) : view === "closed" ? (
-        <Closed facts={facts} onBook={() => setView("book")} onClose={() => setView(null)} />
+        <Closed facts={facts} onBook={book} onClose={() => setView(null)} />
+      ) : view === "match" ? (
+        <Match facts={facts} onBack={book} />
+      ) : view === "witness" ? (
+        <Witness facts={facts} onBack={book} />
       ) : null}
     </>
   );
@@ -152,11 +193,15 @@ function Book({
   facts,
   news,
   onQuiz,
+  onMatch,
+  onWitness,
   onClose,
 }: {
   facts: Facts;
   news: ReturnType<typeof fresh>;
   onQuiz: () => void;
+  onMatch: () => void;
+  onWitness: () => void;
   onClose: () => void;
 }) {
   const save = useSave();
@@ -164,6 +209,7 @@ function Book({
   const start = (save[SLOT.startedAt] as number) || Date.now();
   const hidden = ((save[SLOT.hidden] as string[]) ?? []).length;
   const skips = (save[SLOT.skips] as number) ?? 0;
+  const streak = (save[SLOT.daily] as Streak | undefined)?.streak ?? 0;
 
   return (
     <Panel kicker="THE CASEBOOK" title="What is known about the subject" onClose={onClose}>
@@ -207,6 +253,43 @@ function Book({
           );
         })}
       </ol>
+
+      <section className="xq-section">
+        <h3 className="xq-h">Side cases</h3>
+        <div className="xq-actions">
+          <button type="button" className="btn btn-sm" onClick={onMatch}>
+            {flagged(save, "matched") ? "✓ " : ""}Match the evidence
+          </button>
+          <button type="button" className="btn btn-sm" onClick={onWitness}>
+            {flagged(save, "witness") ? "✓ " : ""}Question a witness
+          </button>
+        </div>
+      </section>
+
+      <section className="xq-section">
+        <h3 className="xq-h">Daily case</h3>
+        <p className="xq-lead">
+          The locker dial and the vault safe change their numbers every day ({dayKey()}). Open one each day to keep a
+          streak. Current streak: <strong>{streak} day{streak === 1 ? "" : "s"}</strong>.
+        </p>
+      </section>
+
+      <section className="xq-section">
+        <h3 className="xq-h">
+          Achievements · {earned(save).length} / {ACHIEVEMENTS.length}
+        </h3>
+        <ul className="xq-achv">
+          {ACHIEVEMENTS.map((a) => {
+            const on = a.test(save);
+            return (
+              <li key={a.id} className={on ? "is-on" : ""}>
+                <strong>{on ? "★" : "☆"} {a.title}</strong>
+                <span>{a.desc}</span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
       <div className="xq-actions">
         <button type="button" className="btn btn-solid" onClick={onQuiz} disabled={!readyToClose(save)}>
@@ -319,5 +402,210 @@ function Closed({ facts, onBook, onClose }: { facts: Facts; onBook: () => void; 
         </button>
       </div>
     </Panel>
+  );
+}
+
+const flagged = (s: Record<string, unknown>, f: string) =>
+  Array.isArray(s[SLOT.flags]) && (s[SLOT.flags] as string[]).includes(f);
+
+/* ---------------------------------------------------------------------------
+   Side cases
+   ------------------------------------------------------------------------- */
+
+/** Each project to what it is: click a name, then its description. */
+function Match({ facts, onBack }: { facts: Facts; onBack: () => void }) {
+  const list = useMemo(() => pairs(facts), [facts]);
+  const [clues] = useState(() => shuffleOrder(list));
+  const [pick, setPick] = useState<string | null>(null);
+  const [done, setDone] = useState<string[]>([]);
+  const [miss, setMiss] = useState<string | null>(null);
+  const all = list.length > 0 && done.length === list.length;
+
+  const choose = (id: string) => {
+    if (!pick || done.includes(id)) return;
+    if (id === pick) {
+      const next = [...done, id];
+      setDone(next);
+      setMiss(null);
+      sound.latch();
+      if (next.length === list.length) {
+        addTo(SLOT.flags, "matched");
+        sound.recovered();
+      }
+    } else {
+      setMiss(id);
+      sound.toss();
+    }
+    setPick(null);
+  };
+
+  return (
+    <Panel kicker="SIDE CASE · EVIDENCE" title="Match each project to its file" onClose={onBack}>
+      {list.length < 2 ? (
+        <p className="xa-empty">Not enough projects with a short description in the CMS to match yet.</p>
+      ) : (
+        <>
+          <p className="xq-lead">Pick a project on the left, then the file it belongs to on the right.</p>
+          <div className="xq-match">
+            <div>
+              {list.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`xq-option ${pick === p.id ? "is-pick" : ""} ${done.includes(p.id) ? "is-done" : ""}`}
+                  onClick={() => !done.includes(p.id) && setPick(p.id)}
+                  aria-pressed={pick === p.id}
+                >
+                  {p.title}
+                </button>
+              ))}
+            </div>
+            <div>
+              {clues.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`xq-option is-clue ${done.includes(p.id) ? "is-done" : ""} ${miss === p.id ? "is-miss" : ""}`}
+                  onClick={() => choose(p.id)}
+                  disabled={!pick || done.includes(p.id)}
+                >
+                  {p.clue}
+                </button>
+              ))}
+            </div>
+          </div>
+          {all ? <p className="xq-news">All matched. Filed under Evidence locker.</p> : null}
+        </>
+      )}
+    </Panel>
+  );
+}
+
+/** Four statements from a witness, one of them a lie. */
+function Witness({ facts, onBack }: { facts: Facts; onBack: () => void }) {
+  const [t] = useState(() => testimony(facts));
+  const [tried, setTried] = useState<number[]>([]);
+  const [caught, setCaught] = useState(false);
+
+  if (!t)
+    return (
+      <Panel kicker="SIDE CASE · WITNESS" title="Nobody saw anything" onClose={onBack}>
+        <p className="xa-empty">There is not enough in the CMS yet for a witness to talk about.</p>
+      </Panel>
+    );
+
+  const accuse = (i: number) => {
+    if (caught) return;
+    if (i === t.lie) {
+      setCaught(true);
+      addTo(SLOT.flags, "witness");
+      sound.recovered();
+    } else {
+      setTried((x) => [...x, i]);
+      sound.toss();
+    }
+  };
+
+  return (
+    <Panel kicker="SIDE CASE · WITNESS" title="The landlord says…" onClose={onBack}>
+      <p className="xq-lead">One of these is a lie. The casebook has everything you need to spot it.</p>
+      <div className="xq-options">
+        {t.statements.map((line, i) => (
+          <button
+            key={i}
+            type="button"
+            className={`xq-option ${tried.includes(i) ? "is-done" : ""} ${caught && i === t.lie ? "is-pick" : ""}`}
+            onClick={() => accuse(i)}
+            disabled={tried.includes(i)}
+          >
+            “{line}”{tried.includes(i) ? "  (checks out)" : ""}
+          </button>
+        ))}
+      </div>
+      {caught ? <p className="xq-news">Caught. The landlord goes quiet and looks at the floor.</p> : null}
+    </Panel>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   The UV torch: carried once found, and it works in every room
+   ------------------------------------------------------------------------- */
+
+type UvNote = { x: number; y: number; text: string };
+
+function uvFor(f: Facts, place: string): UvNote[] {
+  const p = f.profile;
+  const by: Record<string, (string | null | undefined)[]> = {
+    case: [p?.philosophy, p?.headline],
+    bedroom: [p?.hobbies?.length ? `Off the clock: ${p.hobbies.join(", ")}` : null, p?.philosophy],
+    office: [p?.currentFocus, p?.availabilityText],
+    lab: [p?.technicalInterests, f.projects[0]?.title ? `Proudest of: ${f.projects[0].title}` : null],
+    college: [f.education[0] ? `${f.education[0].degree}. Worth it.` : null, p?.technicalInterests],
+    vault: [f.certifications[0] ? `First paper: ${f.certifications[0].name}` : null, p?.philosophy],
+    training: [p?.currentFocus, p?.yearsOfExperience ? `${p.yearsOfExperience}+ years of practice` : null],
+  };
+  const spots = [
+    { x: 18, y: 28 },
+    { x: 58, y: 56 },
+  ];
+  return (by[place] ?? by.case)
+    .filter((t): t is string => !!t && !!t.trim())
+    .map((text, i) => ({ ...spots[i % spots.length], text }));
+}
+
+function UvTorch({ facts, place }: { facts: Facts; place: string }) {
+  const save = useSave();
+  const has = Array.isArray(save[SLOT.items]) && (save[SLOT.items] as string[]).includes("torch");
+  const [on, setOn] = useState(false);
+  const layer = useRef<HTMLDivElement>(null);
+  const notes = uvFor(facts, place);
+
+  useEffect(() => {
+    if (!on) return;
+    const move = (e: PointerEvent) => {
+      layer.current?.style.setProperty("--x", `${e.clientX}px`);
+      layer.current?.style.setProperty("--y", `${e.clientY}px`);
+    };
+    window.addEventListener("pointermove", move);
+    return () => window.removeEventListener("pointermove", move);
+  }, [on]);
+
+  if (!has) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        className={`xq-torch ${on ? "is-on" : ""}`}
+        aria-pressed={on}
+        onClick={() => {
+          setOn((v) => !v);
+          addTo(SLOT.flags, "torch");
+          sound.flick();
+        }}
+      >
+        UV TORCH
+      </button>
+      {on ? (
+        <div ref={layer} className="xq-uv">
+          {/* The spotlight is for looking; the text is all here for a screen reader. */}
+          {notes.length ? (
+            notes.map((n, i) => (
+              <p
+                key={i}
+                className="xq-uv-note"
+                style={{ left: `${n.x}%`, top: `${n.y}%`, rotate: `${i % 2 ? 3 : -4}deg` }}
+              >
+                {n.text}
+              </p>
+            ))
+          ) : (
+            <p className="xq-uv-note" style={{ left: "40%", top: "45%" }}>
+              Nothing written here.
+            </p>
+          )}
+        </div>
+      ) : null}
+    </>
   );
 }

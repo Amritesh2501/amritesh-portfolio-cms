@@ -365,3 +365,93 @@ export function recovered() {
     osc.stop(t + delay + 1.7);
   });
 }
+
+/* ---------------------------------------------------------------------------
+   Props: one voice per kind of thing, so touching the room sounds like the
+   room rather than like the same latch forty times.
+   ------------------------------------------------------------------------- */
+
+/** A short pitched voice, optionally sliding. The basis of beeps and metal. */
+function tone(hz: number, ms: number, type: OscillatorType, gain: number, to?: number, at = 0) {
+  if (!kit || muted) return;
+  const { ctx, master } = kit;
+  const t = ctx.currentTime + at;
+  const dur = ms / 1000;
+  const osc = ctx.createOscillator();
+  osc.type = type;
+  osc.frequency.setValueAtTime(hz, t);
+  if (to) osc.frequency.exponentialRampToValueAtTime(to, t + dur);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain, t + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(g);
+  g.connect(master);
+  osc.start(t);
+  osc.stop(t + dur + 0.05);
+}
+
+/** A wall switch: two clicks, down and back. */
+export const flick = () => {
+  burst(0.14, 30, "highpass", 3000, 5000, 2);
+  tone(1800, 25, "square", 0.03);
+};
+
+/** A blind or a cord: a dry rattle. */
+export const rattle = () => {
+  for (let i = 0; i < 5; i++) tone(900 + Math.random() * 500, 30, "square", 0.02, undefined, i * 0.045);
+  burst(0.06, 260, "bandpass", 2400, 1200, 1.5);
+};
+
+/** Something heavy and soft taking a hit: the bag. */
+export const thud = () => {
+  tone(90, 260, "sine", 0.5, 45);
+  burst(0.12, 120, "lowpass", 600, 120);
+};
+
+/** Metal on metal: lockers, cages, racks, the vault wheel. */
+export const clank = () => {
+  tone(420, 380, "triangle", 0.12, 380);
+  tone(1130, 260, "sine", 0.06, 1090);
+  burst(0.1, 90, "bandpass", 3200, 1800, 3);
+};
+
+/** Glass or a trophy catching the light. */
+export const chime = () => {
+  tone(1568, 900, "sine", 0.08);
+  tone(2349, 700, "sine", 0.04, undefined, 0.06);
+};
+
+/** A motor spinning up: the treadmill, the globe, the fiche reader. */
+export const whir = () => tone(80, 700, "sawtooth", 0.05, 240);
+
+/** Electronics waking: the camera, a screen. */
+export const beep = () => {
+  tone(1320, 70, "square", 0.04);
+  tone(1760, 90, "square", 0.04, undefined, 0.1);
+};
+
+/** A hinge that wants oil: doors and gates. */
+export const creak = () => tone(260, 600, "sawtooth", 0.035, 180);
+
+/** Paper: a box lid, a yearbook, a card catalogue. */
+export const rustle = () => burst(0.12, 340, "bandpass", 3600, 1400, 0.8);
+
+/** One detent of a combination dial going past. */
+export const dialClick = () => burst(0.05, 18, "highpass", 4200, 5200, 4);
+
+/** The detent that is different: the gate lining up under the dial. */
+export const dialTick = () => {
+  burst(0.22, 40, "bandpass", 1500, 900, 6);
+  tone(700, 60, "square", 0.05);
+};
+
+/** A camera shutter. */
+export const shutter = () => {
+  burst(0.2, 40, "highpass", 2500, 6000, 1);
+  burst(0.14, 70, "bandpass", 1800, 900, 2);
+};
+
+/** Every voice a prop can have, by name, so data can pick one. */
+export const PROP_SOUNDS = { flick, rattle, thud, clank, chime, whir, beep, creak, rustle, latch, page } as const;
+export type PropSound = keyof typeof PROP_SOUNDS;

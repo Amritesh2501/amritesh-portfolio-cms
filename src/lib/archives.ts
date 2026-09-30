@@ -13,6 +13,7 @@
  */
 
 import type { Shot } from "./world";
+import type { PropSound } from "./sound";
 
 export type ArchiveId = "college" | "vault" | "training";
 
@@ -32,7 +33,15 @@ export type Shows =
   | "certifications"
   | "issuers"
   | "drills"
-  | "skills";
+  | "skills"
+  | "achievements";
+
+/**
+ * The games that guard a prop: a pin tumbler (default), a combination dial,
+ * the vault safe (a dial on a clock, whose numbers the office phone gives
+ * away), fingerprint dusting, the decoder ring, and the timeline.
+ */
+export type Lock = "pick" | "dial" | "safe" | "prints" | "decoder" | "timeline";
 
 export type ArchiveProp = {
   id: string;
@@ -43,8 +52,16 @@ export type ArchiveProp = {
   note: string;
   /** Opens a card with this on it. Absent means using it only changes it. */
   shows?: Shows;
-  /** Behind a lock that has to be picked first. */
+  /** Behind a lock that has to be beaten first. */
   locked?: boolean;
+  /** Which lock: a pin tumbler to pick (default) or a combination dial. */
+  lock?: Lock;
+  /** Opens its own screen rather than a card of CMS rows. */
+  opens?: "cctv";
+  /** What it sounds like to touch. */
+  sfx: PropSound;
+  /** Something picked up and carried to every room. */
+  gives?: "torch";
   hit: Box;
 };
 
@@ -116,22 +133,27 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "yearbooks",
         at: "stacks",
+        sfx: "page",
         name: "The yearbooks",
-        note: "One pulled out. Somebody has written the years on the spines in pencil.",
+        note: "One pulled out. Somebody has written the years on the spines in pencil, and SHIFT {shift} in a margin.",
         shows: "years",
         hit: { x: 450, y: 350, w: 380, h: 590 },
       },
       {
         id: "catalogue",
         at: "catalogue",
+        sfx: "rustle",
         name: "The card catalogue",
-        note: "The drawer slides out on its runners. Every card is typed.",
+        note: "The drawer slides out on its runners. Every card is typed, and now in order.",
         shows: "records",
+        locked: true,
+        lock: "timeline",
         hit: { x: 900, y: 640, w: 280, h: 300 },
       },
       {
         id: "globe",
         at: "catalogue",
+        sfx: "whir",
         name: "The globe",
         note: "It spins. There are pins in it where the courses were taken.",
         shows: "places",
@@ -140,20 +162,26 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "lamp",
         at: "desk",
+        sfx: "flick",
         name: "The banker's lamp",
-        note: "Click. Green glass, and a pool of light on the desk.",
+        note: "Click. Green glass, a pool of light, and a UV torch in the base. You take it.",
+        gives: "torch",
         hit: { x: 1350, y: 690, w: 100, h: 100 },
       },
       {
         id: "fiche",
         at: "desk",
+        sfx: "whir",
         name: "The microfiche reader",
-        note: "The screen warms up onto a page of old enrolment lists.",
+        note: "The screen warms up. The scrambled line on it reads clearly now.",
+        locked: true,
+        lock: "decoder",
         hit: { x: 1560, y: 630, w: 150, h: 160 },
       },
       {
         id: "diploma",
         at: "wall",
+        sfx: "latch",
         name: "The frame",
         note: "Straightened. It had been hanging crooked for years.",
         shows: "diploma",
@@ -200,6 +228,7 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "cage",
         at: "cage",
+        sfx: "creak",
         name: "The cage",
         note: "The padlock gives. The gate swings in.",
         shows: "certifications",
@@ -209,14 +238,18 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "boxes",
         at: "boxes",
+        sfx: "clank",
         name: "The deposit boxes",
-        note: "One of the little doors is unlocked. There is a list of names inside.",
+        note: "The prints match. The little door opens on a list of names.",
         shows: "issuers",
+        locked: true,
+        lock: "prints",
         hit: { x: 980, y: 480, w: 440, h: 300 },
       },
       {
         id: "trolley",
         at: "boxes",
+        sfx: "rustle",
         name: "The trolley",
         note: "The lid comes off an archive box. Empty — it was moved to the cage.",
         hit: { x: 1020, y: 800, w: 360, h: 140 },
@@ -224,15 +257,21 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "vault",
         at: "door",
+        sfx: "clank",
         name: "The vault door",
-        note: "The wheel turns all the way round. The door does not move.",
+        note: "The last wheel drops. The door swings out on what the vault was keeping.",
+        shows: "achievements",
+        locked: true,
+        lock: "safe",
         hit: { x: 1490, y: 440, w: 420, h: 440 },
       },
       {
         id: "camera",
         at: "door",
+        sfx: "beep",
         name: "The camera",
         note: "The red light comes on. Somebody is watching the door.",
+        opens: "cctv",
         hit: { x: 1860, y: 390, w: 110, h: 70 },
       },
     ],
@@ -279,6 +318,7 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "whiteboard",
         at: "board",
+        sfx: "page",
         name: "The whiteboard",
         note: "This week's drills, and how many reps of each.",
         shows: "drills",
@@ -287,6 +327,7 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "trophies",
         at: "board",
+        sfx: "chime",
         name: "The trophies",
         note: "Picked up and put back. They catch the light.",
         hit: { x: 460, y: 630, w: 360, h: 90 },
@@ -294,14 +335,18 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "lockers",
         at: "lockers",
+        sfx: "clank",
         name: "The lockers",
         note: "The door swings open. Everything is labelled.",
         shows: "skills",
+        locked: true,
+        lock: "dial",
         hit: { x: 880, y: 420, w: 280, h: 520 },
       },
       {
         id: "bag",
         at: "gym",
+        sfx: "thud",
         name: "The heavy bag",
         note: "Thud. The chain rattles and the bag swings.",
         hit: { x: 1240, y: 320, w: 120, h: 450 },
@@ -309,6 +354,7 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "rack",
         at: "gym",
+        sfx: "clank",
         name: "The rack",
         note: "A dumbbell comes off the rack and goes back on.",
         hit: { x: 1380, y: 760, w: 180, h: 180 },
@@ -316,6 +362,7 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "clock",
         at: "gym",
+        sfx: "beep",
         name: "The round clock",
         note: "Three minutes on, one off. The hand starts going round.",
         hit: { x: 1420, y: 390, w: 80, h: 80 },
@@ -323,6 +370,7 @@ export const ARCHIVES: ArchiveRoom[] = [
       {
         id: "treadmill",
         at: "track",
+        sfx: "whir",
         name: "The treadmill",
         note: "The belt starts to run.",
         hit: { x: 1600, y: 760, w: 360, h: 190 },

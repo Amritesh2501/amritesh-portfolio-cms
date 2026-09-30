@@ -18,6 +18,7 @@ import * as sound from "@/lib/sound";
 import { useSaved } from "@/lib/save";
 import { SLOT } from "@/lib/casebook";
 import { Skip } from "./Casebook";
+import { Voicemail } from "./Voicemail";
 import { dateRange } from "@/lib/utils";
 import { BLOOMS, OfficeRoom } from "./OfficeArt";
 import { Untangle } from "./Untangle";
@@ -60,6 +61,8 @@ export function Office({
   const [lights, setLights] = useState(false);
   /** The louvres. Shut on arrival: it is an office after everybody has gone. */
   const [blindOpen, setBlindOpen] = useState(false);
+  const [phoneOpen, setPhoneOpen] = useState(false);
+  const [flags] = useSaved<string[]>(SLOT.flags, []);
   /** Which flower is in the pot. Nothing depends on it. */
   const [bloom, setBloom] = useState(0);
 
@@ -137,6 +140,17 @@ export function Office({
     [at, goto, reduce],
   );
 
+  /** The phone: walk to the desk if needed, then pick it up. */
+  const answer = useCallback(() => {
+    sound.latch();
+    if (at === "desk") {
+      setPhoneOpen(true);
+      return;
+    }
+    goto("desk");
+    timers.current.push(window.setTimeout(() => setPhoneOpen(true), reduce ? 0 : 900));
+  }, [at, goto, reduce]);
+
   /** Beaten. The panel is NOT closed — each puzzle is a lock on something, and
    *  closing the moment the lock gives throws the reward away. */
   const solve = useCallback((id: OfficePuzzleId) => {
@@ -150,12 +164,13 @@ export function Office({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (open) setOpen(null);
+        if (phoneOpen) setPhoneOpen(false);
+        else if (open) setOpen(null);
         else if (at) toRoom();
         else onBack();
         return;
       }
-      if (open) return;
+      if (open || phoneOpen) return;
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
       e.preventDefault();
       const from = at ? order.indexOf(at) : -1;
@@ -165,7 +180,7 @@ export function Office({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [at, open, order, goto, toRoom, onBack]);
+  }, [at, open, phoneOpen, order, goto, toRoom, onBack]);
 
   const shot = useMemo(() => frameFor(cam, view, OFFICE), [cam, view]);
   const here = at ? officeStationById(at) : null;
@@ -192,16 +207,18 @@ export function Office({
             onPuzzle={reach}
             onLights={() => {
               setLights((on) => !on);
-              sound.latch();
+              sound.flick();
             }}
             onBlind={() => {
               setBlindOpen((on) => !on);
-              sound.latch();
+              sound.rattle();
             }}
             onBloom={() => {
               setBloom((n) => (n + 1) % BLOOMS.length);
-              sound.settle();
+              sound.rustle();
             }}
+            onPhone={answer}
+            ringing={!flags.includes("voicemail")}
           />
         </div>
       </div>
@@ -220,7 +237,7 @@ export function Office({
               className={`xw-mute ${lights ? "is-on" : ""}`}
               onClick={() => {
                 setLights((on) => !on);
-                sound.latch();
+                sound.flick();
               }}
               aria-pressed={lights}
             >
@@ -257,6 +274,14 @@ export function Office({
             </button>
           </div>
 
+          {at === "desk" ? (
+            <div className="xw-files">
+              <button type="button" className="xw-file-btn" onClick={answer}>
+                <span>THE PHONE</span>
+                <span className="xw-file-s">{flags.includes("voicemail") ? "MESSAGES" : "3 NEW"}</span>
+              </button>
+            </div>
+          ) : null}
           {OFFICE_PUZZLES.filter((p) => p.at === at).map((p) => (
             <div className="xw-files" key={p.id}>
               <button
@@ -273,6 +298,8 @@ export function Office({
           ))}
         </div>
       </div>
+
+      {phoneOpen ? <Voicemail facts={data} onClose={() => setPhoneOpen(false)} /> : null}
 
       {/* Each lock shows what it was guarding once it gives. */}
       {open === "record" ? (

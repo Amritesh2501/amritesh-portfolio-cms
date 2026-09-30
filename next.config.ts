@@ -57,6 +57,18 @@ const config: NextConfig = {
           },
         ],
       },
+      {
+        // The security camera in the case room opens the visitor's own camera
+        // (on request, never uploaded). Only this page gets it; a later match
+        // overrides the key above.
+        source: "/experiments",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(), geolocation=()",
+          },
+        ],
+      },
     ];
   },
 };

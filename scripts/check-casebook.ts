@@ -42,8 +42,8 @@ const full = {
   [SLOT.bedroom]: ["terminal"],
   [SLOT.office]: ["record", "wiring", "patch", "backlog"],
   [SLOT.labRig]: true,
-  [SLOT.archiveUnlocked("vault")]: true,
-  [SLOT.archiveUsed("training")]: ["lockers"],
+  [SLOT.archiveOpen("vault")]: ["cage"],
+  [SLOT.archiveOpen("training")]: ["lockers"],
 };
 
 assert.equal(doneEntries({}).length, 0);

@@ -83,3 +83,10 @@ export function useSaved<T>(slot: string, initial: T) {
   );
   return [value, set] as const;
 }
+
+/** Add one value to a list slot (flags, items), once. */
+export function addTo(slot: string, value: string) {
+  const cur = getSave()[slot];
+  const list = Array.isArray(cur) ? (cur as string[]) : [];
+  if (!list.includes(value)) writeSlot(slot, [...list, value]);
+}

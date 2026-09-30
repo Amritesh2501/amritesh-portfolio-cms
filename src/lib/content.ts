@@ -214,7 +214,7 @@ export async function getCaseRoomData() {
     }
   };
 
-  const [profile, projects, experience, education, skillGroups, certifications, evidence] =
+  const [profile, projects, experience, education, skillGroups, certifications, evidence, achievements] =
     await Promise.all([
       settle(getProfile(), null),
       settle(getCaseProjects(), [] as Awaited<ReturnType<typeof getCaseProjects>>),
@@ -223,9 +223,10 @@ export async function getCaseRoomData() {
       settle(getSkillGroups(), [] as Awaited<ReturnType<typeof getSkillGroups>>),
       settle(getCertifications(), [] as Awaited<ReturnType<typeof getCertifications>>),
       settle(getCaseEvidence(), [] as Awaited<ReturnType<typeof getCaseEvidence>>),
+      settle(getAchievements(), [] as Awaited<ReturnType<typeof getAchievements>>),
     ]);
 
-  return { profile, projects, experience, education, skillGroups, certifications, evidence };
+  return { profile, projects, experience, education, skillGroups, certifications, evidence, achievements };
 }
 
 export type CaseRoomData = Awaited<ReturnType<typeof getCaseRoomData>>;

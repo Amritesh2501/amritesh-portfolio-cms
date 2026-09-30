@@ -9256,3 +9256,887 @@ html {
   letter-spacing: 0.12em;
   rotate: 8deg;
 }
+
+/* --- Touching an archive prop: a small nudge every time ------------------- */
+
+.xw-ar-poke-a,
+.xw-ar-poke-b {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+.xw-ar-poke-a {
+  animation: xw-ar-poke-a 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.xw-ar-poke-b {
+  animation: xw-ar-poke-b 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes xw-ar-poke-a {
+  30% { transform: translateY(-4px) rotate(-1deg); }
+  60% { transform: translateY(1px) rotate(0.6deg); }
+}
+@keyframes xw-ar-poke-b {
+  30% { transform: translateY(-4px) rotate(-1deg); }
+  60% { transform: translateY(1px) rotate(0.6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xw-ar-poke-a,
+  .xw-ar-poke-b {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The combination dial (components/site/DialLock)
+   ------------------------------------------------------------------------- */
+
+.xz .xa-body {
+  justify-items: center;
+  text-align: center;
+}
+
+.xz-how {
+  margin: 0;
+  max-width: 44ch;
+  color: var(--read-soft);
+  line-height: 1.6;
+}
+
+.xz-how kbd {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--read-line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font: 0.8125rem var(--font-mono);
+  color: var(--read-fg);
+}
+
+.xz-dial {
+  position: relative;
+  width: min(260px, 70vw);
+  aspect-ratio: 1;
+  cursor: ns-resize;
+}
+
+.xz-dial svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: rotate 0.09s linear;
+}
+
+.xz-face {
+  fill: #16171c;
+  stroke: #6f6a5f;
+  stroke-width: 3;
+}
+
+.xz-notch {
+  stroke: #cfc8b8;
+  stroke-width: 1.5;
+}
+
+.xz-num {
+  fill: #efe9dc;
+  font: 600 12px var(--font-mono);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.xz-knob {
+  fill: #25262d;
+  stroke: #6f6a5f;
+  stroke-width: 2;
+}
+
+/* The fixed mark at the top that the numbers are read against. */
+.xz-mark {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  translate: -50% 0;
+  border: 9px solid transparent;
+  border-top: 13px solid #d9a05b;
+}
+
+.xz-rim {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.xz-rim.is-tick {
+  animation: xz-tick 0.5s ease-out;
+}
+
+@keyframes xz-tick {
+  from { box-shadow: 0 0 0 3px #d9a05b, 0 0 30px #d9a05b; }
+  to { box-shadow: 0 0 0 3px transparent, 0 0 30px transparent; }
+}
+
+.xz-dial.is-open svg {
+  animation: xz-open 0.8s ease-out forwards;
+}
+
+@keyframes xz-open {
+  to { transform: translateY(18px); opacity: 0.4; }
+}
+
+.xz-read {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 0;
+}
+
+.xz-pos {
+  font: 600 2.25rem var(--font-mono);
+  color: #efe9dc;
+}
+
+.xz-slots {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.xz-slots span {
+  min-width: 2.6rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px dashed var(--read-line);
+  border-radius: 4px;
+  font: 1rem var(--font-mono);
+  color: var(--read-soft);
+}
+
+.xz-slots span.is-set {
+  border-style: solid;
+  border-color: #d9a05b;
+  color: #d9a05b;
+}
+
+.xz-hint {
+  margin: 0;
+  font: 0.9375rem var(--font-mono);
+  color: #efe9dc;
+}
+
+.xz-hint.is-slip {
+  color: #e58a7f;
+}
+
+.xz-controls {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.xz-slips {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--read-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xz-dial svg {
+    transition: none;
+  }
+  .xz-rim.is-tick {
+    animation-duration: 0.9s;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The security camera (components/site/Cctv)
+   ------------------------------------------------------------------------- */
+
+.xv-card {
+  width: min(64rem, 100%);
+}
+
+.xv-foot {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0 clamp(1.25rem, 4vw, 2.25rem) 1.25rem;
+}
+
+.xv-foot .btn:last-child {
+  margin-left: auto;
+}
+
+.xv-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.9rem;
+}
+
+.xv-choice {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.5rem 1.25rem;
+  border: 1px solid var(--read-line);
+  border-radius: 6px;
+  background: color-mix(in srgb, #efe9dc 3%, transparent);
+  color: var(--read-soft);
+  font: 0.9375rem/1.5 var(--font-display);
+  text-align: left;
+  cursor: pointer;
+}
+
+.xv-choice:hover,
+.xv-choice:focus-visible {
+  border-color: #d9a05b;
+  background: color-mix(in srgb, #d9a05b 8%, transparent);
+}
+
+.xv-choice-k {
+  font: 600 1rem var(--font-mono);
+  letter-spacing: 0.1em;
+  color: #efe9dc;
+}
+
+.xv-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 6px;
+  border-radius: 6px;
+  background: #000;
+}
+
+@media (max-width: 560px) {
+  .xv-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.xv-cell {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 1px solid #222;
+  background: #050505;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.xv-cell:hover,
+.xv-cell:focus-visible {
+  border-color: #d9a05b;
+  outline: none;
+}
+
+.xv-cell.is-dead {
+  cursor: default;
+}
+
+.xv-screen {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+}
+
+.xv-screen.is-big {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+}
+
+.xv-art {
+  pointer-events: none;
+  filter: grayscale(0.85) contrast(1.15) brightness(1.1) sepia(0.2) hue-rotate(60deg);
+}
+
+/* The full-screen feed drifts, the way a camera on a slow pan would. */
+.xv-screen.is-big .xv-art {
+  animation: xv-pan 18s ease-in-out infinite alternate;
+}
+
+@keyframes xv-pan {
+  from { transform: scale(1.12) translateX(-3%); }
+  to { transform: scale(1.12) translateX(3%); }
+}
+
+.xv-scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.28) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.6));
+}
+
+.xv-static {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-radial-gradient(circle at 17% 32%, #333 0 1px, #111 1px 2px),
+    repeating-radial-gradient(circle at 71% 64%, #2a2a2a 0 1px, transparent 1px 3px);
+  animation: xv-static 0.25s steps(3) infinite;
+}
+
+@keyframes xv-static {
+  33% { background-position: 3px 5px, -4px 2px; }
+  66% { background-position: -2px -3px, 5px -4px; }
+}
+
+.xv-label,
+.xv-rec,
+.xv-time {
+  position: absolute;
+  font: 600 clamp(0.5rem, 1.2vw, 0.75rem) var(--font-mono);
+  letter-spacing: 0.08em;
+  color: #f4efe4;
+  text-shadow: 0 1px 2px #000;
+}
+
+.xv-label {
+  top: 6%;
+  left: 4%;
+}
+
+.xv-rec {
+  top: 6%;
+  right: 4%;
+  color: #ff4a3d;
+  animation: xw-ar-led 1.1s steps(1) infinite;
+}
+
+.xv-time {
+  bottom: 6%;
+  left: 4%;
+}
+
+.xv-big {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.xv-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+/* --- Live ----------------------------------------------------------------- */
+
+.xv-live {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.xv-view {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  max-height: 60vh;
+  border-radius: 6px;
+  background: #000;
+  overflow: hidden;
+}
+
+.xv-view video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.xv-chart {
+  position: absolute;
+  inset: 8% auto 8% 0;
+  width: 14%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.xv-chart span {
+  border-top: 1px solid rgb(255 255 255 / 0.45);
+  padding-left: 58%;
+  font: 0.75rem var(--font-mono);
+  color: rgb(255 255 255 / 0.8);
+  text-shadow: 0 1px 2px #000;
+}
+
+.xv-corners {
+  position: absolute;
+  inset: 5%;
+  pointer-events: none;
+  background:
+    linear-gradient(#f4efe4, #f4efe4) top left / 28px 2px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) top left / 2px 28px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) top right / 28px 2px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) top right / 2px 28px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) bottom left / 28px 2px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) bottom left / 2px 28px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) bottom right / 28px 2px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) bottom right / 2px 28px no-repeat;
+  opacity: 0.7;
+}
+
+.xv-placard {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  translate: -50% 0;
+  display: grid;
+  padding: 0.4rem 1rem;
+  border-radius: 3px;
+  background: rgb(10 10 10 / 0.85);
+  color: #f4efe4;
+  font: 700 clamp(0.75rem, 2vw, 1rem) var(--font-mono);
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.xv-placard small {
+  font-weight: 400;
+  font-size: 0.7em;
+}
+
+.xv-wait {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 0.875rem var(--font-mono);
+  color: var(--read-soft);
+}
+
+.xv-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  pointer-events: none;
+  animation: xv-flash 0.5s ease-out forwards;
+}
+
+@keyframes xv-flash {
+  from { opacity: 0.9; }
+  to { opacity: 0; }
+}
+
+.xv-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.xv-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.xv-shot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: end;
+}
+
+.xv-shot img {
+  width: min(16rem, 100%);
+  border: 6px solid #f4efe4;
+  border-bottom-width: 22px;
+  rotate: -2deg;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xv-static,
+  .xv-screen.is-big .xv-art,
+  .xv-rec {
+    animation: none;
+  }
+}
+
+.xz-slips.is-late {
+  color: #e58a7f;
+}
+
+/* ---------------------------------------------------------------------------
+   Archive minigames: prints, decoder, timeline, and the answering machine
+   (components/site/ArchiveGames, Voicemail)
+   ------------------------------------------------------------------------- */
+
+.xn .xa-body {
+  justify-items: center;
+}
+
+.xn-how {
+  margin: 0;
+  max-width: 50ch;
+  color: var(--read-soft);
+  line-height: 1.6;
+  text-align: center;
+}
+
+.xn-how kbd {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--read-line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font: 0.8125rem var(--font-mono);
+  color: var(--read-fg);
+}
+
+.xn-good,
+.xn-bad {
+  margin: 0;
+  font: 0.9375rem var(--font-mono);
+}
+
+.xn-good {
+  color: #9be3a8;
+}
+
+.xn-bad {
+  color: #e58a7f;
+}
+
+/* Prints */
+
+.xn-surface {
+  width: min(300px, 80vw);
+  aspect-ratio: 1;
+  border-radius: 6px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.xn-door {
+  fill: #2a2622;
+  stroke: #6f6a5f;
+  stroke-width: 2;
+}
+
+.xn-powder {
+  fill: #8c877c;
+}
+
+.xn-ridges {
+  fill: none;
+  stroke: #1b1a18;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.xn-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.xn-card {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+  width: 7.5rem;
+  padding: 0.7rem;
+  border: 1px solid var(--read-line);
+  border-radius: 6px;
+  background: #e9e3d6;
+  color: #1b1a18;
+  font: 600 0.75rem var(--font-mono);
+  cursor: pointer;
+}
+
+.xn-card svg {
+  width: 100%;
+}
+
+.xn-card:hover,
+.xn-card:focus-visible {
+  outline: 3px solid #d9a05b;
+}
+
+.xn-card.is-match {
+  outline: 3px solid #9be3a8;
+}
+
+/* Decoder */
+
+.xn-ring {
+  width: min(260px, 72vw);
+}
+
+.xn-ring-outer {
+  fill: #16171c;
+  stroke: #6f6a5f;
+  stroke-width: 2;
+}
+
+.xn-ring-inner {
+  fill: #22232a;
+  stroke: #d9a05b;
+  stroke-width: 1.5;
+}
+
+.xn-ring-l {
+  fill: #efe9dc;
+  font: 600 11px var(--font-mono);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.xn-ring-l.is-inner {
+  fill: #d9a05b;
+}
+
+.xn-ring-k {
+  fill: var(--read-soft);
+  font: 700 20px var(--font-mono);
+  text-anchor: middle;
+}
+
+.xn-cipher {
+  margin: 0;
+  max-width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 4px;
+  background: #0b1a12;
+  color: #9be3a8;
+  font: 1rem/1.6 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Timeline */
+
+.xn-cards-list {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xn-cards-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--read-line);
+  border-radius: 4px;
+  background: #e9e3d6;
+  color: #1b1a18;
+}
+
+.xn-cards-list li.is-in {
+  outline: 2px solid #9be3a8;
+}
+
+.xn-n {
+  font: 700 0.8125rem var(--font-mono);
+  color: #7a4f1d;
+}
+
+.xn-label {
+  flex: 1;
+  font: 0.9375rem var(--font-display);
+}
+
+.xn-move {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.xn-move button {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #b5ad9d;
+  border-radius: 4px;
+  background: #fff;
+  color: #1b1a18;
+  cursor: pointer;
+}
+
+.xn-move button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Answering machine */
+
+.xn-tape {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xn-tape li {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--read-line);
+  border-radius: 4px;
+}
+
+.xn-tape li.is-playing {
+  border-color: #d9a05b;
+}
+
+.xn-transcript {
+  margin: 0;
+  color: var(--read-fg);
+  line-height: 1.6;
+}
+
+/* The phone in the office drawing, and its message light. */
+.xw-phone-light {
+  fill: #ff4a3d;
+  stroke: none;
+  opacity: 0.2;
+}
+
+.xw-phone.is-ringing .xw-phone-light {
+  animation: xw-ar-led 0.9s steps(1) infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   Casebook additions: side cases, daily, achievements, the UV torch
+   ------------------------------------------------------------------------- */
+
+.xq-section {
+  display: grid;
+  gap: 0.6rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--read-line);
+}
+
+.xq-h {
+  margin: 0;
+  font: 600 0.75rem var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d9a05b;
+}
+
+.xq-achv {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xq-achv li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px dashed var(--read-line);
+  border-radius: 4px;
+  color: var(--read-soft);
+  font-size: 0.875rem;
+}
+
+.xq-achv li.is-on {
+  border-style: solid;
+  border-color: #d9a05b;
+  color: var(--read-fg);
+}
+
+.xq-achv strong {
+  font-weight: 600;
+}
+
+.xq-match {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 0.75rem;
+}
+
+.xq-match > div {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+}
+
+@media (max-width: 560px) {
+  .xq-match {
+    grid-template-columns: 1fr;
+  }
+}
+
+.xq-option.is-clue {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.xq-option.is-pick {
+  border-color: #d9a05b;
+  background: color-mix(in srgb, #d9a05b 16%, transparent);
+}
+
+.xq-option.is-done {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.xq-option.is-miss {
+  border-color: #e58a7f;
+}
+
+.xq-option:disabled {
+  cursor: default;
+}
+
+.xq-torch {
+  position: fixed;
+  z-index: 12;
+  right: 0;
+  top: calc(50% + 7.5rem);
+  writing-mode: vertical-rl;
+  padding: 0.8rem 0.55rem;
+  border: 1px solid #8f5cff;
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+  background: #140a24;
+  color: #b78cff;
+  font: 600 0.6875rem var(--font-mono);
+  letter-spacing: 0.18em;
+  cursor: pointer;
+}
+
+.xq-torch.is-on {
+  background: #8f5cff;
+  color: #0b0b0b;
+}
+
+/* The torch: a violet cone that follows the pointer. Only what is under it
+   shows; the room stays clickable through it. */
+.xq-uv {
+  --x: 50vw;
+  --y: 50vh;
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+  background: radial-gradient(circle 190px at var(--x) var(--y), rgb(143 92 255 / 0.28), transparent 70%);
+  -webkit-mask-image: radial-gradient(circle 190px at var(--x) var(--y), #000 55%, transparent 100%);
+  mask-image: radial-gradient(circle 190px at var(--x) var(--y), #000 55%, transparent 100%);
+}
+
+.xq-uv-note {
+  position: absolute;
+  max-width: 22rem;
+  margin: 0;
+  color: #d9ffe8;
+  font: 1.25rem/1.4 var(--font-serif);
+  text-shadow: 0 0 6px #6dffb0, 0 0 18px #6dffb0;
+}
