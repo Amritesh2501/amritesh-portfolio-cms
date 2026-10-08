@@ -1,0 +1,7417 @@
+/* ---------------------------------------------------------------------------
+   The experiments rooms
+
+   Everything only /experiments draws: the terminal gate, the case room, every
+   room through the books, their games, the casebook and the cameras. Loaded by
+   that page alone (src/app/experiments/page.tsx), so the portfolio pages do
+   not download, parse or inline ten thousand lines they never use.
+
+   The design tokens and the shared keyframes (blink) stay in globals.css,
+   which every page, this one included, still loads.
+   ------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   Experiments
+
+   A terminal, pinned black in both palettes. See the page component for why
+   this one screen ignores the theme lock the rest of the site keeps.
+   ------------------------------------------------------------------------- */
+
+.xp {
+  /* Ink on a dark ground. The room through here is drawn rather than lit,
+     so the palette is a pen and the paper it ran out on, not a terminal. */
+  --xp-fg: #e4ddcb;
+  /* 5.1:1 on the black below. This carries the move counter and the
+     instructions, not decoration, so it is held above the dim-text floor. */
+  --xp-dim: #8a8577;
+  /* The one warm colour: anything the visitor can act on. */
+  --xp-hot: #d9a05b;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-boot);
+  overflow-y: auto;
+  background: #05060a;
+  color: var(--xp-fg);
+  font-family: var(--font-mono);
+}
+
+.xp-inner {
+  min-height: 100%;
+  max-width: 72ch;
+  margin: 0 auto;
+  padding: clamp(2rem, 8vh, 5rem) clamp(1.25rem, 5vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.xp-text {
+  margin: 0;
+  font-size: clamp(0.8125rem, 2.6vw, 0.9375rem);
+  line-height: 1.85;
+  /* pre-wrap, not pre: the lines are authored short, but a narrow screen still
+     has to be allowed to break them rather than scroll sideways. */
+  white-space: pre-wrap;
+  /* Reserves the full block from the first frame, so the button below does not
+     walk down the screen as the text types. */
+  min-height: 17em;
+}
+
+.xp-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 0.1em;
+  vertical-align: text-bottom;
+  background: var(--xp-fg);
+  animation: blink 1.05s steps(1) infinite;
+}
+
+.xp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* The terminal has no lavender in it, so the buttons borrow the screen colour
+   rather than the site accent. */
+.xp .btn {
+  border-color: color-mix(in srgb, var(--xp-fg) 40%, transparent);
+  color: var(--xp-fg);
+}
+
+.xp .btn:hover:not(:disabled) {
+  border-color: var(--xp-fg);
+  background: color-mix(in srgb, var(--xp-fg) 12%, transparent);
+  color: var(--xp-fg);
+}
+
+.xp .btn-solid {
+  background: var(--xp-fg);
+  border-color: var(--xp-fg);
+  color: #05060a;
+}
+
+.xp .btn-solid:hover:not(:disabled) {
+  background: #fff;
+  border-color: #fff;
+  color: #05060a;
+}
+
+.xp-game:focus {
+  outline: none;
+}
+
+/* The cut. Covers the terminal on the way in and holds, so the room is built
+   underneath while there is nothing to see. The hit lands on this black. */
+.xp-cut {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: #05060a;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s ease;
+}
+
+.xp-cut.is-on {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.xp.is-entering .xp-inner {
+  transition: opacity 0.4s ease, transform 0.9s ease;
+  opacity: 0;
+  transform: scale(0.99);
+}
+
+/* --- The intake: a case file behind police tape -------------------------- */
+
+.xp {
+  --xp-tape: #f2c200;
+}
+
+.xp.is-intake {
+  overflow-x: hidden;
+  /* A bare bulb over a table, and nothing else lit. */
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 30%, #17140f 0%, #05060a 70%),
+    #05060a;
+}
+
+.xp-sheet {
+  position: relative;
+  margin-top: 2rem;
+  padding: 1.5rem clamp(1rem, 4vw, 2rem);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  border-left: 4px solid var(--xp-hot);
+  background: color-mix(in srgb, var(--xp-fg) 4%, transparent);
+}
+
+.xp-stamp {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.25rem 0.6rem;
+  border: 3px double #c8413b;
+  color: #c8413b;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.25em;
+  transform: rotate(-12deg) scale(1.6);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.xp-stamp.is-in {
+  opacity: 0.85;
+  transform: rotate(-12deg) scale(1);
+}
+
+.xp-ask {
+  display: grid;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.xp-log p {
+  margin: 0 0 0.6rem;
+  line-height: 1.6;
+}
+
+.xp-q {
+  color: var(--xp-dim);
+}
+
+.xp-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--xp-hot);
+  letter-spacing: 0.12em;
+}
+
+.xp-prompt input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0;
+  border: 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--xp-fg) 35%, transparent);
+  background: none;
+  color: var(--xp-fg);
+  font: inherit;
+}
+
+.xp-prompt input:focus {
+  outline: none;
+  border-bottom-color: var(--xp-hot);
+}
+
+/* --- The room's secrets (components/site/Secrets) ------------------------ */
+
+.xs-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Invisible until the pointer is on it, and then only a glint: found by
+   looking, not by reading a list. */
+.xs-spot {
+  position: absolute;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: zoom-in;
+  pointer-events: auto;
+}
+
+.xs-spot:hover,
+.xs-spot:focus-visible {
+  background: radial-gradient(circle, rgb(255 255 255 / 0.14), transparent 65%);
+  outline: none;
+}
+
+/* The yellow tent an investigator leaves where something was. */
+.xs-tent {
+  position: absolute;
+  left: 50%;
+  bottom: 30%;
+  translate: -50% 0;
+  width: 2.4rem;
+  height: 2rem;
+  display: grid;
+  place-items: end center;
+  padding-bottom: 0.15rem;
+  background: var(--xp-tape, #f2c200);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  color: #0b0b0b;
+  font: 700 1rem var(--font-mono);
+}
+
+.xs-card,
+.xs-uv {
+  position: absolute;
+  z-index: 9;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: min(30rem, calc(100vw - 2rem));
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  padding: 1.75rem 1.5rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  background: #0c0b09;
+  color: var(--xp-fg);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.7);
+}
+
+.xs-card p,
+.xs-uv p {
+  margin: 0;
+}
+
+.xs-card-title {
+  color: var(--xp-hot);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.xs-card-foot {
+  color: var(--xp-dim);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+}
+
+.xs-card-links {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.xs-card-links a {
+  color: var(--xp-hot);
+}
+
+.xs-stamp {
+  position: absolute;
+  top: -0.8rem;
+  right: 1rem;
+  padding: 0.15rem 0.5rem;
+  border: 2px solid #c8413b;
+  background: #0c0b09;
+  color: #c8413b;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  rotate: 4deg;
+}
+
+/* Blacklight. The room goes violet and the ink nobody was meant to see
+   comes up green-white. */
+.xw.is-uv .xw-viewport {
+  filter: hue-rotate(220deg) saturate(1.6) brightness(0.8);
+}
+
+.xs-uv {
+  border-color: #8f5cff;
+  background: rgb(20 8 40 / 0.92);
+}
+
+.xs-uv-head {
+  color: #b78cff;
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+}
+
+.xs-uv-note {
+  color: #d9ffe8;
+  text-shadow: 0 0 6px #6dffb0, 0 0 18px #6dffb0;
+  font-size: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xp-stamp {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The experiments room
+
+   A room drawn in ink, with a camera over it. The camera is ONE transform on
+   .xw-stage with a transition on it: moving between two places is two numbers
+   and a scale, and the compositor does the rest. There is no per-frame
+   JavaScript in this whole screen.
+
+   Nothing in the drawing is filled. Everything is strokes, hatching and the
+   small overshoot a pen leaves at a corner, which is what makes it read as
+   drawn rather than rendered — and is also why a camera can fly over it for
+   nothing.
+   ------------------------------------------------------------------------- */
+
+.xw {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.xw-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #05060a;
+}
+
+.xw-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: 0 0;
+  will-change: transform;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.28, 1);
+}
+
+.xw-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.xw-black {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background: #05060a;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.1s ease;
+}
+
+.xw-black.is-on {
+  opacity: 1;
+}
+
+/* --- Ink ------------------------------------------------------------------ */
+
+.xw-line {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.82;
+}
+
+.xw-thin {
+  stroke-width: 1.3;
+}
+
+/* Occlusion.
+   Everything here is stroke-only, which is what makes it read as drawn — but
+   stroke-only also means the floorboards run straight through the desk and the
+   skirting cuts across the cabinet. Solid objects get the page colour as a
+   fill so they cover what is behind them, the way an object does. */
+.xw-solid {
+  fill: #05060a;
+}
+
+.xw-faint {
+  opacity: 0.38;
+}
+
+.xw-fill {
+  fill: var(--xp-fg);
+  stroke: none;
+}
+
+.xw-hatch {
+  stroke: var(--xp-fg);
+  stroke-width: 1;
+  stroke-linecap: round;
+  opacity: 0.22;
+  fill: none;
+}
+
+/* The string on the board, and nothing else in the room. */
+.xw-hot-line {
+  fill: none;
+  stroke: var(--xp-hot);
+  stroke-width: 1.6;
+  opacity: 0.55;
+}
+
+.xw-glow {
+  opacity: 0.4;
+}
+
+/* --- Things you can click ------------------------------------------------- */
+
+.xw-hit {
+  fill: transparent;
+  stroke: none;
+  cursor: pointer;
+}
+
+/* A dashed bracket rather than a highlight: this is a pen drawing, and a
+   glowing rectangle would be the one thing in the room that is not. */
+.xw-hit:hover,
+.xw-hit:focus-visible {
+  fill: color-mix(in srgb, var(--xp-hot) 7%, transparent);
+  stroke: var(--xp-hot);
+  stroke-width: 2;
+  stroke-dasharray: 7 9;
+  outline: none;
+}
+
+/* --- The shelf ------------------------------------------------------------ */
+
+.xw-shelf .xw-file .xw-line {
+  transition: opacity 0.3s ease;
+}
+
+.xw-file-index,
+.xw-file-name {
+  fill: var(--xp-fg);
+  stroke: none;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  letter-spacing: 0.12em;
+  opacity: 0.75;
+}
+
+.xw-file-name {
+  font-size: 14px;
+  letter-spacing: 0.16em;
+}
+
+.xw-file.is-done .xw-line,
+.xw-file.is-done .xw-file-index,
+.xw-file.is-done .xw-file-name {
+  opacity: 0.34;
+}
+
+.xw-file.is-locked .xw-line,
+.xw-file.is-locked .xw-file-index,
+.xw-file.is-locked .xw-file-name {
+  opacity: 0.28;
+  stroke-dasharray: 5 6;
+}
+
+.xw-shelf.is-near .xw-file .xw-hit:hover ~ * {
+  opacity: 1;
+}
+
+/* --- HUD ------------------------------------------------------------------ */
+
+.xw-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(1rem, 3vw, 2rem);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.xw-hud.is-in {
+  opacity: 1;
+}
+
+.xw-hud button,
+.xw-hud a {
+  pointer-events: auto;
+}
+
+.xw-hud-top {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+.xw-title {
+  margin: 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--xp-fg);
+  opacity: 0.8;
+}
+
+.xw-count {
+  margin: 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--xp-dim);
+}
+
+.xw-mute {
+  margin-left: auto;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 26%, transparent);
+  border-radius: 2px;
+  background: none;
+  color: var(--xp-dim);
+  font: inherit;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+}
+
+.xw-mute:hover,
+.xw-mute:focus-visible {
+  border-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+.xw-hud-bottom {
+  display: grid;
+  gap: 0.9rem;
+  justify-items: start;
+}
+
+.xw-blurb {
+  max-width: 46ch;
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--xp-fg);
+  opacity: 0.85;
+}
+
+.xw-stations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.xw-station {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  border-radius: 2px;
+  background: color-mix(in srgb, #05060a 70%, transparent);
+  color: var(--xp-dim);
+  font: inherit;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.xw-station:hover,
+.xw-station:focus-visible {
+  border-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+.xw-station.is-here {
+  border-color: var(--xp-fg);
+  color: var(--xp-fg);
+}
+
+.xw-station.is-exit {
+  margin-left: auto;
+}
+
+/* The files, as controls. The drawn spines take the pointer; these take the
+   keyboard, which a drawing cannot. */
+.xw-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.xw-file-btn {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--xp-hot) 40%, transparent);
+  border-radius: 2px;
+  background: color-mix(in srgb, #05060a 75%, transparent);
+  color: var(--xp-fg);
+  font: inherit;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+}
+
+.xw-file-btn:hover:not(:disabled),
+.xw-file-btn:focus-visible:not(:disabled) {
+  border-color: var(--xp-hot);
+  background: color-mix(in srgb, var(--xp-hot) 12%, transparent);
+}
+
+.xw-file-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.xw-file-btn.is-done {
+  border-color: color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  color: var(--xp-dim);
+}
+
+.xw-file-n {
+  color: var(--xp-hot);
+  font-size: 0.6875rem;
+}
+
+.xw-file-s {
+  color: var(--xp-dim);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+}
+
+/* --- A gap in the row ----------------------------------------------------
+
+   The file that is currently out is simply not drawn. There used to be a
+   keyframe here that tipped the spine out of the row and faded it, handing
+   over to a card that flew in from elsewhere; ShelfBook does the whole move
+   as one object now, starting at this spine position, so anything animating
+   here would be a second copy of the same file moving differently.
+   ------------------------------------------------------------------------- */
+
+.xw-file-body.is-out {
+  opacity: 0;
+  /* The book takes the click from here on. */
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------------
+   A file, off the shelf
+
+   One box in three dimensions, not a stack of panels. A book on a shelf shows
+   its spine, so the box starts a quarter turn away from the camera and turns to
+   face it — which is the move a hand makes, and is why the faces are laid out
+   as a box rather than cross-faded.
+
+   The layout is the standard one for a solid: each face is placed in the plane
+   it belongs to and turned to point out of it.
+
+       cover   translateZ(t/2)                     normal +Z
+       spine   translateX(-w/2) rotateY(-90deg)    normal -X
+       edge    translateX(+w/2) rotateY(90deg)     normal +X
+
+   With the whole box at rotateY(90deg) the spine's -X normal swings round to +Z
+   and faces you; at rotateY(0) the cover does. That one number is the entire
+   animation.
+   ------------------------------------------------------------------------- */
+
+.xk {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: clamp(1.25rem, 4vh, 2.5rem);
+  background: color-mix(in srgb, #05060a 84%, transparent);
+  /* Long. A short perspective turns a quarter turn into a fisheye and the
+     cover arrives visibly stretched. */
+  perspective: 2400px;
+  perspective-origin: 50% 46%;
+  font-family: var(--font-mono);
+  animation: xk-dim 0.5s ease both;
+}
+
+@keyframes xk-dim {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.xk-book {
+  position: relative;
+  transform-style: preserve-3d;
+  /* Every one of these is written from ShelfBook: --dx/--dy is where the drawn
+     spine was standing on screen, --s0 the scale that makes this box's spine
+     face exactly the size that one was, --tilt the lean it was drawn with, and
+     --t the thickness taken from its own proportions on the shelf. */
+  animation: xk-take 2300ms cubic-bezier(0.33, 0.9, 0.28, 1) both;
+}
+
+/* Out of the row, then round.
+
+   The two are deliberately not blended. A book does not begin rotating while it
+   is still between its neighbours — it comes clear first and only then turns.
+   So the whole of the first third is travel at a fixed rotateY(90deg) and the
+   quarter turn happens after it, which is also why the turn reads as slow
+   without the whole move being slow. */
+@keyframes xk-take {
+  0% {
+    transform:
+      translate3d(var(--dx), var(--dy), 0)
+      scale(var(--s0))
+      rotateZ(var(--tilt))
+      rotateY(90deg);
+  }
+  /* Clear of the shelf: pulled toward the camera and lifted, still edge-on. */
+  34% {
+    transform:
+      translate3d(calc(var(--dx) * 0.82), calc(var(--dy) * 0.82 - 3vh), 140px)
+      scale(calc(var(--s0) + (1 - var(--s0)) * 0.34))
+      rotateZ(var(--tilt))
+      rotateY(90deg);
+  }
+  /* Held there a beat, out of the row and not yet turning. This is the
+     pause that makes the two moves read as two moves. */
+  46% {
+    transform:
+      translate3d(calc(var(--dx) * 0.78), calc(var(--dy) * 0.78 - 3.4vh), 160px)
+      scale(calc(var(--s0) + (1 - var(--s0)) * 0.38))
+      rotateZ(var(--tilt))
+      rotateY(90deg);
+  }
+  /* Most of the quarter turn, travelling in to centre as it goes. */
+  82% {
+    transform:
+      translate3d(calc(var(--dx) * 0.16), calc(var(--dy) * 0.16), 90px)
+      scale(calc(var(--s0) + (1 - var(--s0)) * 0.88))
+      rotateZ(calc(var(--tilt) * 0.3))
+      rotateY(14deg);
+  }
+  /* Square on. The last few degrees are where the ease spends its time. */
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotateZ(0deg) rotateY(0deg);
+  }
+}
+
+.xk-book.is-still {
+  animation: none;
+}
+
+.xk-face {
+  position: absolute;
+  backface-visibility: hidden;
+}
+
+/* --- The cover ------------------------------------------------------------ */
+
+.xk-cover {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: clamp(1.1rem, 3.5vh, 2rem);
+  border: 0;
+  border-radius: 2px 5px 5px 2px;
+  /* Board, not paper: a case binder, lit from the top left. */
+  background:
+    linear-gradient(118deg, color-mix(in srgb, var(--xp-fg) 13%, #0b0c11), #05060a 62%),
+    #05060a;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--xp-fg) 34%, transparent),
+    inset 5px 0 14px -8px rgba(0, 0, 0, 0.9);
+  font: inherit;
+  text-align: left;
+  color: var(--xp-fg);
+  cursor: pointer;
+  transform: translateZ(calc(var(--t) / 2));
+}
+
+/* The printed rule inside the edge, the way a case file cover is set. */
+.xk-cover-rule {
+  position: absolute;
+  inset: 9px;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  pointer-events: none;
+}
+
+.xk-cover:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 2px var(--xp-hot),
+    inset 5px 0 14px -8px rgba(0, 0, 0, 0.9);
+}
+
+.xk-n {
+  font-size: 0.625rem;
+  letter-spacing: 0.32em;
+  color: var(--xp-hot);
+}
+
+.xk-name {
+  font-size: clamp(1.25rem, 3.4vh, 2rem);
+  line-height: 1.05;
+  letter-spacing: 0.14em;
+  color: var(--xp-fg);
+}
+
+.xk-sub {
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--xp-dim);
+}
+
+.xk-brief {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--xp-fg) 88%, transparent);
+}
+
+/* Pushed to the foot of the cover, where the instruction belongs. */
+.xk-open {
+  margin-top: auto;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--xp-hot) 55%, transparent);
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--xp-hot);
+  transition: background-color 0.3s ease;
+}
+
+.xk-cover:hover .xk-open,
+.xk-cover:focus-visible .xk-open {
+  background: color-mix(in srgb, var(--xp-hot) 16%, transparent);
+}
+
+/* Stamped across the corner, at the angle a stamp lands. */
+.xk-stamp {
+  position: absolute;
+  top: 16%;
+  right: -6%;
+  padding: 0.3rem 1.4rem;
+  border: 2px solid color-mix(in srgb, var(--xp-hot) 65%, transparent);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  color: color-mix(in srgb, var(--xp-hot) 85%, transparent);
+  transform: rotate(-11deg);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* --- The spine ------------------------------------------------------------ */
+
+.xk-spine {
+  top: 0;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  width: var(--t);
+  height: 100%;
+  margin-left: calc(var(--t) / -2);
+  padding: 1rem 0;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(90deg, #05060a, color-mix(in srgb, var(--xp-fg) 16%, #0b0c11) 55%, #05060a);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  /* Rotated first, then moved out to the left edge, so the face ends up in
+     the plane x = -w/2 with its normal pointing out along -X.
+
+     calc against --w and NOT translateX(-50%): a percentage in translateX
+     resolves against the elements OWN width, which here is the thickness, so
+     the percentage version parks both edge faces a few dozen pixels either
+     side of the middle of the book instead of on its edges. */
+  transform: translateX(calc(var(--w) / -2)) rotateY(-90deg);
+}
+
+.xk-spine-n {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--xp-hot);
+}
+
+.xk-spine-name {
+  font-size: 0.6875rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-fg);
+  white-space: nowrap;
+  /* Read from the foot up, which is how a spine on a shelf is read. */
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* --- The paper block ------------------------------------------------------ */
+
+.xk-edge {
+  top: 0;
+  left: 50%;
+  width: var(--t);
+  height: 100%;
+  margin-left: calc(var(--t) / -2);
+  border-radius: 0 3px 3px 0;
+  /* Ruled, because a stack of cut paper is exactly that: a lot of fine lines. */
+  background:
+    repeating-linear-gradient(90deg,
+      color-mix(in srgb, var(--xp-fg) 22%, #0b0c11) 0 1px,
+      #08090e 1px 3px);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  transform: translateX(calc(var(--w) / 2)) rotateY(90deg);
+}
+
+/* --- Opening --------------------------------------------------------------
+
+   The cover swings back on the spine, which is the left edge of the box — so
+   the hinge is transform-origin: left, and the rotation is the same rotateY
+   the book has been using all along, just about a different axis position.
+   Past ninety degrees it keeps going to a hundred and sixty, because a cover
+   laid open does not stop square, it falls past the spine and rests there.
+   --------------------------------------------------------------------------- */
+
+.xk-cover {
+  transform-origin: left center;
+  transition: transform 900ms cubic-bezier(0.42, 0.02, 0.2, 1);
+}
+
+.xk-book.is-open .xk-cover {
+  transform: translateZ(calc(var(--t) / 2)) rotateY(-162deg);
+  /* Once it is past square the reader is looking at the BACK of the cover,
+     and a board has no printing on its back. */
+  pointer-events: none;
+}
+
+.xk-book.is-open .xk-cover > * {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* The first page, sitting just under the cover. Drawn before the swing, not
+   after, because a cover that opens onto nothing reads as a lid. */
+.xk-leaf {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: clamp(1.1rem, 3.5vh, 2rem);
+  border-radius: 2px 4px 4px 2px;
+  background: linear-gradient(100deg, #12131a, #0a0b10 70%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--xp-fg) 16%, transparent);
+  /* A hair behind the cover, so it is hidden until the cover moves. */
+  transform: translateZ(calc(var(--t) / 2 - 3px));
+}
+
+.xk-leaf-rule {
+  height: 1px;
+  background: color-mix(in srgb, var(--xp-fg) 16%, transparent);
+}
+
+.xk-leaf-rule.is-short {
+  width: 55%;
+}
+
+/* --- What is in the file ---------------------------------------------------
+
+   Ink on black, like the room it came out of.
+
+   This was a case-file docket on manila stock: punch holes down the bound
+   edge, a red margin rule, a file number, a classification, an empty
+   photograph box, a signature line and a CONFIDENTIAL stamp. All of it was
+   dressing around four sections of a CV, and all of it was louder than what it
+   was carrying. What is left is the heading and the content.
+   --------------------------------------------------------------------------- */
+
+.xk-sheet {
+  position: absolute;
+  inset: clamp(0.75rem, 3vh, 2.5rem) clamp(0.75rem, 4vw, 3rem);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: #05060a;
+  box-shadow: 0 60px 120px -40px rgba(0, 0, 0, 1);
+  animation: xk-zoom 700ms cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+@keyframes xk-zoom {
+  from {
+    opacity: 0;
+    /* Roughly the open book's footprint, coming at the camera. */
+    transform: scale(0.34);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.xk-sheet-head {
+  display: grid;
+  gap: 0.35rem;
+  padding: clamp(1.1rem, 3.5vh, 2rem) clamp(1.1rem, 3.5vw, 2.4rem) clamp(0.9rem, 2.5vh, 1.4rem);
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+}
+
+.xk-sheet-n {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.32em;
+  color: var(--xp-hot);
+}
+
+.xk-sheet-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(1.3rem, 4vh, 2.1rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.16em;
+  color: var(--xp-fg);
+}
+
+.xk-sheet-sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--xp-dim);
+}
+
+.xk-sheet-body {
+  min-height: 0;
+  padding: clamp(1.1rem, 3vh, 1.8rem) clamp(1.1rem, 3.5vw, 2.4rem) clamp(1.4rem, 4vh, 2.4rem);
+  overflow-y: auto;
+}
+
+/* The content is set for a column now rather than for a recto, so it gets a
+   measure rather than the full width of a screen. */
+.xk-sheet-body .xf-pages {
+  max-width: 78ch;
+}
+
+/* Once the pages are up the book behind them is just boards. */
+.xk.is-spread .xk-book {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xk-sheet {
+    animation-duration: 0.01ms;
+  }
+
+  .xk-cover,
+  .xk.is-spread .xk-book {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* --- Putting it back ------------------------------------------------------ */
+
+.xk-back {
+  padding: 0.5rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  background: transparent;
+  font: inherit;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--xp-fg);
+  cursor: pointer;
+  /* Out of the way until the book has arrived. A control fading in underneath
+     a turning object is something to misclick. */
+  opacity: 0;
+  transition: opacity 0.4s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.xk-book.is-settled ~ .xk-back,
+.xk-book.is-still ~ .xk-back {
+  opacity: 1;
+}
+
+.xk-back:hover,
+.xk-back:focus-visible {
+  border-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xk {
+    animation-duration: 0.01ms;
+  }
+
+  /* The book is still taken off the shelf; it does not perform being taken off
+     the shelf. ShelfBook skips its timer too, so the cover is focusable from
+     the first frame rather than a second and a half in. */
+  .xk-book {
+    animation: none;
+  }
+}
+
+/* --- The window: a blind, a cord, and what happens when you pull it -------
+
+   The blind slides, the daylight fades, and the ink in the room lifts by a few
+   percent. Three transitions on the same duration, which is what makes it read
+   as one event — a room getting light — instead of three things animating.
+   ------------------------------------------------------------------------- */
+
+.xw-blind,
+.xw-blind-rail {
+  transition: transform 1.1s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+.xw-blind-face {
+  fill: color-mix(in srgb, #05060a 84%, var(--xp-fg));
+  stroke: none;
+}
+
+.xw-outside {
+  opacity: 0;
+  transition: opacity 0.9s ease 0.35s;
+}
+
+.xw-outside.is-open {
+  opacity: 1;
+}
+
+/* The cord. Quiet until the camera is at the window, then it is the only warm
+   thing in frame — which is the whole instruction. */
+.xw-cord {
+  cursor: pointer;
+  transition: transform 1.1s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+.xw-cord-bead {
+  fill: var(--xp-fg);
+  stroke: none;
+  opacity: 0.6;
+  transition: fill 0.4s ease, opacity 0.4s ease;
+}
+
+/* A pulse as well as the warm fill, so that at the window it is obvious what to
+   pull. It is the one thing in the room that asks to be touched, so it is the
+   one thing allowed to move on its own. */
+.xw-cord.is-live .xw-cord-bead {
+  fill: var(--xp-hot);
+  opacity: 1;
+  animation: xw-bead 2.4s ease-in-out infinite;
+}
+
+@keyframes xw-bead {
+  0%, 100% { r: 9; }
+  50% { r: 11.5; }
+}
+
+/* --- The two lights -------------------------------------------------------
+
+   Every glow in the drawing fills with var(--xw-bulb), which World sets once
+   on .xw. Changing the bulb is that one string changing; the cone, the pool
+   and the filament never learn what colour they are.
+
+   The cones are flat polygons rather than gradients on purpose. The room is
+   flat ink, and a soft volumetric falloff would be the one thing in it
+   pretending to be lit rather than drawn.
+   ------------------------------------------------------------------------- */
+
+.xw {
+  /* Both are written from World, out of lib/world — BULBS[0] and DESK_BULB —
+     so the colours have one home and the stylesheet is not a second one. The
+     fallbacks are here because a room whose lights go black when a custom
+     property fails to arrive is worse than one lit the wrong colour. */
+  --xw-bulb: #ffc178;
+  --xw-lamp-bulb: #ffbe5c;
+  /* Sodium and window-light off a city at night. Not a bulb in this room, so
+     it is not one of BULBS and does not change when the fitting does. */
+  --xw-city: #cfe0ff;
+}
+
+.xw-bulb-light,
+.xw-lamp-light {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.xw-pendant.is-on .xw-bulb-light,
+.xw-lamp.is-on .xw-lamp-light {
+  opacity: 1;
+}
+
+.xw-bulb-cone,
+.xw-lamp-cone {
+  fill: var(--xw-bulb);
+  stroke: none;
+  opacity: 0.09;
+}
+
+.xw-bulb-pool,
+.xw-lamp-pool {
+  fill: var(--xw-bulb);
+  stroke: none;
+  opacity: 0.14;
+}
+
+.xw-lamp-cone {
+  fill: var(--xw-lamp-bulb);
+}
+
+.xw-lamp-pool {
+  fill: var(--xw-lamp-bulb);
+  opacity: 0.18;
+}
+
+/* The filament. Dark and dead until it is switched on, and then it is the
+   brightest thing in the room — which is the whole feedback for the click. */
+.xw-bulb-core,
+.xw-lamp-core {
+  fill: var(--xp-fg);
+  stroke: none;
+  opacity: 0.18;
+  transition: fill 0.4s ease, opacity 0.4s ease, filter 0.4s ease;
+}
+
+.xw-pendant.is-on .xw-bulb-core {
+  fill: var(--xw-bulb);
+  opacity: 1;
+  filter: drop-shadow(0 0 14px var(--xw-bulb));
+}
+
+.xw-lamp.is-on .xw-lamp-core {
+  fill: var(--xw-lamp-bulb);
+  opacity: 1;
+  filter: drop-shadow(0 0 10px var(--xw-lamp-bulb));
+}
+
+/* Both fittings are things you press, so both say so. */
+.xw-pendant,
+.xw-lamp {
+  cursor: pointer;
+}
+
+/* --- The light switches in the HUD ---------------------------------------- */
+
+.xw-lights {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.xw-mute.is-on {
+  border-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+.xw-bulbs {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0 0.2rem;
+}
+
+.xw-bulb-swatch {
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 26%, transparent);
+  border-radius: 50%;
+  background: var(--swatch);
+  opacity: 0.45;
+  cursor: pointer;
+  transition: opacity 0.3s ease, transform 0.3s var(--ease-out), box-shadow 0.3s ease;
+}
+
+.xw-bulb-swatch:hover,
+.xw-bulb-swatch:focus-visible {
+  opacity: 0.85;
+  transform: scale(1.12);
+}
+
+.xw-bulb-swatch.is-on {
+  opacity: 1;
+  border-color: var(--xp-fg);
+  box-shadow: 0 0 12px var(--swatch);
+}
+
+/* --- Daylight ------------------------------------------------------------- */
+
+.xw-day {
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+}
+
+.xw-day.is-on {
+  opacity: 1;
+}
+
+.xw-day-shaft {
+  fill: var(--xw-city, #cfe0ff);
+  stroke: none;
+  opacity: 0.06;
+}
+
+/* Where the shaft lands. */
+.xw-day-pool {
+  fill: var(--xw-city, #cfe0ff);
+  stroke: none;
+  opacity: 0.05;
+}
+
+/* The glass itself, which is the brightest thing in the room once the blind
+   is up — the light is coming from there, so that is where it has to be. */
+.xw-day-glow {
+  fill: var(--xw-city, #cfe0ff);
+  stroke: none;
+  opacity: 0.09;
+}
+
+/* --- The city ------------------------------------------------------------
+
+   Other people's rooms, with the light on. Two thirds of the windows are
+   dark: a block where every one is lit reads as a wall of squares rather than
+   as a building at three in the morning. They fade up slightly after the
+   blind, so the eye lands on the room first and then notices what is out
+   there.
+   ------------------------------------------------------------------------- */
+
+/* Held back a beat behind the blind, so the eye lands on the room getting
+   light and only then notices what is out there. */
+.xw-city {
+  opacity: 0;
+  transition: opacity 0.7s ease 0.45s;
+}
+
+.xw-outside.is-open .xw-city,
+/* The bedroom's window has no reveal of its own — the blind is drawn over the
+   view, so the blind going up IS the reveal and the lights are simply on. */
+.xw-bed-out .xw-city {
+  opacity: 1;
+}
+
+.xw-city-lit {
+  fill: var(--xw-city, #cfe0ff);
+  stroke: none;
+  opacity: 0.32;
+}
+
+.xw-city-lit.is-warm {
+  fill: #ffcf8a;
+  opacity: 0.5;
+}
+
+
+/* The ink itself lifts once the blind is up. Small — five percent — because
+   the room is still a pen drawing and the point is that it reads as lighter,
+   not that it turns into a different room. */
+.xw .xw-svg {
+  transition: opacity 1.2s ease;
+}
+
+.xw.is-lit .xw-svg {
+  opacity: 1;
+}
+
+.xw:not(.is-lit) .xw-svg {
+  opacity: 0.94;
+}
+
+/* --- The keyboard ----------------------------------------------------------
+
+   Twenty-four keys, each its own target once the camera is at the desk.
+   Pressing one lights it and nothing else happens: nothing is typed, nothing
+   is spelled. It is a keyboard to fidget with, the same as the mug.
+
+   The colour is per key and comes from the index, so the board lights up in a
+   different place every time rather than flashing one accent — which is what
+   makes it read as keys rather than as a button.
+   ------------------------------------------------------------------------- */
+
+.xw-key {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 0.8;
+  opacity: 0.3;
+}
+
+.xw-keys .xw-hit {
+  cursor: pointer;
+}
+
+/* The lit copy, over the cap. Mounted fresh on every press — a class toggle
+   cannot restart its own animation, so the same key twice running would light
+   once and then sit there. */
+.xw-key-lit {
+  fill: hsl(var(--hue) 80% 62%);
+  stroke: none;
+  animation: xw-key-flash 420ms ease-out both;
+  pointer-events: none;
+}
+
+@keyframes xw-key-flash {
+  0% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
+/* --- The pens --------------------------------------------------------------
+
+   Six in the pot, and each click throws one across the room. The thrown pen
+   stays where it lands rather than fading at the end of its arc: four throws
+   leave four pens on the floor, which is the only reason the feature is worth
+   having. A pen that vanishes is a particle effect.
+   ------------------------------------------------------------------------- */
+
+.xw-pens .xw-hit {
+  cursor: pointer;
+}
+
+.xw-pen {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+/* Gone from the pot, because it is in the air. */
+.xw-pen.is-gone {
+  opacity: 0;
+}
+
+.xw-pen-flown {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: xw-throw 1100ms cubic-bezier(0.3, 0.55, 0.55, 1) both;
+}
+
+/* Up, over and down. The arc is in the keyframe rather than in a path
+   because two translates and a rotate is the whole of it, and the compositor
+   does not have to think about any of them. */
+@keyframes xw-throw {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  35% {
+    transform: translate(calc(var(--to-x) * 0.4), -90px) rotate(calc(var(--spin) * 0.4));
+  }
+  100% {
+    transform: translate(var(--to-x), var(--to-y)) rotate(var(--spin));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xw-pen-flown {
+    animation-duration: 0.01ms;
+  }
+
+  .xw-key-lit {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* --- The mug ---------------------------------------------------------------
+
+   The one thing in the room to fiddle with. Hovering it makes it steam;
+   clicking it turns it on the spot. Neither does anything, which is the
+   point — a room where every object is a control is a menu, and a room with
+   nothing to touch that is not a control is a diagram.
+   ------------------------------------------------------------------------- */
+
+.xw-mug {
+  cursor: pointer;
+}
+
+.xw-steam path {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+/* Held at zero until hovered: a mug that steams all the time is a mug nobody
+   will ever think to touch. */
+.xw-mug:hover .xw-steam path,
+.xw-mug:focus-within .xw-steam path {
+  opacity: 0.4;
+  animation: xw-steam 3.4s ease-in-out infinite;
+}
+
+.xw-mug:hover .xw-steam path:nth-child(2) { animation-delay: -1.1s; }
+.xw-mug:hover .xw-steam path:nth-child(3) { animation-delay: -2.2s; }
+
+@keyframes xw-steam {
+  0% { transform: translateY(6px) scaleX(0.9); opacity: 0; }
+  35% { opacity: 0.45; }
+  100% { transform: translateY(-26px) scaleX(1.15); opacity: 0; }
+}
+
+/* One turn, restarted by the key changing rather than by a class toggling —
+   so it can be clicked again the moment it has finished. */
+.xw-mug-body {
+  transform-box: fill-box;
+  transform-origin: 50% 72%;
+  animation: xw-mug-turn 900ms cubic-bezier(0.3, 0.9, 0.3, 1) both;
+}
+
+@keyframes xw-mug-turn {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xw-mug-body {
+    animation: none;
+  }
+
+  .xw-mug:hover .xw-steam path {
+    animation: none;
+    opacity: 0.4;
+  }
+}
+
+/* --- The machine on the desk ---------------------------------------------- */
+
+.xw-crt-led {
+  fill: var(--xp-hot);
+  opacity: 0.5;
+}
+
+.xw-crt.is-live .xw-crt-led {
+  opacity: 1;
+}
+
+.xw-crt-glow {
+  opacity: 0.45;
+  transition: opacity 0.6s ease;
+}
+
+.xw-crt.is-live .xw-crt-glow {
+  opacity: 0.9;
+}
+
+/* One line down the glass, so the machine is visibly ON before it is clicked.
+   The only thing in the drawing that moves by itself. */
+.xw-crt-scan {
+  fill: var(--xp-hot);
+  stroke: none;
+  opacity: 0.22;
+  animation: xw-scan 4.2s linear infinite;
+}
+
+@keyframes xw-scan {
+  from { transform: translateY(0); }
+  to { transform: translateY(136px); }
+}
+
+/* --- Inside a file: the portfolio's own sections --------------------------- */
+
+.xf-pages {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.xf-lede {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--xp-fg);
+  opacity: 0.9;
+}
+
+.xf-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem 2rem;
+  margin: 0;
+  padding: 1rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 16%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 16%, transparent);
+}
+
+.xf-facts dt {
+  font-size: 0.5625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--xp-dim);
+}
+
+.xf-facts dd {
+  margin: 0.3rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--xp-fg);
+}
+
+.xf-sub {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 16%, transparent);
+}
+
+.xf-sub h4 {
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--xp-hot);
+}
+
+.xf-entry {
+  display: grid;
+  gap: 0.4rem;
+  padding-left: 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--xp-hot) 45%, transparent);
+}
+
+.xf-entry + .xf-entry {
+  margin-top: 1.4rem;
+}
+
+.xf-entry-when {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  color: var(--xp-dim);
+}
+
+.xf-entry-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--xp-fg);
+}
+
+.xf-entry-title a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--xp-hot) 60%, transparent);
+  text-underline-offset: 4px;
+}
+
+.xf-entry-sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--xp-dim);
+}
+
+.xf-entry-tech,
+.xf-link {
+  margin: 0.2rem 0 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--xp-hot);
+}
+
+.xf-bullets {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--xp-fg);
+  opacity: 0.85;
+}
+
+.xf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xf-chips li {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--xp-fg);
+}
+
+.xf-index {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xf-index li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  padding: 0.55rem 0.9rem;
+  border-left: 2px solid var(--xp-hot);
+  background: color-mix(in srgb, var(--xp-fg) 5%, transparent);
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  color: var(--xp-fg);
+}
+
+.xf-index-n {
+  color: var(--xp-hot);
+  font-size: 0.6875rem;
+}
+
+.xf-index-state {
+  margin-left: auto;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  color: var(--xp-dim);
+}
+
+.xf-blank {
+  margin: 0;
+  padding: 2rem 0;
+  font-size: 0.875rem;
+  color: var(--xp-dim);
+}
+
+
+/* --- Small screens -------------------------------------------------------- */
+
+@media (max-width: 720px) {
+  .xw-blurb {
+    font-size: 0.875rem;
+  }
+
+  .xw-stations,
+  .xw-files {
+    gap: 0.3rem;
+  }
+
+  .xw-station,
+  .xw-file-btn {
+    font-size: 0.625rem;
+    padding: 0.45rem 0.7rem;
+  }
+
+  .xw-station.is-exit {
+    margin-left: 0;
+  }
+}
+
+/* --- Reduced motion ------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* The camera transition stays — it is navigation, and cutting it to zero
+     teleports the player between shots with no sense of the room being one
+     continuous place. Everything that is only decoration goes. */
+  .xw-stage {
+    transition-duration: 400ms !important;
+  }
+
+  /* The two things in the drawing that move on their own. The cord still
+     lights up warm at the window, which is the part carrying the instruction;
+     what goes is the part that was only motion. */
+  .xw-cord.is-live .xw-cord-bead,
+  .xw-crt-scan {
+    animation: none;
+  }
+
+  .xw-blind,
+  .xw-blind-rail,
+  .xw-cord {
+    transition-duration: 300ms;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Going through the book
+
+   The index file has nothing of its own to show, which is exactly why it is
+   the one that is a door. Its leaves go over one after another, the whole book
+   comes at the camera as they go, and then black — and the black is the point.
+   You do not watch the next room arrive, you come round in it.
+   ------------------------------------------------------------------------- */
+
+.xk-flight {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  perspective: 1600px;
+  pointer-events: none;
+}
+
+.xk-flight-stack {
+  position: relative;
+  width: min(42ch, 74vw);
+  aspect-ratio: 3 / 4;
+  transform-style: preserve-3d;
+  /* The book coming at the reader while its own pages turn. Two movements at
+     once, which is what makes it read as going INTO the book rather than as
+     watching a book from a fixed seat. */
+  animation: xk-flight-in 2600ms cubic-bezier(0.5, 0, 0.75, 0.2) both;
+}
+
+@keyframes xk-flight-in {
+  0% { transform: scale(0.9) translateZ(0); }
+  70% { transform: scale(1.9) translateZ(160px); }
+  100% { transform: scale(7) translateZ(620px); }
+}
+
+/* One leaf. Hinged on its left edge, like every page in a bound book. */
+.xk-leafing {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 26%, transparent);
+  border-radius: 2px;
+  background: linear-gradient(100deg, #17181f, #0b0c11 70%);
+  transform-origin: left center;
+  backface-visibility: hidden;
+  animation: xk-leaf-over 900ms cubic-bezier(0.45, 0, 0.3, 1) both;
+}
+
+@keyframes xk-leaf-over {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(-172deg); }
+}
+
+/* And then black, held long enough to be a cut rather than a fade. */
+.xk-fade {
+  position: absolute;
+  inset: 0;
+  background: #05060a;
+  animation: xk-fade-in 900ms ease-in 1700ms both;
+}
+
+@keyframes xk-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xk-flight-stack,
+  .xk-leafing,
+  .xk-fade {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   His room
+
+   Everything structural is the case room's — .xw, .xw-stage, .xw-hud and the
+   rest are shared, because it is the same screen with a different drawing in
+   it. What is here is only what differs: the light, which is morning rather
+   than three in the morning, and the panels that stand in for puzzles.
+   ------------------------------------------------------------------------- */
+
+.xr {
+  /* Warmer paper than the case room. Same pen, better morning. */
+  --xp-fg: #ece6d6;
+  --xp-dim: #938b78;
+}
+
+/* Daylight through the window, always on: it is getting light out there and
+   there is no blind in this room to argue with. */
+.xr .xw-bed-day {
+  pointer-events: none;
+}
+
+/* What is through the glass. No fade of its own: the blind is drawn over it,
+   so the blind going up IS the reveal, and a second opacity here would be two
+   things animating one event. */
+.xw-bed-out {
+  pointer-events: none;
+}
+
+.xw-bed-sky-fill {
+  fill: var(--xw-city, #cfe0ff);
+  opacity: 0.1;
+}
+
+.xw-bed-sun {
+  fill: #ffcf8a;
+  opacity: 0.3;
+}
+
+.xw-bed-sky {
+  pointer-events: none;
+}
+
+/* The poster that is a puzzle: the only warm thing on that wall until it is
+   solved, and a photograph afterwards. */
+.xw-bed-poster-live .xw-line {
+  stroke: var(--xp-hot);
+}
+
+.xw-bed-sum {
+  fill: var(--xp-hot);
+  stroke: none;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  letter-spacing: 0.08em;
+}
+
+.xw-bed-posters.is-done .xw-bed-poster-live .xw-line {
+  stroke: var(--xp-fg);
+}
+
+.xw-bed-posters .xw-hit,
+.xw-bed-term .xw-hit {
+  cursor: pointer;
+}
+
+/* The drawer slides; the cavity behind it does not. */
+.xw-bed-drawer-face {
+  transition: transform 0.6s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+.xw-bed-drawer.is-open .xw-bed-drawer-face {
+  transform: translate(-14px, 26px);
+}
+
+/* The terminal: green, because a machine that wants a password should look
+   older than the room it is in. */
+.xw-bed-term-glow .xw-line {
+  stroke: #7fe0a8;
+  opacity: 0.85;
+}
+
+.xw-bed-term-caret {
+  fill: #7fe0a8;
+  animation: blink 1.05s steps(1) infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   The cipher terminal
+
+   Green on black, and the green does the work: everything readable is one hue
+   at three brightnesses, and the only other colour in here is the red that
+   arrives when the thing locks. A terminal that uses four colours is a
+   dashboard wearing a costume.
+
+   The CRT is three things and no more — scanlines, a bloom in the middle, and
+   a curve at the edges. Anything beyond that starts costing frames for an
+   effect nobody is looking at.
+   ------------------------------------------------------------------------- */
+
+.xc {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 2.5vw, 2rem);
+  background: #020603;
+  font-family: var(--font-mono);
+}
+
+.xc-crt {
+  --green: #5bffa8;
+  --green-dim: #2f8f5e;
+  --green-deep: #0c2c1c;
+  --red: #ff5f56;
+
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(72ch, 100%);
+  height: min(46rem, 100%);
+  overflow: hidden;
+  border: 1px solid var(--green-dim);
+  border-radius: 8px;
+  background:
+    radial-gradient(120% 120% at 50% 45%, rgba(20, 90, 55, 0.22), transparent 70%),
+    #020603;
+  color: var(--green);
+  box-shadow:
+    inset 0 0 90px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(0, 0, 0, 0.9),
+    0 40px 120px -40px rgba(30, 255, 150, 0.16);
+  animation: xc-on 0.45s ease both;
+}
+
+/* A screen coming on: a line, then a frame. */
+@keyframes xc-on {
+  0% { opacity: 0; transform: scaleY(0.004); }
+  50% { opacity: 1; transform: scaleY(0.04); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* A wrong answer knocks the picture. Keyed in the component, so it can land
+   twice running. */
+.xc-crt {
+  animation: xc-on 0.45s ease both, xc-knock 0.32s ease-out;
+}
+
+@keyframes xc-knock {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-5px, 1px); }
+  45% { transform: translate(4px, -1px); }
+  70% { transform: translate(-2px, 0); }
+}
+
+.xc-crt.is-dead {
+  border-color: color-mix(in srgb, var(--red) 60%, transparent);
+  color: var(--red);
+}
+
+/* --- HUD ------------------------------------------------------------------ */
+
+.xc-hud {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-bottom: 1px solid var(--green-dim);
+}
+
+.xc-hud-cell {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+}
+
+.xc-hud-cell + .xc-hud-cell {
+  border-left: 1px solid var(--green-deep);
+}
+
+.xc-hud-cell b {
+  font-weight: 400;
+  font-size: 0.5rem;
+  letter-spacing: 0.26em;
+  color: var(--green-dim);
+}
+
+.xc-pips {
+  display: flex;
+  gap: 4px;
+}
+
+.xc-pips i {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--green-dim);
+}
+
+.xc-pips i.is-spent {
+  border-color: var(--red);
+  background: var(--red);
+}
+
+/* The clock is the pressure, so it is the one thing allowed to change colour
+   on its own. */
+.xc-clock.is-low {
+  color: var(--red);
+  animation: xc-tick 1s steps(2) infinite;
+}
+
+@keyframes xc-tick {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* --- Body ----------------------------------------------------------------- */
+
+.xc-body {
+  min-height: 0;
+  padding: clamp(0.9rem, 2.5vh, 1.5rem);
+  overflow-y: auto;
+}
+
+.xc-label {
+  margin: 0 0 0.45rem;
+  font-size: 0.5rem;
+  letter-spacing: 0.32em;
+  color: var(--green-dim);
+}
+
+.xc-label:not(:first-child) {
+  margin-top: 1.4rem;
+}
+
+/* The message. Glowing, wide-tracked, and allowed to wrap at a word. */
+.xc-cipher {
+  margin: 0;
+  font-size: clamp(1.1rem, 3.6vw, 1.85rem);
+  letter-spacing: 0.32em;
+  line-height: 1.5;
+  word-break: break-word;
+  text-shadow: 0 0 14px rgba(91, 255, 168, 0.55);
+}
+
+.xc-hint {
+  margin: 0.55rem 0 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--green-dim);
+}
+
+/* --- The key -------------------------------------------------------------- */
+
+.xc-key {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.25rem, 1fr));
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xc-key li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.2rem;
+  border: 1px solid var(--green-deep);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+}
+
+.xc-key-from {
+  color: var(--green);
+}
+
+.xc-key-arrow {
+  color: var(--green-dim);
+}
+
+.xc-key-to {
+  color: var(--green);
+  opacity: 0.72;
+}
+
+/* --- The answer ----------------------------------------------------------- */
+
+.xc-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.xc-box {
+  width: 1.9rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid var(--green-dim);
+  border-radius: 2px;
+  background: rgba(12, 44, 28, 0.35);
+  font: inherit;
+  font-size: 1rem;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--green);
+  caret-color: var(--green);
+}
+
+.xc-box:focus-visible {
+  outline: none;
+  border-color: var(--green);
+  background: rgba(91, 255, 168, 0.14);
+  box-shadow: 0 0 12px rgba(91, 255, 168, 0.35);
+}
+
+.xc-box:disabled {
+  border-color: color-mix(in srgb, var(--red) 40%, transparent);
+  color: color-mix(in srgb, var(--red) 80%, transparent);
+}
+
+/* A word break. Rendered so the shape of the answer is visible, and skipped
+   when tabbing, because typing a space to cross one costs the clock. */
+.xc-gap {
+  width: 1.1rem;
+}
+
+/* --- Foot ----------------------------------------------------------------- */
+
+.xc-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem clamp(0.9rem, 2.5vw, 1.5rem);
+  border-top: 1px solid var(--green-dim);
+}
+
+.xc-go {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid var(--green);
+  background: rgba(91, 255, 168, 0.1);
+  font: inherit;
+  font-size: 0.625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--green);
+  cursor: pointer;
+}
+
+.xc-go:hover,
+.xc-go:focus-visible {
+  background: rgba(91, 255, 168, 0.22);
+}
+
+.xc-status {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  color: var(--green-dim);
+}
+
+.xc-status.is-ok {
+  color: var(--green);
+  text-shadow: 0 0 12px rgba(91, 255, 168, 0.6);
+}
+
+.xc-locked {
+  margin: 0;
+  font-size: 0.9375rem;
+  letter-spacing: 0.34em;
+  color: var(--red);
+  text-shadow: 0 0 16px rgba(255, 95, 86, 0.6);
+  animation: xc-tick 1.1s steps(2) infinite;
+}
+
+.xc-back {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green-dim);
+  cursor: pointer;
+}
+
+.xc-back:hover,
+.xc-back:focus-visible {
+  color: var(--green);
+}
+
+/* --- The glass ------------------------------------------------------------ */
+
+.xc-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.32) 0 1px,
+    transparent 1px 3px
+  );
+  pointer-events: none;
+}
+
+/* One line sweeping down, the way a tube refreshes. */
+.xc-bloom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 22%;
+  background: linear-gradient(180deg, transparent, rgba(91, 255, 168, 0.05), transparent);
+  animation: xc-sweep 5.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes xc-sweep {
+  from { top: -22%; }
+  to { top: 100%; }
+}
+
+@media (max-width: 560px) {
+  .xc-hud {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .xc-hud-cell:nth-child(3),
+  .xc-hud-cell:nth-child(4) {
+    border-top: 1px solid var(--green-deep);
+  }
+
+  .xc-hud-cell:nth-child(3) {
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xc-crt {
+    animation: none;
+  }
+
+  .xc-bloom,
+  .xc-clock.is-low,
+  .xc-locked {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The drawer, and what is in it
+
+   Five pins and one number. The tension bar is the only feedback the puzzle
+   gives, so it is the biggest thing on the card — everything else is chrome
+   around it.
+   ------------------------------------------------------------------------- */
+
+.xl {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 3vw, 2rem);
+  overflow-y: auto;
+  background: color-mix(in srgb, #05060a 88%, transparent);
+  font-family: var(--font-mono);
+}
+
+.xl-card {
+  display: grid;
+  gap: 0.9rem;
+  width: min(46ch, 100%);
+  padding: clamp(1.3rem, 4vw, 2rem);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 40%, transparent);
+  background: #05060a;
+  /* Keyed on the slip count, so a bind shakes the card and can do it twice
+     running. */
+  animation: xl-bind 0.34s ease-out;
+}
+
+@keyframes xl-bind {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-6px, 0); }
+  60% { transform: translate(5px, 0); }
+}
+
+.xl-kicker {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-hot);
+}
+
+.xl-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(1.2rem, 4vw, 1.7rem);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--xp-fg);
+}
+
+.xl-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--xp-dim);
+}
+
+/* --- The pins ------------------------------------------------------------- */
+
+.xl-pins {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.xl-pin {
+  flex: 1;
+  height: 10px;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+}
+
+.xl-pin.is-set {
+  border-color: var(--xp-hot);
+  background: var(--xp-hot);
+}
+
+/* The one being worked. */
+.xl-pin.is-live {
+  border-color: var(--xp-fg);
+  box-shadow: inset 0 0 0 2px #05060a, 0 0 10px color-mix(in srgb, var(--xp-fg) 40%, transparent);
+}
+
+/* --- Tension --------------------------------------------------------------
+
+   The only thing the player gets back, so it is the loudest element here.
+   Transformed rather than resized: a width transition on every pointer move is
+   a layout pass per frame for a bar that is one rectangle. */
+
+.xl-tension {
+  height: 1.6rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  background: color-mix(in srgb, var(--xp-fg) 5%, transparent);
+}
+
+.xl-tension-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--xp-hot) 30%, transparent),
+    var(--xp-hot));
+  transform-origin: 0 50%;
+  transition: transform 0.08s linear;
+}
+
+.xl-read {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.26em;
+  color: var(--xp-dim);
+}
+
+/* --- The track ------------------------------------------------------------ */
+
+.xl-track {
+  position: relative;
+  height: 3rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 24%, transparent);
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 9px,
+    color-mix(in srgb, var(--xp-fg) 10%, transparent) 9px 10px
+  );
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.xl-pick {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--xp-fg);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--xp-fg) 60%, transparent);
+}
+
+.xl-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.xl-slips {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  color: var(--xp-dim);
+}
+
+/* --- The diary -------------------------------------------------------------
+
+   Paper, like the case files and the board. The things you take out of these
+   rooms to read are lit; the rooms are not.
+   ------------------------------------------------------------------------- */
+
+.xl-diary {
+  --page: #e9e2ce;
+  --page-ink: #211c12;
+  --page-dim: #6d6250;
+  --page-rule: rgba(90, 76, 52, 0.22);
+
+  display: grid;
+  gap: 1.2rem;
+  justify-items: start;
+  width: min(60ch, 100%);
+  max-height: 100%;
+  padding: clamp(1.4rem, 4vw, 2.6rem);
+  overflow-y: auto;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 27px, var(--page-rule) 27px 28px),
+    var(--page);
+  color: var(--page-ink);
+  box-shadow: 0 40px 100px -30px rgba(0, 0, 0, 0.9);
+  animation: xl-open 0.45s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+@keyframes xl-open {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.xl-diary-head {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  padding-bottom: 0.7rem;
+  border-bottom: 2px solid rgba(90, 76, 52, 0.5);
+}
+
+.xl-diary-kicker {
+  margin: 0;
+  font-size: 0.5rem;
+  letter-spacing: 0.3em;
+  color: #9d3427;
+}
+
+.xl-diary-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(1.2rem, 4vw, 1.7rem);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+}
+
+.xl-diary-body {
+  display: grid;
+  gap: 1.4rem;
+  width: 100%;
+}
+
+.xl-diary-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.xl-diary-facts dt {
+  font-size: 0.5rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--page-dim);
+}
+
+.xl-diary-facts dd {
+  margin: 0.2rem 0 0;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid rgba(90, 76, 52, 0.4);
+  font-size: 0.875rem;
+}
+
+.xl-diary h3 {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #9d3427;
+}
+
+.xl-diary-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* The one section written as if nobody were reading it, so it is set as
+   handwriting would be: looser, and indented off the rule. */
+.xl-diary-hand {
+  padding-left: 1.2rem;
+  border-left: 2px solid rgba(157, 52, 39, 0.4);
+  font-style: italic;
+}
+
+.xl-diary .prose-tech,
+.xl-diary .prose-tech p,
+.xl-diary .prose-tech li {
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: var(--page-ink);
+}
+
+.xl-diary-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--page-dim);
+}
+
+.xl-diary-empty strong {
+  font-weight: 400;
+  color: #9d3427;
+}
+
+.xl-diary .btn {
+  border-color: rgba(157, 52, 39, 0.5);
+  background: transparent;
+  color: #9d3427;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xl-card,
+  .xl-diary {
+    animation: none;
+  }
+
+  .xl-tension-fill {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The poster over the bed, and what is behind it
+
+   Paper, like everything in these rooms you take out to read. The sheet is a
+   sum sheet — ruled, cheap, the kind that gets pinned to a wall — and the
+   photograph behind it is the first time in either room the person is a face
+   rather than a case number.
+   ------------------------------------------------------------------------- */
+
+.xs {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 3vw, 2rem);
+  overflow-y: auto;
+  background: color-mix(in srgb, #05060a 88%, transparent);
+  font-family: var(--font-mono);
+}
+
+.xs-sheet {
+  --page: #e9e2ce;
+  --page-ink: #211c12;
+  --page-dim: #6d6250;
+  --page-red: #9d3427;
+
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  width: min(42ch, 100%);
+  padding: clamp(1.3rem, 4vw, 2.2rem);
+  background:
+    repeating-linear-gradient(180deg, transparent 0 26px, rgba(90, 76, 52, 0.2) 26px 27px),
+    var(--page);
+  color: var(--page-ink);
+  box-shadow: 0 40px 100px -30px rgba(0, 0, 0, 0.9);
+  animation: xs-in 0.4s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+@keyframes xs-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.xs-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(90, 76, 52, 0.5);
+}
+
+.xs-kicker {
+  margin: 0;
+  font-size: 0.5rem;
+  letter-spacing: 0.3em;
+  color: var(--page-red);
+}
+
+.xs-clock {
+  margin: 0;
+  font-size: 0.875rem;
+  letter-spacing: 0.14em;
+  color: var(--page-ink);
+}
+
+.xs-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--page-dim);
+}
+
+.xs-pips {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.xs-pips span {
+  width: 1.1rem;
+  height: 5px;
+  background: rgba(90, 76, 52, 0.28);
+}
+
+.xs-pips span.is-done {
+  background: var(--page-red);
+}
+
+.xs-pips span.is-live {
+  background: var(--page-ink);
+}
+
+/* The sum itself, set as big as a thing written on a poster in marker. */
+.xs-sum {
+  margin: 0;
+  font-size: clamp(1.8rem, 7vw, 3rem);
+  letter-spacing: 0.06em;
+  color: var(--page-ink);
+}
+
+.xs-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.xs-box {
+  width: 7rem;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-bottom: 2px solid var(--page-red);
+  background: transparent;
+  font: inherit;
+  font-size: 1.5rem;
+  color: var(--page-ink);
+}
+
+.xs-box:focus-visible {
+  outline: none;
+  background: rgba(157, 52, 39, 0.08);
+}
+
+.xs-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.xs-tally {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  color: var(--page-dim);
+}
+
+.xs-sheet .btn {
+  border-color: rgba(157, 52, 39, 0.5);
+  background: transparent;
+  color: var(--page-red);
+}
+
+.xs-sheet .btn-solid {
+  background: var(--page-red);
+  border-color: var(--page-red);
+  color: #f4efe2;
+}
+
+/* --- The photograph -------------------------------------------------------
+
+   A print in a frame, not an image on a page: a white border, a shadow, and
+   the caption under it rather than over it. */
+
+.xs-photo {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+  width: min(34rem, 100%);
+  margin: 0;
+  padding: clamp(1rem, 3vw, 1.6rem);
+  background: #f4efe2;
+  box-shadow: 0 40px 100px -30px rgba(0, 0, 0, 0.95);
+  animation: xs-in 0.5s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+.xs-photo-frame {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #22201c;
+}
+
+.xs-photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Warmed and softened, so a headshot sits on this paper rather than on top
+     of it. */
+  filter: sepia(0.18) contrast(1.04) saturate(0.9);
+}
+
+.xs-photo-none {
+  margin: 0;
+  padding: 2rem;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: #8d8579;
+  text-align: center;
+}
+
+.xs-photo-none strong {
+  font-weight: 400;
+  color: #c9c0ad;
+}
+
+.xs-photo-cap {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+  text-align: center;
+  color: #211c12;
+}
+
+.xs-photo-name {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
+}
+
+.xs-photo-sub {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #6d6250;
+}
+
+.xs-photo-note {
+  margin: 0.3rem 0 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #9d3427;
+}
+
+.xs-photo .btn {
+  border-color: rgba(157, 52, 39, 0.5);
+  background: transparent;
+  color: #9d3427;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xs-sheet,
+  .xs-photo {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   What the room gives up
+
+   Two panels: the books on the shelf, which open on a click, and what the
+   terminal was protecting, which does not. Same shape and same ink as the room
+   they are found in — the paper is gone from this project, and these were
+   never going to be sheets of it.
+   ------------------------------------------------------------------------- */
+
+.xa {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 3vw, 2rem);
+  overflow-y: auto;
+  background: color-mix(in srgb, #05060a 86%, transparent);
+  font-family: var(--font-mono);
+}
+
+.xa-card {
+  display: grid;
+  gap: 1.1rem;
+  justify-items: start;
+  width: min(62ch, 100%);
+  max-height: 100%;
+  padding: clamp(1.4rem, 4vw, 2.4rem);
+  overflow-y: auto;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: #05060a;
+  box-shadow: 0 40px 100px -30px rgba(0, 0, 0, 0.95);
+  animation: xa-in 0.42s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+@keyframes xa-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+.xa-head {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+}
+
+.xa-kicker {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-hot);
+}
+
+.xa-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(1.2rem, 4vw, 1.7rem);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--xp-fg);
+}
+
+.xa-body {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+
+.xa-lede {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--xp-fg);
+}
+
+.xa-body .prose-tech,
+.xa-body .prose-tech p,
+.xa-body .prose-tech li {
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  color: var(--xp-fg);
+  opacity: 0.88;
+}
+
+.xa-body .prose-tech strong {
+  color: var(--xp-hot);
+  font-weight: 400;
+}
+
+.xa-foot {
+  margin: 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 14%, transparent);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--xp-dim);
+}
+
+.xa-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--xp-dim);
+}
+
+.xa-empty strong {
+  font-weight: 400;
+  color: var(--xp-hot);
+}
+
+/* The shelf of books is a thing you can press. */
+.xw-bed-books .xw-hit {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xa-card {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   His machine
+
+   What was behind the cipher. The case room's computer is a workstation
+   somebody was doing a job on; this is a person's own, so it is the opposite —
+   no system name, no volumes, no shutdown. A wallpaper, a handful of files
+   somebody actually made, and whatever was left open.
+
+   Green, because the terminal it was locked behind was green and this is the
+   same machine once you are past the lock.
+   ------------------------------------------------------------------------- */
+
+.xm {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 2.5vw, 2rem);
+  background: #020603;
+  font-family: var(--font-mono);
+}
+
+.xm-screen {
+  --green: #5bffa8;
+  --green-dim: #2f8f5e;
+  --green-deep: #0c2c1c;
+
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(74ch, 100%);
+  height: min(46rem, 100%);
+  overflow: hidden;
+  border: 1px solid var(--green-dim);
+  border-radius: 8px;
+  background:
+    radial-gradient(130% 120% at 50% 40%, rgba(20, 90, 55, 0.18), transparent 72%),
+    #020603;
+  color: var(--green);
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.9), 0 40px 120px -40px rgba(30, 255, 150, 0.16);
+  animation: xm-on 0.4s ease both;
+}
+
+@keyframes xm-on {
+  from { opacity: 0; transform: scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Scanlines, the same glass the cipher was behind. */
+.xm-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+
+.xm-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--green-dim);
+}
+
+.xm-user,
+.xm-free {
+  font-size: 0.5625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--green-dim);
+}
+
+.xm-sp {
+  flex: 1;
+}
+
+.xm-quit {
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--green-dim);
+  background: transparent;
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green);
+  cursor: pointer;
+}
+
+.xm-quit:hover,
+.xm-quit:focus-visible {
+  background: rgba(91, 255, 168, 0.16);
+}
+
+.xm-desk {
+  position: relative;
+  min-height: 0;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.xm-files {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, max-content));
+  align-content: start;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xm-file {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  width: 6.5rem;
+  padding: 0.6rem 0.3rem 0.45rem;
+  border: 1px solid transparent;
+  background: transparent;
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.08em;
+  color: var(--green);
+  cursor: pointer;
+}
+
+.xm-file-name {
+  padding: 0.1rem 0.3rem;
+  word-break: break-all;
+}
+
+.xm-file:hover .xm-file-name,
+.xm-file:focus-visible .xm-file-name {
+  background: rgba(91, 255, 168, 0.18);
+}
+
+.xm-file.is-open .xm-file-name {
+  background: var(--green);
+  color: #020603;
+}
+
+/* A file with nothing in it is greyed, not hidden. A machine that hides its
+   empty files looks like a machine with nothing on it. */
+.xm-file.is-empty {
+  color: var(--green-dim);
+  opacity: 0.6;
+}
+
+.xm-glyph {
+  width: 30px;
+  height: 34px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+/* --- An open file --------------------------------------------------------- */
+
+.xm-window {
+  position: absolute;
+  inset: 2.5rem 1rem 1rem 3rem;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border: 1px solid var(--green-dim);
+  background: #030a06;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.6);
+  animation: xm-open 0.2s ease both;
+}
+
+@keyframes xm-open {
+  from { opacity: 0; transform: translate(-4px, -4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.xm-window-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.4rem 0.4rem 0.7rem;
+  border-bottom: 1px solid var(--green-dim);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  color: var(--green);
+}
+
+.xm-x {
+  margin-left: auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--green-dim);
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--green);
+  cursor: pointer;
+}
+
+.xm-window-body {
+  min-height: 0;
+  padding: 1rem 1.1rem 1.4rem;
+  overflow-y: auto;
+}
+
+.xm-lede {
+  margin: 0 0 0.8rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--green);
+}
+
+.xm-window-body .prose-tech,
+.xm-window-body .prose-tech p,
+.xm-window-body .prose-tech li {
+  font-size: 0.8125rem;
+  line-height: 1.85;
+  color: color-mix(in srgb, var(--green) 82%, transparent);
+}
+
+.xm-window-body .prose-tech strong {
+  font-weight: 400;
+  color: var(--green);
+}
+
+.xm-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.xm-facts {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.xm-facts dt {
+  font-size: 0.5rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--green-dim);
+}
+
+.xm-facts dd {
+  margin: 0.15rem 0 0;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--green-deep);
+  font-size: 0.8125rem;
+}
+
+.xm-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--green-dim);
+}
+
+.xm-empty strong {
+  font-weight: 400;
+  color: var(--green);
+}
+
+.xm-status {
+  padding: 0.4rem 0.75rem;
+  border-top: 1px solid var(--green-dim);
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  color: var(--green-dim);
+}
+
+@media (max-width: 640px) {
+  .xm-window {
+    inset: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xm-screen,
+  .xm-window {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The office
+
+   Everything structural is shared with the other two rooms — .xw, .xw-stage,
+   .xw-hud. What is here is only what differs: the light, which is fluorescent
+   rather than tungsten or morning, and the things on the walls.
+   ------------------------------------------------------------------------- */
+
+.xo {
+  /* Colder than either of the other rooms. An office at eight in the evening
+     is lit by tubes, and tubes are not warm. */
+  --xp-fg: #dfe4e6;
+  --xp-dim: #7d878c;
+  --xw-bulb: #dff1f5;
+}
+
+/* The tubes. Dead grey until switched on, then the brightest thing in the
+   room — which for a ceiling grid is correct. */
+.xw-office-tubes .xw-bulb-core {
+  fill: var(--xp-fg);
+  opacity: 0.14;
+  transition: opacity 0.35s ease, fill 0.35s ease;
+}
+
+.xw-pendant.is-on .xw-office-tubes .xw-bulb-core {
+  fill: var(--xw-bulb);
+  opacity: 0.9;
+}
+
+.xw-office-out {
+  pointer-events: none;
+}
+
+/* The louvres. Turned flat they are a wall; turned edge-on they are six dozen
+   thin slats and the city is between them. The width is written from the
+   component, so the transition is on the geometry rather than on a filter. */
+.xw-office-slats rect {
+  fill: color-mix(in srgb, #05060a 72%, var(--xp-fg));
+  stroke: none;
+  transition: width 0.7s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+.xw-office-slats.is-open rect {
+  fill: color-mix(in srgb, #05060a 86%, var(--xp-fg));
+}
+
+/* The wand, and the bead on the end of it. Quiet until the camera is near the
+   window — it is the thing you take hold of, so it has to be findable without
+   being the loudest mark in the room. */
+.xw-office-win {
+  cursor: pointer;
+}
+
+.xw-office-wand {
+  transition: transform 0.7s cubic-bezier(0.32, 0.72, 0.24, 1);
+  transform-origin: 1896px 350px;
+}
+
+.xw-office-wand.is-open {
+  transform: rotate(-9deg);
+}
+
+/* The flower. One custom property, set from the room, so its colour has one
+   home rather than six. */
+.xw-office-bloom ellipse {
+  fill: var(--bloom, #e0a33c);
+  stroke: none;
+  opacity: 0.62;
+  transition: fill 0.45s ease;
+}
+
+.xw-office-bloom-eye {
+  fill: var(--bloom, #e0a33c);
+  stroke: none;
+  opacity: 0.95;
+  transition: fill 0.45s ease;
+}
+
+.xw-office-pot {
+  cursor: pointer;
+}
+
+/* The diagram on the whiteboard, and the lines that cross. */
+.xw-office-diagram rect {
+  fill: none;
+  stroke: var(--xp-fg);
+  opacity: 0.5;
+}
+
+.xw-office-edge path {
+  fill: none;
+  stroke: var(--xp-hot);
+  stroke-width: 1.6;
+  opacity: 0.55;
+  transition: stroke 0.5s ease, opacity 0.5s ease;
+}
+
+/* Solved, the crossings are gone and the board stops being a warning. */
+.xw-office-board.is-done .xw-office-edge path {
+  stroke: var(--xp-fg);
+  opacity: 0.3;
+}
+
+/* The ports on the rack, and the cables hanging out of them. */
+.xw-office-ports circle {
+  fill: none;
+  stroke: var(--xp-fg);
+  opacity: 0.6;
+}
+
+.xw-office-cable path {
+  fill: none;
+  stroke: var(--xp-hot);
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.6;
+  transition: opacity 0.5s ease;
+}
+
+.xw-office-rack.is-done .xw-office-cable path {
+  opacity: 0;
+}
+
+/* The tickets on the screen. Every kind its own colour, and dimmed once the
+   board has been cleared. */
+.xw-office-tiles {
+  pointer-events: none;
+}
+
+.xw-office-tile {
+  stroke: none;
+  opacity: 0.55;
+  transition: opacity 0.5s ease;
+}
+
+.xw-office-tile.is-k0 { fill: #e2564a; }
+.xw-office-tile.is-k1 { fill: #e0a33c; }
+.xw-office-tile.is-k2 { fill: #4fb477; }
+.xw-office-tile.is-k3 { fill: #4a86d8; }
+.xw-office-tile.is-k4 { fill: #9a6fd0; }
+
+.xw-office-screen.is-done .xw-office-tile {
+  opacity: 0.12;
+}
+
+.xw-office-board .xw-hit,
+.xw-office-rack .xw-hit,
+.xw-office-cab .xw-hit {
+  cursor: pointer;
+}
+
+/* --- What the office gives up --------------------------------------------- */
+
+.xo-entry {
+  display: grid;
+  gap: 0.35rem;
+  padding-left: 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--xp-hot) 45%, transparent);
+}
+
+.xo-entry + .xo-entry {
+  margin-top: 1.4rem;
+}
+
+/* School is a different kind of row from a job, and should not look like one
+   more employer at the bottom of the list. */
+.xo-entry.is-school {
+  border-left-color: color-mix(in srgb, var(--xp-fg) 30%, transparent);
+}
+
+.xo-when {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  color: var(--xp-dim);
+}
+
+.xo-role {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--xp-fg);
+}
+
+.xo-where {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--xp-dim);
+}
+
+.xo-bullets {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--xp-fg);
+  opacity: 0.86;
+}
+
+.xo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xo-chips li {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--xp-fg);
+}
+
+/* ---------------------------------------------------------------------------
+   The patch panel
+
+   Two columns of terminals and a count between them. Nothing is timed and
+   nothing locks: a wiring job is fiddly, not tense.
+
+   Every terminal carries its strand's NAME as well as its colour. A puzzle
+   whose entire mechanic is matching hues is a puzzle somebody colour-blind
+   cannot play at all, and a label costs nothing.
+   ------------------------------------------------------------------------- */
+
+.xg {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 3vw, 2rem);
+  overflow-y: auto;
+  background: color-mix(in srgb, #05060a 88%, transparent);
+  font-family: var(--font-mono);
+}
+
+.xg-card {
+  display: grid;
+  gap: 1.2rem;
+  width: min(52ch, 100%);
+  padding: clamp(1.3rem, 4vw, 2.2rem);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: #05060a;
+  animation: xa-in 0.4s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+.xg-head {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.xg-kicker {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-hot);
+}
+
+.xg-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(1.1rem, 4vw, 1.6rem);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--xp-fg);
+}
+
+.xg-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--xp-dim);
+}
+
+/* The panel is one SVG laid out in its own coordinates. `height: auto` is
+   load-bearing: the component turns pointer positions into panel coordinates
+   with a single scale factor, which is only correct while the box has no
+   letterboxing in it. */
+.xg-panel {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  overflow: visible;
+}
+
+/* The plate each terminal is screwed to. */
+.xg-plate {
+  fill: color-mix(in srgb, var(--xp-fg) 6%, transparent);
+  stroke: color-mix(in srgb, var(--xp-fg) 24%, transparent);
+  stroke-width: 1;
+  transition: stroke 0.25s ease, fill 0.25s ease;
+}
+
+.xg-label {
+  fill: var(--xp-fg);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* The socket, and the pin in the middle of it. */
+.xg-socket {
+  fill: #05060a;
+  stroke: var(--strand);
+  stroke-width: 2;
+  opacity: 0.55;
+  transition: opacity 0.25s ease;
+}
+
+.xg-pin {
+  fill: var(--strand);
+  opacity: 0.7;
+  transition: opacity 0.25s ease;
+}
+
+/* The loose end. Same weight as a patched run, because it is the same cable. */
+.xg-stub {
+  fill: none;
+  stroke: var(--strand);
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* The whole row takes the grab, not the 11px circle. A puzzle about dragging
+   cables must not also be a puzzle about hitting a small target. */
+.xg-grab {
+  fill: transparent;
+  cursor: grab;
+}
+
+.xg-term:focus-visible {
+  outline: none;
+}
+
+.xg-term:focus-visible .xg-plate,
+.xg-term:hover .xg-plate {
+  stroke: var(--xp-fg);
+  fill: color-mix(in srgb, var(--xp-fg) 12%, transparent);
+}
+
+/* In hand. */
+.xg-term.is-held .xg-socket,
+.xg-term.is-held .xg-pin {
+  opacity: 1;
+}
+
+.xg-term.is-held .xg-plate {
+  stroke: var(--strand);
+}
+
+.xg-term.is-held .xg-grab {
+  cursor: grabbing;
+}
+
+.xg-term.is-done .xg-plate {
+  stroke: var(--strand);
+  fill: color-mix(in srgb, var(--strand) 16%, transparent);
+}
+
+.xg-term.is-done .xg-socket,
+.xg-term.is-done .xg-pin {
+  opacity: 1;
+}
+
+.xg-term.is-done .xg-grab {
+  cursor: default;
+}
+
+/* Wrong socket. The buzz is motion, so under reduced motion it is a red plate
+   instead — a refusal nobody can see is a click that appears to be dropped. */
+.xg-term.is-wrong {
+  animation: xg-buzz 0.3s ease-out;
+}
+
+.xg-term.is-wrong .xg-plate {
+  stroke: #e2564a;
+  fill: color-mix(in srgb, #e2564a 20%, transparent);
+}
+
+/* The cable itself. */
+.xg-run {
+  fill: none;
+  stroke: var(--strand);
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.xg-run.is-live {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+@keyframes xg-buzz {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(-5px); }
+  65% { transform: translateX(4px); }
+}
+
+.xg-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.xg-tally {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  color: var(--xp-dim);
+}
+
+/* ---------------------------------------------------------------------------
+   The backlog
+
+   A match-three, played straight. Every tile carries a MARK as well as a
+   colour, for the same reason the patch panel carries names.
+   ------------------------------------------------------------------------- */
+
+.xt {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 3vw, 2rem);
+  overflow-y: auto;
+  background: color-mix(in srgb, #05060a 90%, transparent);
+  font-family: var(--font-mono);
+}
+
+.xt-card {
+  display: grid;
+  gap: 1rem;
+  width: min(38rem, 100%);
+  padding: clamp(1.1rem, 3.5vw, 1.8rem);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: #05060a;
+  animation: xa-in 0.4s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+.xt-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.xt-kicker {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-hot);
+}
+
+.xt-count {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  color: var(--xp-fg);
+}
+
+.xt-bar {
+  height: 6px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--xp-fg) 10%, transparent);
+}
+
+.xt-bar span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--xp-hot);
+  transform-origin: 0 50%;
+  transition: transform 0.35s var(--ease-out);
+}
+
+.xt-grid {
+  display: grid;
+  gap: 4px;
+}
+
+.xt-cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--tile) 45%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--tile) 22%, transparent);
+  font: inherit;
+  font-size: 1rem;
+  color: var(--tile);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.xt-cell:hover:not(:disabled) {
+  transform: scale(1.06);
+}
+
+.xt-cell.is-picked {
+  box-shadow: 0 0 0 2px var(--xp-fg);
+  transform: scale(1.1);
+}
+
+/* A neighbour this tile can actually be swapped with.
+   Without it the only way to find a move on a 49-cell board is to try pairs
+   until one takes, and since a swap that clears nothing is REFUSED rather than
+   performed, every one of those tries looks exactly like a click that did not
+   register. Which is what it was reported as. */
+.xt-cell.is-can {
+  border-color: var(--xp-fg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--xp-fg) 45%, transparent);
+}
+
+/* Refused, not undone — an undo looks like a dropped click. The outline is
+   here rather than in the animation because the animation is motion, and this
+   has to be visible to somebody who has turned motion off. */
+.xt-cell.is-refused {
+  border-color: #e2564a;
+  background: color-mix(in srgb, #e2564a 22%, transparent);
+  animation: xg-buzz 0.3s ease-out;
+}
+
+.xt-note {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--xp-dim);
+}
+
+.xt-done {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  padding: 2rem 0;
+}
+
+.xt-done-line {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--xp-fg);
+}
+
+.xt-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xg-card,
+  .xt-card {
+    animation: none;
+  }
+
+  /* Only the movement goes. Both of these keep the colour they were given
+     above, which is the part that carries the meaning. */
+  .xg-term.is-wrong,
+  .xt-cell.is-refused {
+    animation: none;
+  }
+
+  .xt-cell:hover:not(:disabled),
+  .xt-cell.is-picked {
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The evidence board, full screen
+
+   Nothing here is positioned in this file. A force simulation decides where
+   every pin lands and writes it into a `left`/`top`, so the CSS only ever says
+   what a pin LOOKS like — which is the point: adding a pin in the CMS must not
+   mean touching a stylesheet.
+
+   The board is a fixed 1440x900 space scaled to the viewport with one
+   transform, so the simulation never re-runs on a resize and the pins do not
+   jump when a phone is rotated.
+   ------------------------------------------------------------------------- */
+
+.xb {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  /* Two perspectives, nested on purpose: this one is what the whole sheet
+     swings round in, and .xb-frame has its own for the pins standing on it. */
+  perspective: 1900px;
+  perspective-origin: 38% 50%;
+  justify-items: center;
+  background: #05060a;
+  font-family: var(--font-mono);
+  /* No entrance here: .xb-frame does the arriving. Two animations on the
+     same event read as the thing arriving twice. */
+}
+
+.xb-top {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  padding: 1rem clamp(1rem, 3vw, 2rem);
+}
+
+.xb-kicker {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.34em;
+  color: var(--xp-hot);
+}
+
+.xb-count {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--xp-dim);
+}
+
+.xb-close {
+  margin-left: auto;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  background: transparent;
+  font: inherit;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--xp-fg);
+  cursor: pointer;
+}
+
+.xb-close:hover,
+.xb-close:focus-visible {
+  border-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+/* The one perspective on this screen. Long, because the board is wide and a
+   short perspective turns a gentle lift into a fisheye. Everything on the
+   sheet — the string, the cards, the tacks — is at its own depth inside it,
+   so picking a pin up is a lift rather than a scale. */
+.xb-frame {
+  position: relative;
+  align-self: center;
+  perspective: 2200px;
+  perspective-origin: 50% 42%;
+  transform-style: preserve-3d;
+  /* Coming round to the front.
+
+     On the wall the board is seen down its own length, at roughly the angle
+     the left wall is drawn at. This starts there and turns square to the
+     reader, so opening it reads as walking round to look at it rather than as
+     a panel appearing. The angle is matched to the drawing by eye, which is
+     the only way to match a one-point perspective sketch — there is no camera
+     to ask. */
+  animation: xb-swing 1100ms cubic-bezier(0.25, 0.9, 0.25, 1) both;
+}
+
+@keyframes xb-swing {
+  from {
+    opacity: 0;
+    transform: rotateY(-36deg) translate3d(-8%, 0, -420px);
+  }
+  to {
+    opacity: 1;
+    transform: rotateY(0deg) translate3d(0, 0, 0);
+  }
+}
+
+/* The sheet itself.
+
+   Paper, not cork: a warm off-white ground, a fine grid ruled over it, and a
+   heavier line every fifth one, the way engineering paper is printed. The
+   fibre is two very low-contrast gradients crossing at an angle nothing else
+   in the layout uses, which is enough to stop a flat fill reading as a flat
+   fill without costing an image.
+
+   Everything on this sheet is dark-on-light, which is the opposite of the room
+   it came out of. That is the point: taking the board down and putting it
+   under a light is meant to feel like leaving the dark. */
+.xb-board {
+  --paper: #e8e1cf;
+  --paper-rule: rgba(90, 76, 52, 0.16);
+  --paper-rule-major: rgba(90, 76, 52, 0.3);
+  --paper-ink: #241d12;
+  --paper-dim: #6b5c44;
+  --string: #a8352b;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+  background:
+    /* The fibre. */
+    repeating-linear-gradient(64deg, transparent 0 3px, rgba(120, 100, 70, 0.035) 3px 4px),
+    repeating-linear-gradient(-27deg, transparent 0 5px, rgba(120, 100, 70, 0.03) 5px 6px),
+    /* A light thrown across it, so the sheet is lit rather than printed. */
+    radial-gradient(130% 100% at 50% -10%, rgba(255, 248, 226, 0.85), transparent 62%),
+    /* The major rule, every fifth line. */
+    repeating-linear-gradient(0deg, transparent 0 99px, var(--paper-rule-major) 99px 100px),
+    repeating-linear-gradient(90deg, transparent 0 99px, var(--paper-rule-major) 99px 100px),
+    /* The minor rule. */
+    repeating-linear-gradient(0deg, transparent 0 19px, var(--paper-rule) 19px 20px),
+    repeating-linear-gradient(90deg, transparent 0 19px, var(--paper-rule) 19px 20px),
+    var(--paper);
+  box-shadow:
+    0 0 0 1px rgba(60, 48, 30, 0.35),
+    0 40px 90px -30px rgba(0, 0, 0, 0.9);
+}
+
+.xb-threads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Behind the cards it ties to, which is where string goes: a thread that
+     paints over its own photographs looks drawn on rather than tied on. */
+  transform: translateZ(-8px);
+  pointer-events: none;
+}
+
+.xb-thread {
+  fill: none;
+  stroke: var(--string, #a8352b);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  opacity: 0.55;
+  transition: opacity 0.35s ease, stroke-width 0.35s ease;
+}
+
+.xb-thread.is-lit {
+  opacity: 1;
+  stroke-width: 3.4;
+}
+
+/* --- One pin --------------------------------------------------------------
+
+   A photographic print, pinned. The card is a real object on the sheet: it
+   sits a few pixels off it in Z, lifts further when it is picked up, and the
+   whole board is under a perspective so that lift is visible as a lift rather
+   than as a scale. */
+
+.xb-pin {
+  position: absolute;
+  /* width and height are written from Board, because the thread anchor is
+     derived from the height. */
+  transform-style: preserve-3d;
+  /* Nothing transitions here. The simulation writes left/top every frame, so
+     those cannot be animated without the pin lagging its own physics, and the
+     dim moved down to the children — a transition left on this element would
+     be watching two properties that no longer change on it, which is how the
+     fade got lost in the first place. */
+  touch-action: none;
+  cursor: grab;
+}
+
+.xb-pin:active {
+  cursor: grabbing;
+}
+
+/* Dimmed on the CHILDREN, never on .xb-pin itself.
+
+   opacity and filter are both grouping properties: an element carrying either
+   one is forced to transform-style:flat and squashes its descendants onto its
+   own plane. Put them on the card wrapper and the tack's translateZ collapses
+   for the 0.35s the transition runs, so every unrelated pin's tack visibly
+   twitches the moment one pin is opened. It is the same trap that flattened
+   the work slab, one component over. */
+.xb-pin.is-dim .xb-pin-hit,
+.xb-pin.is-dim .xb-tack {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+/* The tack. A dome with a highlight on it and a shadow under it, because a
+   flat circle at the top of a card reads as a bullet point. */
+.xb-tack {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  z-index: 3;
+  width: 17px;
+  height: 17px;
+  margin-left: -8.5px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 30%, #fff8f2 0 14%, transparent 60%),
+    radial-gradient(circle at 50% 45%, #d2483a, #7d1f16 78%);
+  box-shadow: 0 3px 7px rgba(40, 24, 10, 0.55);
+  transform: translateZ(22px);
+  transition: opacity 0.35s ease, filter 0.35s ease;
+}
+
+.xb-pin-hit {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  /* Safe here and nowhere else on this card: nothing inside the button carries
+     a translateZ, so clipping it flattens nothing that was doing any work. */
+  overflow: hidden;
+  /* Bottom-heavy, the way a print with a caption under it is. */
+  padding: 11px 11px 9px;
+  border: 0;
+  background: #fbf8f0;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 10px 22px -10px rgba(40, 28, 12, 0.65);
+  font: inherit;
+  text-align: left;
+  color: var(--paper-ink, #241d12);
+  cursor: inherit;
+  transform: translateZ(8px);
+  /* opacity and filter are here because the dim is applied here. They used to
+     be declared on .xb-pin, which no longer changes either one, so the fade
+     silently became a snap. */
+  transition:
+    box-shadow 0.35s ease,
+    transform 0.35s var(--ease-out),
+    opacity 0.35s ease,
+    filter 0.35s ease;
+}
+
+.xb-pin.is-open .xb-pin-hit,
+.xb-pin-hit:focus-visible {
+  outline: none;
+  transform: translateZ(46px);
+  box-shadow:
+    0 0 0 2px var(--string, #a8352b),
+    0 26px 44px -16px rgba(40, 28, 12, 0.7);
+}
+
+.xb-pin-shot {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #ddd6c6;
+  box-shadow: 0 0 0 1px rgba(60, 48, 30, 0.18) inset;
+}
+
+.xb-pin-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* A print pinned to a board under one light is not colour-accurate, and
+     knocking the saturation down is what makes a CMS screenshot sit ON this
+     sheet instead of on top of it. */
+  filter: grayscale(0.55) contrast(1.06) sepia(0.12);
+}
+
+.xb-pin-blank {
+  font-size: 0.5625rem;
+  letter-spacing: 0.24em;
+  color: var(--paper-dim, #6b5c44);
+}
+
+.xb-pin-foot {
+  display: grid;
+  gap: 2px;
+  padding-top: 9px;
+}
+
+.xb-pin-code {
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  color: var(--string, #a8352b);
+}
+
+.xb-pin-title {
+  /* Two lines at most, so a long title cannot push the foot past the fixed
+     height and take the caption with it. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  color: var(--paper-ink, #241d12);
+}
+
+/* Kinds. A note is torn off a pad, a map is squared, a document is typed.
+   Enough difference to tell them apart at a glance across a board. */
+.xb-pin.is-note .xb-pin-hit {
+  background: #f6ebc4;
+}
+
+.xb-pin.is-map .xb-pin-hit {
+  background-color: #eef2ea;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 13px, rgba(60, 80, 55, 0.14) 13px 14px),
+    repeating-linear-gradient(90deg, transparent 0 13px, rgba(60, 80, 55, 0.14) 13px 14px);
+}
+
+.xb-pin.is-document .xb-pin-hit {
+  background: #fdfdfa;
+  box-shadow:
+    0 0 0 1px rgba(60, 48, 30, 0.25) inset,
+    0 10px 22px -10px rgba(40, 28, 12, 0.65);
+}
+
+/* --- The pin, picked up --------------------------------------------------- */
+
+.xb-read {
+  position: absolute;
+  right: clamp(1rem, 3vw, 2rem);
+  bottom: clamp(3.5rem, 7vh, 5rem);
+  z-index: 3;
+  display: grid;
+  gap: 0.7rem;
+  justify-items: start;
+  width: min(38ch, calc(100vw - 2rem));
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--xp-hot);
+  background: #05060a;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.95);
+  animation: xb-read-in 0.32s ease both;
+}
+
+@keyframes xb-read-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.xb-read-code {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.26em;
+  color: var(--xp-hot);
+}
+
+.xb-read-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--xp-fg);
+}
+
+.xb-read-body {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--xp-fg);
+  opacity: 0.86;
+}
+
+.xb-read-body.is-empty {
+  color: var(--xp-dim);
+  opacity: 1;
+}
+
+.xb-empty {
+  display: grid;
+  gap: 0.8rem;
+  align-content: center;
+  max-width: 46ch;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.xb-empty-title {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  color: var(--xp-fg);
+}
+
+.xb-empty-line {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--xp-dim);
+}
+
+.xb-empty-line strong {
+  font-weight: 400;
+  color: var(--xp-hot);
+}
+
+.xb-hint {
+  margin: 0;
+  padding: 0.9rem 1rem 1.1rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  color: var(--xp-dim);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xb-frame,
+  .xb-read {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The machine on the desk
+
+   A desktop from before desktops were pretty: one pane deep, icons down the
+   left, a status bar that says what the thing under the pointer does. There is
+   no window manager in here on purpose — overlapping draggable windows would
+   be a week of work to build something nobody would drag.
+   ------------------------------------------------------------------------- */
+
+.xd {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 2.5vw, 2rem);
+  background: color-mix(in srgb, #05060a 88%, transparent);
+  font-family: var(--font-mono);
+}
+
+.xd-screen {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  width: min(1100px, 100%);
+  height: min(760px, 100%);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 28%, transparent);
+  /* The curve and the corner tint are the whole CRT. Anything more elaborate
+     starts fighting the ink room it is sitting in. */
+  border-radius: 10px;
+  background:
+    radial-gradient(120% 120% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%),
+    #060a09;
+  color: var(--xp-fg);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.9), 0 40px 90px -30px rgba(0, 0, 0, 1);
+  animation: xd-on 0.45s cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+
+/* A CRT coming on: a line, then a frame, then a picture. */
+@keyframes xd-on {
+  0% { opacity: 0; transform: scaleY(0.004) scaleX(0.9); }
+  45% { opacity: 1; transform: scaleY(0.02) scaleX(1); }
+  100% { opacity: 1; transform: none; }
+}
+
+.xd-post {
+  grid-row: 1 / -1;
+  align-self: start;
+  padding: 1.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.9;
+  color: #7fe0a8;
+}
+
+.xd-post p {
+  margin: 0;
+}
+
+.xd-caret {
+  display: inline-block;
+  width: 0.6em;
+  height: 1em;
+  background: #7fe0a8;
+  animation: blink 1.05s steps(1) infinite;
+}
+
+/* --- The shell ------------------------------------------------------------
+
+   One application, five tabs, and no desktop metaphor. Icons on a ground with
+   a window floating over them was a lot of frame for a machine that holds five
+   things and can only ever show one of them: a title bar, a close box, a drag
+   grip that did not drag, a menu bar with no menus. All of it was chrome.
+
+   A tab strip says the same thing in one row — here is what is on this
+   machine, here is which one you are in — and gives the content the rest of
+   the screen.
+   --------------------------------------------------------------------------- */
+
+.xd-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+}
+
+/* A mark, not a brand: three bars, the way a machine of this era stamped its
+   own corner. */
+.xd-mark {
+  width: 0.85rem;
+  height: 0.7rem;
+  background: repeating-linear-gradient(0deg, var(--xp-hot) 0 2px, transparent 2px 4px);
+}
+
+.xd-machine {
+  font-size: 0.5625rem;
+  letter-spacing: 0.26em;
+  color: var(--xp-dim);
+}
+
+.xd-sp {
+  flex: 1;
+}
+
+.xd-quit {
+  padding: 0.25rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  background: transparent;
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--xp-fg);
+  cursor: pointer;
+}
+
+.xd-quit:hover,
+.xd-quit:focus-visible {
+  border-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+/* --- The tabs ------------------------------------------------------------- */
+
+.xd-tabs {
+  display: flex;
+  gap: 1px;
+  padding: 0 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.xd-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.xd-tab {
+  padding: 0.6rem 0.9rem;
+  border: 0;
+  /* The underline IS the tab. A box round each one turns five words into five
+     buttons; a rule under the live one turns them into a strip. */
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--xp-dim);
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.xd-tab:hover,
+.xd-tab:focus-visible {
+  color: var(--xp-fg);
+}
+
+.xd-tab.is-on {
+  border-bottom-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+.xd-view {
+  min-height: 0;
+  padding: clamp(1rem, 3vh, 1.75rem);
+  overflow-y: auto;
+}
+
+/* --- Nothing open yet ------------------------------------------------------
+
+   The landing state is the contents page, not an empty pane with a line of
+   apology on it: the same five things, with what each one holds, as the first
+   thing anybody reads.
+   --------------------------------------------------------------------------- */
+
+.xd-welcome {
+  display: grid;
+  gap: 1.1rem;
+  max-width: 54ch;
+}
+
+.xd-welcome-line {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  color: var(--xp-dim);
+}
+
+.xd-welcome-list {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 14%, transparent);
+}
+
+.xd-welcome-list button {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.7rem 0.2rem;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 14%, transparent);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.xd-welcome-list button:hover .xd-welcome-n,
+.xd-welcome-list button:focus-visible .xd-welcome-n {
+  color: var(--xp-hot);
+}
+
+.xd-welcome-n {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--xp-fg);
+  transition: color 0.25s ease;
+}
+
+.xd-welcome-hint {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--xp-dim);
+}
+
+.xd-status {
+  padding: 0.4rem 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  color: var(--xp-dim);
+}
+
+/* Still used by every app that has nothing to show, which on a fresh install
+   is most of them. */
+.xd-idle {
+  margin: 0;
+  padding: 2rem 0;
+  font-size: 0.8125rem;
+  color: var(--xp-dim);
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .xd-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xd-screen {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* --- What is inside the pane ---------------------------------------------- */
+
+.xd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xd-shot {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  color: var(--xp-dim);
+}
+
+.xd-shot:hover,
+.xd-shot:focus-visible {
+  border-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+.xd-shot img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: #07080d;
+}
+
+.xd-rows {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xd-rows > li {
+  display: grid;
+  gap: 0.4rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--xp-fg) 14%, transparent);
+}
+
+.xd-row-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  color: var(--xp-fg);
+}
+
+.xd-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 0;
+}
+
+.xd-metrics dd {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--xp-hot);
+}
+
+.xd-metrics dt {
+  margin-top: 0.15rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--xp-dim);
+}
+
+.xd-diag-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.xd-diag-row:hover .xd-row-title,
+.xd-diag-row:focus-visible .xd-row-title {
+  color: var(--xp-hot);
+}
+
+.xd-diag-state {
+  margin-left: auto;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  color: var(--xp-hot);
+}
+
+.xd-diag-line {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--xp-dim);
+}
+
+.xd-diag {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+
+.xd-diag-brief {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--xp-dim);
+}
+
+.xd-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  justify-items: start;
+}
+
+.xd-form label {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  color: var(--xp-dim);
+}
+
+.xd-form label.is-wide {
+  grid-column: 1 / -1;
+}
+
+.xd-form input,
+.xd-form textarea {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 26%, transparent);
+  background: #07080d;
+  font: inherit;
+  font-size: 0.8125rem;
+  letter-spacing: normal;
+  color: var(--xp-fg);
+}
+
+.xd-form input:focus-visible,
+.xd-form textarea:focus-visible {
+  outline: none;
+  border-color: var(--xp-hot);
+}
+
+/* Off-screen rather than display:none — a bot fills what it can read in the
+   markup, and hidden inputs are the first thing they skip. */
+.xd-honey {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+}
+
+.xd-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.75rem;
+  color: #ff6b6b;
+}
+
+.xd-readme {
+  display: grid;
+  gap: 0.9rem;
+  justify-items: start;
+  max-width: 62ch;
+  font-size: 0.8125rem;
+  line-height: 1.75;
+  color: var(--xp-fg);
+}
+
+.xd-readme p {
+  margin: 0;
+  opacity: 0.88;
+}
+
+/* ---------------------------------------------------------------------------
+   Minigames shared chrome (Order, Recall)
+   ------------------------------------------------------------------------- */
+
+.mg {
+  display: grid;
+  gap: 1rem;
+  font-family: var(--font-mono);
+}
+
+.mg-hud {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--xp-dim);
+}
+
+.mg-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--xp-dim);
+}
+
+.mg-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* Order */
+
+.mg-order {
+  display: grid;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mg-floor {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 16%, transparent);
+  border-radius: var(--r-sm);
+  background: #070c10;
+  font-size: 0.875rem;
+  color: var(--xp-dim);
+  transition:
+    border-color 0.3s var(--ease-out),
+    color 0.3s var(--ease-out);
+}
+
+.mg-floor.is-home {
+  border-color: color-mix(in srgb, var(--xp-fg) 55%, transparent);
+  color: var(--xp-fg);
+}
+
+.mg-floor-n {
+  font-size: 0.6875rem;
+  opacity: 0.6;
+}
+
+.mg-floor-arrows {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.mg-nudge {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--xp-fg);
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.2s var(--ease-out);
+}
+
+.mg-nudge:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--xp-fg) 16%, transparent);
+}
+
+.mg-nudge:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.mg-order.is-solved .mg-floor {
+  border-color: var(--xp-fg);
+}
+
+/* Recall */
+
+.mg-pads {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.mg-pad {
+  padding: clamp(1.25rem, 5vw, 2.25rem) 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 24%, transparent);
+  border-radius: var(--r-sm);
+  background: #070c10;
+  color: var(--xp-dim);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  transition:
+    background 0.18s var(--ease-out),
+    color 0.18s var(--ease-out),
+    border-color 0.18s var(--ease-out);
+}
+
+.mg-pad:hover:not(:disabled) {
+  border-color: var(--xp-fg);
+  color: var(--xp-fg);
+}
+
+.mg-pad:disabled {
+  cursor: default;
+}
+
+.mg-pad.is-lit {
+  background: color-mix(in srgb, var(--xp-fg) 78%, transparent);
+  border-color: var(--xp-fg);
+  color: #05060a;
+}
+
+/* ---------------------------------------------------------------------------
+   Untangle
+   ------------------------------------------------------------------------- */
+
+.untangle {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.untangle-hud {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  color: var(--xp-dim);
+}
+
+.untangle-hud .t-meta {
+  color: inherit;
+}
+
+.untangle-board {
+  width: 100%;
+  /* Square, so the unit coordinates are not distorted by the viewport and a
+     board never becomes a letterbox on a phone. */
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  border-radius: var(--r-md);
+  background: #070a10;
+  touch-action: none;
+  transition: border-color 0.5s var(--ease-out);
+}
+
+.untangle-board.is-solved {
+  border-color: var(--xp-fg);
+}
+
+.untangle-wire {
+  stroke: color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  transition: stroke 0.35s var(--ease-out);
+}
+
+.untangle-board.is-solved .untangle-wire {
+  stroke: var(--xp-fg);
+}
+
+.untangle-node {
+  fill: #05060a;
+  stroke: var(--xp-fg);
+  stroke-width: 1.5;
+  cursor: grab;
+  transition: fill 0.2s var(--ease-out);
+}
+
+.untangle-node:hover,
+.untangle-node:focus-visible {
+  fill: color-mix(in srgb, var(--xp-fg) 35%, transparent);
+  outline: none;
+}
+
+.untangle-node.is-held {
+  fill: var(--xp-fg);
+  cursor: grabbing;
+}
+
+.untangle-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+
+   How to play
+
+   The same button in the same corner of every game. Each room says what its
+   game is FOR in one line of flavour, which is not the same as saying how to
+   work it — nothing on the screwdriver told you that A and D turn it. Shut by
+   default, and never covering the thing it is describing.
+   ------------------------------------------------------------------------- */
+
+.xh {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+
+.xh-btn {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 26%, transparent);
+  border-radius: 2px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--xp-dim);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.xh-btn:hover,
+.xh-btn:focus-visible {
+  border-color: var(--xp-fg);
+  color: var(--xp-fg);
+}
+
+.xh.is-open .xh-btn {
+  border-color: var(--xp-hot);
+  color: var(--xp-hot);
+}
+
+.xh-panel {
+  display: grid;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-left: 2px solid var(--xp-hot);
+  background: color-mix(in srgb, var(--xp-fg) 6%, transparent);
+  animation: xh-in 0.24s ease-out both;
+}
+
+@keyframes xh-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.xh-what,
+.xh-win {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--xp-fg);
+}
+
+.xh-win {
+  color: var(--xp-hot);
+}
+
+.xh-controls {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--xp-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xh-panel {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The lab, through the PROJECTS book
+
+   The room somebody builds in. The only light that matters comes off the
+   screens, so the ink is the same and the glow is not.
+   ------------------------------------------------------------------------- */
+
+.xw-lab-win,
+.xw-lab-arcade,
+.xw-lab-board .xw-hit,
+.xw-lab-rig .xw-hit {
+  cursor: pointer;
+}
+
+/* The roller blind. Its height is written from the component, so the roll is
+   on the geometry rather than on a transform that would shear the slat line. */
+.xw-lab-blind rect {
+  transition: height 0.9s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+/* Notes on the cork. Paper, not ink: they are the one thing in the room that
+   somebody's hand made rather than the renderer. */
+.xw-lab-note {
+  fill: color-mix(in srgb, #05060a 78%, var(--xp-fg));
+  stroke: color-mix(in srgb, var(--xp-fg) 38%, transparent);
+  stroke-width: 1;
+}
+
+.xw-lab-pin {
+  fill: var(--xp-hot);
+  stroke: none;
+  opacity: 0.8;
+}
+
+/* The cabinet's screen. It has its own light because it is the only thing in
+   here still running a program nobody wrote this week. */
+.xw-lab-crt-glass {
+  fill: color-mix(in srgb, #05060a 84%, #6fd0e0);
+  stroke: color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  stroke-width: 1.4;
+}
+
+.xw-lab-crt-art path,
+.xw-lab-crt-art rect {
+  fill: #7fe0d8;
+  stroke: none;
+  opacity: 0.72;
+}
+
+/* The three screens on the rig. */
+.xw-lab-glass rect {
+  fill: color-mix(in srgb, #05060a 86%, var(--xp-fg));
+  stroke: none;
+}
+
+.xw-lab-rig.is-open .xw-lab-glass rect {
+  fill: color-mix(in srgb, #05060a 78%, #7fb2e0);
+}
+
+.xw-lab-lock rect {
+  fill: none;
+  stroke: color-mix(in srgb, var(--xp-fg) 26%, transparent);
+  stroke-width: 0.8;
+}
+
+.xw-lab-bar {
+  fill: #4fb477;
+  stroke: none;
+  opacity: 0.75;
+}
+
+.xw-lab-chip {
+  fill: var(--xp-hot);
+  stroke: none;
+  opacity: 0.8;
+}
+
+.xw-lab-row {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 3;
+  opacity: 0.45;
+}
+
+.xw-lab-play path,
+.xw-lab-play rect {
+  fill: #7fe0d8;
+  stroke: none;
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xw-lab-blind rect {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The archives: college, locked, and the training facility
+
+   Every prop is a .xw-ar-prop and takes .is-on when used. The classes below
+   are the handful of things a used prop can do — slide, fold open, turn, swing,
+   light up — so a new prop is drawn out of these rather than given its own.
+   ------------------------------------------------------------------------- */
+
+.xw-ar-prop {
+  cursor: pointer;
+}
+
+/* A drawer out, a book pulled, a lid off, a dumbbell up. */
+.xw-ar-slide {
+  transition: transform 0.7s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.xw-ar-prop.is-on .xw-ar-slide {
+  transform: translate(var(--dx, 0px), var(--dy, 0px));
+}
+
+/* A door or a gate swinging back on its left hinge. */
+.xw-ar-fold {
+  transform-box: fill-box;
+  transform-origin: left center;
+  transition: transform 0.8s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.xw-ar-prop.is-on .xw-ar-fold {
+  transform: scaleX(0.16);
+}
+
+/* The vault wheel: one full turn, and back when you let go. */
+.xw-ar-turn {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 2.4s cubic-bezier(0.45, 0, 0.2, 1);
+}
+.xw-ar-prop.is-on .xw-ar-turn {
+  transform: rotate(360deg);
+}
+
+/* The globe and the round clock: going round for as long as they are on. */
+.xw-ar-tick {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.xw-ar-prop.is-on .xw-ar-tick {
+  animation: xw-ar-tick 6s linear infinite;
+}
+@keyframes xw-ar-tick {
+  to { transform: rotate(360deg); }
+}
+
+/* The diploma, crooked until straightened. */
+.xw-ar-tilt {
+  transform-box: fill-box;
+  transform-origin: center top;
+  transform: rotate(-4deg);
+  transition: transform 0.6s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.xw-ar-prop.is-on .xw-ar-tilt {
+  transform: none;
+}
+
+/* The heavy bag: three swings off one hit, then still. */
+.xw-ar-swing {
+  transform-box: fill-box;
+  transform-origin: center top;
+}
+.xw-ar-prop.is-on .xw-ar-swing {
+  animation: xw-ar-swing 1.3s ease-in-out 3;
+}
+@keyframes xw-ar-swing {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(7deg); }
+  75% { transform: rotate(-5deg); }
+}
+
+/* The treadmill belt. */
+.xw-ar-belt {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 2;
+  stroke-dasharray: 16 18;
+  opacity: 0.5;
+}
+.xw-ar-prop.is-on .xw-ar-belt {
+  animation: xw-ar-belt 0.6s linear infinite;
+}
+@keyframes xw-ar-belt {
+  to { stroke-dashoffset: 34; }
+}
+
+/* Anything that only exists while the prop is on: the lamp's pool, the
+   microfiche text, the circle on the whiteboard, the glint on a trophy. */
+.xw-ar-glow {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.xw-ar-prop.is-on .xw-ar-glow {
+  opacity: 1;
+}
+
+.xw-ar-warm {
+  fill: #ffd98a;
+  stroke: none;
+}
+.xw-ar-prop.is-on .xw-ar-warm {
+  opacity: 0.16;
+}
+
+.xw-ar-shade {
+  fill: color-mix(in srgb, #05060a 70%, #3f8f5a);
+}
+.xw-ar-prop.is-on .xw-ar-shade {
+  fill: color-mix(in srgb, #05060a 30%, #5fcf86);
+}
+
+.xw-ar-screen {
+  fill: color-mix(in srgb, #05060a 88%, var(--xp-fg));
+  stroke: none;
+  transition: fill 0.6s ease;
+}
+.xw-ar-prop.is-on .xw-ar-screen {
+  fill: color-mix(in srgb, #05060a 62%, #7fe0d8);
+}
+
+.xw-ar-seal {
+  fill: var(--xp-hot);
+  stroke: none;
+  opacity: 0.7;
+}
+
+.xw-ar-marker {
+  fill: none;
+  stroke: var(--xp-hot);
+  stroke-width: 2.4;
+}
+
+.xw-ar-glint {
+  stroke: #fff4d6;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.xw-ar-hand {
+  stroke: var(--xp-hot);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* Chain link. Drawn with a pattern, so it is lines like everything else. */
+.xw-ar-mesh {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 1;
+  opacity: 0.4;
+}
+
+.xw-ar-lock {
+  fill: color-mix(in srgb, #05060a 60%, var(--xp-hot));
+}
+
+/* Paper left behind a door: what you see once it folds back. */
+.xw-ar-paper {
+  fill: color-mix(in srgb, #05060a 72%, var(--xp-fg));
+  stroke: color-mix(in srgb, var(--xp-fg) 40%, transparent);
+  stroke-width: 1;
+}
+
+/* The camera's recording light. */
+.xw-ar-led {
+  fill: #ff4a3d;
+  stroke: none;
+  opacity: 0.15;
+}
+.xw-ar-prop.is-on .xw-ar-led {
+  animation: xw-ar-led 1.1s steps(1) infinite;
+}
+@keyframes xw-ar-led {
+  0% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+/* The shelf lights: a strip under each board and the light it throws down. */
+.xw-ar-strip {
+  fill: var(--xw-bulb);
+  stroke: none;
+  opacity: 0.15;
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+.xw-ar-spill {
+  fill: var(--xw-bulb);
+  stroke: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.xw-ar-shelves.is-on .xw-ar-strip {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px var(--xw-bulb));
+}
+.xw-ar-shelves.is-on .xw-ar-spill {
+  opacity: 0.12;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xw-ar-slide,
+  .xw-ar-fold,
+  .xw-ar-turn,
+  .xw-ar-tilt {
+    transition: none;
+  }
+  .xw-ar-prop.is-on .xw-ar-tick,
+  .xw-ar-prop.is-on .xw-ar-swing,
+  .xw-ar-prop.is-on .xw-ar-belt,
+  .xw-ar-prop.is-on .xw-ar-led {
+    animation: none;
+  }
+  .xw-ar-prop.is-on .xw-ar-led {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Remember the route
+
+   A nine by nine that lights a path and then asks for it back. The lit state
+   and the walked state are deliberately different colours: one is the machine
+   talking and the other is you answering, and a grid where those look alike is
+   a grid you cannot check your own work on.
+   ------------------------------------------------------------------------- */
+
+.xl2 {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 3vw, 2rem);
+  overflow-y: auto;
+  background: color-mix(in srgb, #05060a 90%, transparent);
+  font-family: var(--font-mono);
+}
+
+.xl2-card {
+  display: grid;
+  gap: 0.9rem;
+  width: min(34rem, 100%);
+  padding: clamp(1.1rem, 3.5vw, 1.8rem);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: #05060a;
+  animation: xa-in 0.4s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+.xl2-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.xl2-kicker {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-hot);
+}
+
+.xl2-count {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  color: var(--xp-fg);
+}
+
+.xl2-state {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  color: var(--xp-dim);
+}
+
+.xl2-grid {
+  display: grid;
+  gap: 3px;
+}
+
+.xl2-cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 16%, transparent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--xp-fg) 4%, transparent);
+  font: inherit;
+  font-size: 0.625rem;
+  color: var(--xp-dim);
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.xl2-grid.is-showing .xl2-cell {
+  cursor: default;
+}
+
+/* The machine talking. */
+.xl2-cell.is-lit {
+  border-color: var(--xp-hot);
+  background: color-mix(in srgb, var(--xp-hot) 40%, transparent);
+  color: #05060a;
+}
+
+/* You answering. */
+.xl2-cell.is-walked {
+  border-color: #4fb477;
+  background: color-mix(in srgb, #4fb477 34%, transparent);
+}
+
+/* Where the next step could possibly be. Not which one it is — the path never
+   jumps, so this is a rule of the game rather than a hint about this route. */
+.xl2-cell.is-near {
+  border-color: color-mix(in srgb, var(--xp-fg) 40%, transparent);
+}
+
+.xl2-cell.is-wrong {
+  border-color: #e2564a;
+  background: color-mix(in srgb, #e2564a 32%, transparent);
+  animation: xg-buzz 0.3s ease-out;
+}
+
+.xl2-foot {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.xl2-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xl2-card {
+    animation: none;
+  }
+
+  .xl2-cell.is-wrong {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The cabinet lock
+
+   Two hands: a pin on the barrel under the mouse, and a cam turned with A and
+   D. The tension bar is the only thing telling you where a tumbler is, so it
+   is the loudest element here by a distance.
+   ------------------------------------------------------------------------- */
+
+.xs2 {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 3vw, 2rem);
+  overflow-y: auto;
+  background: color-mix(in srgb, #05060a 90%, transparent);
+  font-family: var(--font-mono);
+}
+
+.xs2-card {
+  display: grid;
+  gap: 0.9rem;
+  width: min(34rem, 100%);
+  padding: clamp(1.1rem, 3.5vw, 1.8rem);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: #05060a;
+  animation: xa-in 0.4s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+.xs2-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.xs2-kicker {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-hot);
+}
+
+.xs2-count {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  color: var(--xp-fg);
+}
+
+.xs2-state {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--xp-hot);
+}
+
+/* The barrel. Tall enough to be an easy target for a mouse sweep. */
+.xs2-barrel {
+  position: relative;
+  height: 3.5rem;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.xs2-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: color-mix(in srgb, var(--xp-fg) 20%, transparent);
+}
+
+.xs2-pin {
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--xp-hot);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--xp-hot) 60%, transparent);
+}
+
+.xs2-seated {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: #4fb477;
+}
+
+.xs2-tension {
+  height: 8px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--xp-fg) 10%, transparent);
+}
+
+.xs2-tension span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--xp-hot);
+  transform-origin: 0 50%;
+}
+
+.xs2-read {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  color: var(--xp-dim);
+}
+
+/* The screwdriver. */
+.xs2-cam {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+}
+
+.xs2-cam-svg {
+  width: min(9rem, 46vw);
+  height: auto;
+}
+
+.xs2-cam-ring {
+  fill: none;
+  stroke: color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  stroke-width: 1;
+}
+
+.xs2-cam-notch {
+  fill: color-mix(in srgb, var(--xp-fg) 30%, transparent);
+}
+
+.xs2-cam-notch.is-at {
+  fill: var(--xp-hot);
+}
+
+.xs2-cam-blade {
+  fill: none;
+  stroke: var(--xp-fg);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.xs2-cam-grip {
+  fill: color-mix(in srgb, var(--xp-hot) 40%, transparent);
+  stroke: var(--xp-hot);
+  stroke-width: 1.5;
+}
+
+.xs2-cam-note {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  color: var(--xp-dim);
+}
+
+.xs2-cam-note kbd {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 30%, transparent);
+  border-radius: 2px;
+  font: inherit;
+  color: var(--xp-fg);
+}
+
+.xs2-foot {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.xs2-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xs2-card {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The machine, and the cabinet
+   ------------------------------------------------------------------------- */
+
+.xr2 {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 3vw, 2rem);
+  overflow-y: auto;
+  background: color-mix(in srgb, #05060a 90%, transparent);
+  font-family: var(--font-mono);
+}
+
+.xr2-card {
+  display: grid;
+  gap: 1rem;
+  width: min(46rem, 100%);
+  max-height: 88vh;
+  padding: clamp(1.1rem, 3.5vw, 1.8rem);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: #05060a;
+  animation: xa-in 0.4s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+
+.xr2-head {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.xr2-kicker {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.3em;
+  color: var(--xp-hot);
+}
+
+.xr2-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.xr2-tab {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  background: transparent;
+  font: inherit;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  color: var(--xp-dim);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.xr2-tab:hover,
+.xr2-tab:focus-visible {
+  border-color: var(--xp-fg);
+  color: var(--xp-fg);
+}
+
+.xr2-tab.is-on {
+  border-color: var(--xp-hot);
+  background: color-mix(in srgb, var(--xp-hot) 14%, transparent);
+  color: var(--xp-fg);
+}
+
+.xr2-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--xp-dim);
+}
+
+.xr2-body {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.xr2-list {
+  display: grid;
+  gap: 1.3rem;
+}
+
+.xr2-item {
+  display: grid;
+  gap: 0.35rem;
+  padding-left: 1rem;
+  border-left: 1px solid color-mix(in srgb, var(--xp-fg) 20%, transparent);
+}
+
+.xr2-when {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  color: var(--xp-hot);
+}
+
+.xr2-name {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  color: var(--xp-fg);
+}
+
+.xr2-name a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.xr2-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xr2-chips li {
+  padding: 0.15rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 20%, transparent);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  color: var(--xp-dim);
+}
+
+/* The dashboard. */
+.xr2-dash {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.6rem;
+}
+
+.xr2-tile {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 18%, transparent);
+  background: color-mix(in srgb, var(--xp-fg) 4%, transparent);
+}
+
+.xr2-tile-v {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--xp-hot);
+}
+
+.xr2-tile-k {
+  margin: 0;
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--xp-dim);
+}
+
+.xr2-play {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  padding: 1.5rem 0;
+}
+
+.xr2-play-note {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--xp-fg);
+}
+
+.xr2-notes {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xr2-notes li {
+  display: flex;
+  gap: 0.8rem;
+  font-size: 0.875rem;
+  color: var(--xp-fg);
+}
+
+.xr2-notes-n {
+  min-width: 3.5rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  color: var(--xp-hot);
+}
+
+/* --- The cabinet ---------------------------------------------------------- */
+
+.xc2 {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 3vw, 2rem);
+  overflow-y: auto;
+  background: color-mix(in srgb, #05060a 90%, transparent);
+  font-family: var(--font-mono);
+}
+
+/* On the rig's third screen it is already inside a panel. */
+.xc2.is-inline {
+  position: static;
+  z-index: auto;
+  padding: 0;
+  background: none;
+}
+
+.xc2-card {
+  display: grid;
+  gap: 0.8rem;
+  width: min(26rem, 100%);
+  padding: clamp(0.9rem, 3vw, 1.4rem);
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 34%, transparent);
+  background: #05060a;
+}
+
+.xc2.is-inline .xc2-card {
+  border: none;
+  padding: 0;
+}
+
+.xc2-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.xc2-modes {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.xc2-mode {
+  padding: 0.3rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  background: transparent;
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  color: var(--xp-dim);
+  cursor: pointer;
+}
+
+.xc2-mode.is-on {
+  border-color: #7fe0d8;
+  color: #7fe0d8;
+}
+
+.xc2-score {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #7fe0d8;
+}
+
+.xc2-score span {
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  color: var(--xp-dim);
+}
+
+.xc2-screen {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--xp-fg) 22%, transparent);
+  background: #03040a;
+}
+
+.xc2-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+}
+
+.xc2-stars circle {
+  fill: var(--xp-fg);
+  opacity: 0.22;
+}
+
+.xc2-rock {
+  fill: none;
+  stroke: #e0a33c;
+  stroke-width: 1.2;
+}
+
+.xc2-shot {
+  fill: #7fe0d8;
+}
+
+.xc2-ship {
+  fill: none;
+  stroke: #7fe0d8;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+.xc2-over {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 0.8rem;
+  place-content: center;
+  justify-items: center;
+  padding: 1rem;
+  text-align: center;
+  background: color-mix(in srgb, #03040a 82%, transparent);
+}
+
+.xc2-over-line {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--xp-fg);
+}
+
+.xc2-foot {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.xc2-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.xc2-calm {
+  margin: 0;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--xp-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xr2-card {
+    animation: none;
+  }
+}
+
+.xr2-sub {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--xp-dim);
+}
+
+/* ---------------------------------------------------------------------------
+   Reading what a room gave up
+
+   The locks are the game; what is behind them is the portfolio, and it has to
+   read like one. So once a panel is open the room's ink steps back: body copy
+   in the sans at a real reading size and full contrast, titles in the serif,
+   and the mono kept only for small labels (dates, kickers, chips) where it
+   still says "case file" without costing anyone a sentence.
+
+   Applies to .xa (office, archives, bedroom books, lab board) and .xr2 (the
+   lab rig, and the lists the archives borrow from it). The bedroom machine
+   keeps its green screen and only gets a bigger body size.
+   ------------------------------------------------------------------------- */
+
+.xa,
+.xr2 {
+  --read-fg: #efe9dc;
+  --read-soft: #b9b2a3;
+  --read-line: color-mix(in srgb, #efe9dc 14%, transparent);
+  --read-card: #0d0e12;
+  background: color-mix(in srgb, #05060a 92%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.xa-card,
+.xr2-card {
+  width: min(44rem, 100%);
+  max-height: min(90vh, 100%);
+  padding: 0;
+  gap: 0;
+  border: 1px solid var(--read-line);
+  border-top: 3px solid var(--xp-hot);
+  border-radius: 6px;
+  background: var(--read-card);
+  font-family: var(--font-display);
+  color: var(--read-fg);
+}
+
+/* Pinned header and footer; only the middle scrolls, so "Step back" is never
+   thirty entries below the fold. */
+.xa-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.xa-head,
+.xr2-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 1.5rem clamp(1.25rem, 4vw, 2.25rem) 1rem;
+  border-bottom: 1px solid var(--read-line);
+  background: var(--read-card);
+}
+
+.xa-kicker,
+.xr2-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+}
+
+.xa-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.6rem, 4.5vw, 2.2rem);
+  line-height: 1.15;
+  letter-spacing: 0;
+  color: var(--read-fg);
+}
+
+.xa-body,
+.xr2-body {
+  padding: 1.5rem clamp(1.25rem, 4vw, 2.25rem);
+  gap: 1.25rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.xa-lede {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--read-fg);
+}
+
+.xa-body .prose-tech,
+.xa-body .prose-tech p,
+.xa-body .prose-tech li,
+.xr2-body .prose-tech,
+.xr2-body .prose-tech p,
+.xr2-body .prose-tech li {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--read-fg);
+  opacity: 1;
+}
+
+.xa-body .prose-tech strong,
+.xr2-body .prose-tech strong {
+  font-weight: 600;
+}
+
+.xa-body a,
+.xr2-body a {
+  color: var(--xp-hot);
+  text-underline-offset: 3px;
+}
+
+.xa-card > .btn {
+  position: sticky;
+  bottom: 0;
+  align-self: flex-end;
+  margin: 0 clamp(1.25rem, 4vw, 2.25rem) 1.25rem;
+}
+
+.xa-foot {
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  color: var(--read-soft);
+}
+
+.xa-empty {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  color: var(--read-soft);
+}
+
+/* Entries: each job, degree, project or certificate is its own card. */
+.xo-entry,
+.xr2-item {
+  gap: 0.4rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--read-line);
+  border-left: 3px solid var(--xp-hot);
+  border-radius: 4px;
+  background: color-mix(in srgb, #efe9dc 3%, transparent);
+}
+
+.xo-entry + .xo-entry {
+  margin-top: 0;
+}
+
+.xo-entry.is-school {
+  border-left-color: var(--read-soft);
+}
+
+.xo-when,
+.xr2-when {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--xp-hot);
+}
+
+.xo-role,
+.xr2-name {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.35;
+  color: var(--read-fg);
+}
+
+.xo-where,
+.xr2-sub {
+  font-size: 0.9375rem;
+  color: var(--read-soft);
+}
+
+.xo-bullets {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--read-fg);
+  opacity: 1;
+}
+
+.xo-chips li,
+.xr2-chips li {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0;
+  color: var(--read-soft);
+}
+
+.xr2-list {
+  gap: 0.9rem;
+}
+
+.xr2-note,
+.xr2-play-note,
+.xr2-notes li {
+  font-size: 0.9375rem;
+  color: var(--read-soft);
+}
+
+.xr2-notes-n {
+  font-size: 0.75rem;
+}
+
+.xr2-tab {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  border-radius: 999px;
+}
+
+.xr2-tile-k {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+}
+
+.xm-window-body .prose-tech,
+.xm-window-body .prose-tech p,
+.xm-window-body .prose-tech li {
+  font-size: 0.9375rem;
+}
+
+.xm-window-bar {
+  font-size: 0.6875rem;
+}
+
+.xr2-card {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.xr2-card > .btn {
+  justify-self: end;
+  margin: 0 clamp(1.25rem, 4vw, 2.25rem) 1.25rem;
+}
+
+/* ---------------------------------------------------------------------------
+   The casebook (components/site/Casebook)
+
+   A tab on the right edge of every room, the notebook it opens, the three
+   questions that close the case, and the rank at the end. The notebook is an
+   .xa panel, so it reads like everything else the rooms give up.
+   ------------------------------------------------------------------------- */
+
+.xq-tab {
+  position: fixed;
+  z-index: 12;
+  right: 0;
+  top: 50%;
+  translate: 0 -50%;
+  writing-mode: vertical-rl;
+  padding: 1rem 0.55rem;
+  border: 1px solid color-mix(in srgb, #e4ddcb 30%, transparent);
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+  background: #0d0e12;
+  color: #e4ddcb;
+  font: 600 0.75rem var(--font-mono);
+  letter-spacing: 0.18em;
+  cursor: pointer;
+}
+
+.xq-tab:hover,
+.xq-tab:focus-visible {
+  border-color: #d9a05b;
+  color: #d9a05b;
+}
+
+.xq-tab.has-news::before {
+  content: "";
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: 0 auto 0.6rem;
+  border-radius: 50%;
+  background: #d9a05b;
+}
+
+.xq-toast {
+  position: fixed;
+  z-index: 13;
+  left: 50%;
+  top: 1rem;
+  translate: -50% 0;
+  width: min(34rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid color-mix(in srgb, #e4ddcb 20%, transparent);
+  border-left: 3px solid #d9a05b;
+  border-radius: 6px;
+  background: #0d0e12;
+  color: #efe9dc;
+  font: 0.9375rem/1.5 var(--font-display);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 0.6);
+  animation: xa-in 0.35s ease both;
+}
+
+.xq-skip {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: 1rem;
+  translate: -50% 0;
+  padding: 0.55rem 1rem;
+  border: 1px dashed color-mix(in srgb, #e4ddcb 45%, transparent);
+  border-radius: 999px;
+  background: rgb(13 14 18 / 0.92);
+  color: #e4ddcb;
+  font: 0.8125rem var(--font-display);
+  cursor: pointer;
+}
+
+.xq-skip:hover,
+.xq-skip:focus-visible {
+  border-style: solid;
+  border-color: #d9a05b;
+  color: #d9a05b;
+}
+
+.xq {
+  z-index: 16;
+}
+
+.xq-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin: 0;
+  font: 0.8125rem var(--font-mono);
+  color: var(--read-soft);
+}
+
+.xq-news {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, #d9a05b 12%, transparent);
+  color: var(--read-fg);
+}
+
+.xq-entries {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xq-entries li {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px dashed var(--read-line);
+  border-radius: 4px;
+}
+
+.xq-entries li.is-in {
+  border-style: solid;
+  border-left: 3px solid #d9a05b;
+  background: color-mix(in srgb, #efe9dc 3%, transparent);
+}
+
+.xq-entries p {
+  margin: 0;
+}
+
+.xq-entry-title {
+  font: 600 0.75rem var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d9a05b;
+}
+
+.xq-entry-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--read-fg);
+}
+
+.xq-redacted {
+  color: color-mix(in srgb, #efe9dc 22%, transparent);
+  letter-spacing: -0.05em;
+  user-select: none;
+}
+
+.xq-lead {
+  font-size: 0.875rem;
+  color: var(--read-soft);
+}
+
+.xq-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.xq-options {
+  display: grid;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.xq-option {
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--read-line);
+  border-radius: 6px;
+  background: color-mix(in srgb, #efe9dc 3%, transparent);
+  color: var(--read-fg);
+  font: 1rem var(--font-display);
+  text-align: left;
+  cursor: pointer;
+}
+
+.xq-option:hover,
+.xq-option:focus-visible {
+  border-color: #d9a05b;
+  background: color-mix(in srgb, #d9a05b 10%, transparent);
+}
+
+.xq-miss {
+  margin: 0;
+  color: #e58a7f;
+}
+
+.xq-stamp {
+  justify-self: end;
+  padding: 0.2rem 0.7rem;
+  border: 3px double #c8413b;
+  color: #c8413b;
+  font: 700 1rem var(--font-mono);
+  letter-spacing: 0.3em;
+  rotate: -8deg;
+}
+
+.xq-rank {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.xq-rank p {
+  margin: 0;
+}
+
+.xq-rank-title {
+  font: 2rem/1.1 var(--font-serif);
+  color: #d9a05b;
+}
+
+.xq-rank-score {
+  font: 1rem var(--font-mono);
+  color: var(--read-soft);
+}
+
+.xb-new {
+  position: absolute;
+  z-index: 4;
+  top: -10px;
+  right: -8px;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  background: #d9a05b;
+  color: #0b0b0b;
+  font: 700 0.625rem var(--font-mono);
+  letter-spacing: 0.12em;
+  rotate: 8deg;
+}
+
+/* --- Touching an archive prop: a small nudge every time ------------------- */
+
+.xw-ar-poke-a,
+.xw-ar-poke-b {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+.xw-ar-poke-a {
+  animation: xw-ar-poke-a 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.xw-ar-poke-b {
+  animation: xw-ar-poke-b 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes xw-ar-poke-a {
+  30% { transform: translateY(-4px) rotate(-1deg); }
+  60% { transform: translateY(1px) rotate(0.6deg); }
+}
+@keyframes xw-ar-poke-b {
+  30% { transform: translateY(-4px) rotate(-1deg); }
+  60% { transform: translateY(1px) rotate(0.6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xw-ar-poke-a,
+  .xw-ar-poke-b {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The combination dial (components/site/DialLock)
+   ------------------------------------------------------------------------- */
+
+.xz .xa-body {
+  justify-items: center;
+  text-align: center;
+}
+
+.xz-how {
+  margin: 0;
+  max-width: 44ch;
+  color: var(--read-soft);
+  line-height: 1.6;
+}
+
+.xz-how kbd {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--read-line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font: 0.8125rem var(--font-mono);
+  color: var(--read-fg);
+}
+
+.xz-dial {
+  position: relative;
+  width: min(260px, 70vw);
+  aspect-ratio: 1;
+  cursor: ns-resize;
+}
+
+.xz-dial svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: rotate 0.09s linear;
+}
+
+.xz-face {
+  fill: #16171c;
+  stroke: #6f6a5f;
+  stroke-width: 3;
+}
+
+.xz-notch {
+  stroke: #cfc8b8;
+  stroke-width: 1.5;
+}
+
+.xz-num {
+  fill: #efe9dc;
+  font: 600 12px var(--font-mono);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.xz-knob {
+  fill: #25262d;
+  stroke: #6f6a5f;
+  stroke-width: 2;
+}
+
+/* The fixed mark at the top that the numbers are read against. */
+.xz-mark {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  translate: -50% 0;
+  border: 9px solid transparent;
+  border-top: 13px solid #d9a05b;
+}
+
+.xz-rim {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.xz-rim.is-tick {
+  animation: xz-tick 0.5s ease-out;
+}
+
+@keyframes xz-tick {
+  from { box-shadow: 0 0 0 3px #d9a05b, 0 0 30px #d9a05b; }
+  to { box-shadow: 0 0 0 3px transparent, 0 0 30px transparent; }
+}
+
+.xz-dial.is-open svg {
+  animation: xz-open 0.8s ease-out forwards;
+}
+
+@keyframes xz-open {
+  to { transform: translateY(18px); opacity: 0.4; }
+}
+
+.xz-read {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 0;
+}
+
+.xz-pos {
+  font: 600 2.25rem var(--font-mono);
+  color: #efe9dc;
+}
+
+.xz-slots {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.xz-slots span {
+  min-width: 2.6rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px dashed var(--read-line);
+  border-radius: 4px;
+  font: 1rem var(--font-mono);
+  color: var(--read-soft);
+}
+
+.xz-slots span.is-set {
+  border-style: solid;
+  border-color: #d9a05b;
+  color: #d9a05b;
+}
+
+.xz-hint {
+  margin: 0;
+  font: 0.9375rem var(--font-mono);
+  color: #efe9dc;
+}
+
+.xz-hint.is-slip {
+  color: #e58a7f;
+}
+
+.xz-controls {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.xz-slips {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--read-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xz-dial svg {
+    transition: none;
+  }
+  .xz-rim.is-tick {
+    animation-duration: 0.9s;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The security camera (components/site/Cctv)
+   ------------------------------------------------------------------------- */
+
+.xv-card {
+  width: min(64rem, 100%);
+}
+
+.xv-foot {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0 clamp(1.25rem, 4vw, 2.25rem) 1.25rem;
+}
+
+.xv-foot .btn:last-child {
+  margin-left: auto;
+}
+
+.xv-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.9rem;
+}
+
+.xv-choice {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.5rem 1.25rem;
+  border: 1px solid var(--read-line);
+  border-radius: 6px;
+  background: color-mix(in srgb, #efe9dc 3%, transparent);
+  color: var(--read-soft);
+  font: 0.9375rem/1.5 var(--font-display);
+  text-align: left;
+  cursor: pointer;
+}
+
+.xv-choice:hover,
+.xv-choice:focus-visible {
+  border-color: #d9a05b;
+  background: color-mix(in srgb, #d9a05b 8%, transparent);
+}
+
+.xv-choice-k {
+  font: 600 1rem var(--font-mono);
+  letter-spacing: 0.1em;
+  color: #efe9dc;
+}
+
+.xv-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 6px;
+  border-radius: 6px;
+  background: #000;
+}
+
+@media (max-width: 560px) {
+  .xv-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.xv-cell {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 1px solid #222;
+  background: #050505;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.xv-cell:hover,
+.xv-cell:focus-visible {
+  border-color: #d9a05b;
+  outline: none;
+}
+
+.xv-cell.is-dead {
+  cursor: default;
+}
+
+.xv-screen {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+}
+
+.xv-screen.is-big {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+}
+
+.xv-art {
+  pointer-events: none;
+  filter: grayscale(0.85) contrast(1.15) brightness(1.1) sepia(0.2) hue-rotate(60deg);
+}
+
+/* The full-screen feed drifts, the way a camera on a slow pan would. */
+.xv-screen.is-big .xv-art {
+  animation: xv-pan 18s ease-in-out infinite alternate;
+}
+
+@keyframes xv-pan {
+  from { transform: scale(1.12) translateX(-3%); }
+  to { transform: scale(1.12) translateX(3%); }
+}
+
+.xv-scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.28) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.6));
+}
+
+.xv-static {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-radial-gradient(circle at 17% 32%, #333 0 1px, #111 1px 2px),
+    repeating-radial-gradient(circle at 71% 64%, #2a2a2a 0 1px, transparent 1px 3px);
+  animation: xv-static 0.25s steps(3) infinite;
+}
+
+@keyframes xv-static {
+  33% { background-position: 3px 5px, -4px 2px; }
+  66% { background-position: -2px -3px, 5px -4px; }
+}
+
+.xv-label,
+.xv-rec,
+.xv-time {
+  position: absolute;
+  font: 600 clamp(0.5rem, 1.2vw, 0.75rem) var(--font-mono);
+  letter-spacing: 0.08em;
+  color: #f4efe4;
+  text-shadow: 0 1px 2px #000;
+}
+
+.xv-label {
+  top: 6%;
+  left: 4%;
+}
+
+.xv-rec {
+  top: 6%;
+  right: 4%;
+  color: #ff4a3d;
+  animation: xw-ar-led 1.1s steps(1) infinite;
+}
+
+.xv-time {
+  bottom: 6%;
+  left: 4%;
+}
+
+.xv-big {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.xv-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+/* --- Live ----------------------------------------------------------------- */
+
+.xv-live {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.xv-view {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  max-height: 60vh;
+  border-radius: 6px;
+  background: #000;
+  overflow: hidden;
+}
+
+.xv-view video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.xv-chart {
+  position: absolute;
+  inset: 8% auto 8% 0;
+  width: 14%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.xv-chart span {
+  border-top: 1px solid rgb(255 255 255 / 0.45);
+  padding-left: 58%;
+  font: 0.75rem var(--font-mono);
+  color: rgb(255 255 255 / 0.8);
+  text-shadow: 0 1px 2px #000;
+}
+
+.xv-corners {
+  position: absolute;
+  inset: 5%;
+  pointer-events: none;
+  background:
+    linear-gradient(#f4efe4, #f4efe4) top left / 28px 2px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) top left / 2px 28px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) top right / 28px 2px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) top right / 2px 28px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) bottom left / 28px 2px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) bottom left / 2px 28px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) bottom right / 28px 2px no-repeat,
+    linear-gradient(#f4efe4, #f4efe4) bottom right / 2px 28px no-repeat;
+  opacity: 0.7;
+}
+
+.xv-placard {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  translate: -50% 0;
+  display: grid;
+  padding: 0.4rem 1rem;
+  border-radius: 3px;
+  background: rgb(10 10 10 / 0.85);
+  color: #f4efe4;
+  font: 700 clamp(0.75rem, 2vw, 1rem) var(--font-mono);
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.xv-placard small {
+  font-weight: 400;
+  font-size: 0.7em;
+}
+
+.xv-wait {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 0.875rem var(--font-mono);
+  color: var(--read-soft);
+}
+
+.xv-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  pointer-events: none;
+  animation: xv-flash 0.5s ease-out forwards;
+}
+
+@keyframes xv-flash {
+  from { opacity: 0.9; }
+  to { opacity: 0; }
+}
+
+.xv-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.xv-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.xv-shot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: end;
+}
+
+.xv-shot img {
+  width: min(16rem, 100%);
+  border: 6px solid #f4efe4;
+  border-bottom-width: 22px;
+  rotate: -2deg;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xv-static,
+  .xv-screen.is-big .xv-art,
+  .xv-rec {
+    animation: none;
+  }
+}
+
+.xz-slips.is-late {
+  color: #e58a7f;
+}
+
+/* ---------------------------------------------------------------------------
+   Archive minigames: prints, decoder, timeline, and the answering machine
+   (components/site/ArchiveGames, Voicemail)
+   ------------------------------------------------------------------------- */
+
+.xn .xa-body {
+  justify-items: center;
+}
+
+.xn-how {
+  margin: 0;
+  max-width: 50ch;
+  color: var(--read-soft);
+  line-height: 1.6;
+  text-align: center;
+}
+
+.xn-how kbd {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--read-line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font: 0.8125rem var(--font-mono);
+  color: var(--read-fg);
+}
+
+.xn-good,
+.xn-bad {
+  margin: 0;
+  font: 0.9375rem var(--font-mono);
+}
+
+.xn-good {
+  color: #9be3a8;
+}
+
+.xn-bad {
+  color: #e58a7f;
+}
+
+/* Prints */
+
+.xn-surface {
+  width: min(300px, 80vw);
+  aspect-ratio: 1;
+  border-radius: 6px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.xn-door {
+  fill: #2a2622;
+  stroke: #6f6a5f;
+  stroke-width: 2;
+}
+
+.xn-powder {
+  fill: #8c877c;
+}
+
+.xn-ridges {
+  fill: none;
+  stroke: #1b1a18;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.xn-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.xn-card {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+  width: 7.5rem;
+  padding: 0.7rem;
+  border: 1px solid var(--read-line);
+  border-radius: 6px;
+  background: #e9e3d6;
+  color: #1b1a18;
+  font: 600 0.75rem var(--font-mono);
+  cursor: pointer;
+}
+
+.xn-card svg {
+  width: 100%;
+}
+
+.xn-card:hover,
+.xn-card:focus-visible {
+  outline: 3px solid #d9a05b;
+}
+
+.xn-card.is-match {
+  outline: 3px solid #9be3a8;
+}
+
+/* Decoder */
+
+.xn-ring {
+  width: min(260px, 72vw);
+}
+
+.xn-ring-outer {
+  fill: #16171c;
+  stroke: #6f6a5f;
+  stroke-width: 2;
+}
+
+.xn-ring-inner {
+  fill: #22232a;
+  stroke: #d9a05b;
+  stroke-width: 1.5;
+}
+
+.xn-ring-l {
+  fill: #efe9dc;
+  font: 600 11px var(--font-mono);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.xn-ring-l.is-inner {
+  fill: #d9a05b;
+}
+
+.xn-ring-k {
+  fill: var(--read-soft);
+  font: 700 20px var(--font-mono);
+  text-anchor: middle;
+}
+
+.xn-cipher {
+  margin: 0;
+  max-width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 4px;
+  background: #0b1a12;
+  color: #9be3a8;
+  font: 1rem/1.6 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Timeline */
+
+.xn-cards-list {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xn-cards-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--read-line);
+  border-radius: 4px;
+  background: #e9e3d6;
+  color: #1b1a18;
+}
+
+.xn-cards-list li.is-in {
+  outline: 2px solid #9be3a8;
+}
+
+.xn-n {
+  font: 700 0.8125rem var(--font-mono);
+  color: #7a4f1d;
+}
+
+.xn-label {
+  flex: 1;
+  font: 0.9375rem var(--font-display);
+}
+
+.xn-move {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.xn-move button {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #b5ad9d;
+  border-radius: 4px;
+  background: #fff;
+  color: #1b1a18;
+  cursor: pointer;
+}
+
+.xn-move button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Answering machine */
+
+.xn-tape {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xn-tape li {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--read-line);
+  border-radius: 4px;
+}
+
+.xn-tape li.is-playing {
+  border-color: #d9a05b;
+}
+
+.xn-transcript {
+  margin: 0;
+  color: var(--read-fg);
+  line-height: 1.6;
+}
+
+/* The phone in the office drawing, and its message light. */
+.xw-phone-light {
+  fill: #ff4a3d;
+  stroke: none;
+  opacity: 0.2;
+}
+
+.xw-phone.is-ringing .xw-phone-light {
+  animation: xw-ar-led 0.9s steps(1) infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   Casebook additions: side cases, daily, achievements, the UV torch
+   ------------------------------------------------------------------------- */
+
+.xq-section {
+  display: grid;
+  gap: 0.6rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--read-line);
+}
+
+.xq-h {
+  margin: 0;
+  font: 600 0.75rem var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d9a05b;
+}
+
+.xq-achv {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xq-achv li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px dashed var(--read-line);
+  border-radius: 4px;
+  color: var(--read-soft);
+  font-size: 0.875rem;
+}
+
+.xq-achv li.is-on {
+  border-style: solid;
+  border-color: #d9a05b;
+  color: var(--read-fg);
+}
+
+.xq-achv strong {
+  font-weight: 600;
+}
+
+.xq-match {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 0.75rem;
+}
+
+.xq-match > div {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+}
+
+@media (max-width: 560px) {
+  .xq-match {
+    grid-template-columns: 1fr;
+  }
+}
+
+.xq-option.is-clue {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.xq-option.is-pick {
+  border-color: #d9a05b;
+  background: color-mix(in srgb, #d9a05b 16%, transparent);
+}
+
+.xq-option.is-done {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.xq-option.is-miss {
+  border-color: #e58a7f;
+}
+
+.xq-option:disabled {
+  cursor: default;
+}
+
+.xq-torch {
+  position: fixed;
+  z-index: 12;
+  right: 0;
+  top: calc(50% + 7.5rem);
+  writing-mode: vertical-rl;
+  padding: 0.8rem 0.55rem;
+  border: 1px solid #8f5cff;
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+  background: #140a24;
+  color: #b78cff;
+  font: 600 0.6875rem var(--font-mono);
+  letter-spacing: 0.18em;
+  cursor: pointer;
+}
+
+.xq-torch.is-on {
+  background: #8f5cff;
+  color: #0b0b0b;
+}
+
+/* The torch: a violet cone that follows the pointer. Only what is under it
+   shows; the room stays clickable through it. */
+.xq-uv {
+  --x: 50vw;
+  --y: 50vh;
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+  background: radial-gradient(circle 190px at var(--x) var(--y), rgb(143 92 255 / 0.28), transparent 70%);
+  -webkit-mask-image: radial-gradient(circle 190px at var(--x) var(--y), #000 55%, transparent 100%);
+  mask-image: radial-gradient(circle 190px at var(--x) var(--y), #000 55%, transparent 100%);
+}
+
+.xq-uv-note {
+  position: absolute;
+  max-width: 22rem;
+  margin: 0;
+  color: #d9ffe8;
+  font: 1.25rem/1.4 var(--font-serif);
+  text-shadow: 0 0 6px #6dffb0, 0 0 18px #6dffb0;
+}
+

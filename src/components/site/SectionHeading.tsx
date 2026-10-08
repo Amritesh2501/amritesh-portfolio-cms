@@ -1,11 +1,7 @@
 "use client";
 
-import { Fragment, useEffect, useRef } from "react";
-import { useReducedMotion } from "motion/react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
+import { Fragment } from "react";
+import { motion, useReducedMotion } from "motion/react";
 
 /**
  * A section heading that assembles itself as the section arrives.
@@ -15,8 +11,9 @@ gsap.registerPlugin(ScrollTrigger);
  * becomes fourteen separately moving objects and the eye tracks none of them.
  * Words keep the heading legible the whole way in.
  *
- * Scrubbed rather than played, so it runs backwards when the page does, which
- * is the same contract the rest of the reveals on this site follow.
+ * Played once when it scrolls in, on motion (already on the page), rather
+ * than scrubbed by a scroll-linked GSAP timeline: that cost a second animation
+ * library and a scroll listener for one heading effect.
  *
  * Every word is in the DOM at full contrast from the first frame; only
  * transform and opacity move, so nothing here changes what is read out or what
@@ -31,48 +28,24 @@ export function SectionHeading({
   children: string;
   className?: string;
 }) {
-  const ref = useRef<HTMLHeadingElement>(null);
   const reduce = useReducedMotion();
-  const words = children.split(/\s+/).filter(Boolean);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || reduce) return;
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        ".heading-word span",
-        { yPercent: 118, rotate: 3 },
-        {
-          yPercent: 0,
-          rotate: 0,
-          ease: "power3.out",
-          duration: 1,
-          stagger: 0.08,
-          scrollTrigger: {
-            trigger: el,
-            // Starts as the heading clears the fold and finishes well before
-            // it reaches the middle, so it is settled by the time it is being
-            // read rather than still arriving.
-            start: "top 92%",
-            end: "top 58%",
-            scrub: 0.8,
-          },
-        },
-      );
-    }, el);
-
-    return () => ctx.revert();
-  }, [reduce]);
+  const words = children.split(/s+/).filter(Boolean);
 
   return (
-    <h2 id={id} ref={ref} className={className}>
+    <h2 id={id} className={className}>
       {words.map((word, i) => (
         <Fragment key={i}>
           {/* The space sits OUTSIDE the clipping box. Inside it, overflow
               hidden on an inline-flex box eats it and the words run together. */}
           <span className="heading-word">
-            <span>{word}</span>
+            <motion.span
+              initial={reduce ? false : { y: "118%", rotate: 3 }}
+              whileInView={{ y: 0, rotate: 0 }}
+              viewport={{ once: true, margin: "0px 0px -8% 0px" }}
+              transition={{ duration: 0.9, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {word}
+            </motion.span>
           </span>
           {i < words.length - 1 ? " " : null}
         </Fragment>

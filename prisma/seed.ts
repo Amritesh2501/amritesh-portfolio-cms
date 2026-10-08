@@ -868,6 +868,8 @@ async function seedSettings() {
     { key: "site.contactHeading", value: "Let's work together", group: "site", label: "Contact heading", type: "text", displayOrder: 7 },
     { key: "site.contactBlurb", value: "Roles, contract work, or a system you need built properly. Tell me what you are trying to ship.", group: "site", label: "Contact blurb", type: "textarea", displayOrder: 8 },
     { key: "site.githubUser", value: "Amritesh2501", group: "site", label: "GitHub username", type: "text", description: "Drives the activity grid in the Stack section. Leave empty to hide it.", displayOrder: 10 },
+    { key: "now.title", value: "What I'm doing now", group: "site", label: "Now page title", type: "text", description: "Heading of the /now page.", displayOrder: 30 },
+    { key: "now.body", value: "", group: "site", label: "Now page", type: "textarea", description: "Markdown. What you are focused on right now: building, learning, reading. Shown at /now; leave empty to hide the page.", displayOrder: 31 },
     { key: "site.showIntro", value: "true", group: "site", label: "Boot sequence intro", type: "boolean", description: "The short terminal boot animation on first visit.", displayOrder: 9 },
 
     // --- theme ---

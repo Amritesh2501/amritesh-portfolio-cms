@@ -34,20 +34,21 @@
     "check:casebook": "tsx scripts/check-casebook.ts",
     "check:dial": "tsx scripts/check-dial.ts",
     "check:games": "tsx scripts/check-games.ts",
+    "check:calendar": "tsx scripts/check-calendar.ts",
+    "check:analytics": "tsx scripts/check-analytics.ts",
     "room": "tsx --tsconfig scripts/tsconfig.json scripts/render-room.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
     "@hookform/resolvers": "^3.9.1",
     "@phosphor-icons/react": "^2.1.7",
     "@prisma/client": "^6.2.1",
     "bcryptjs": "^2.4.3",
     "d3-force": "^3.0.0",
     "d3-shape": "^3.2.0",
-    "gsap": "^3.15.0",
-    "lenis": "^1.3.26",
     "motion": "^11.15.0",
     "next": "^15.1.4",
     "next-auth": "5.0.0-beta.25",

@@ -513,15 +513,20 @@ export function RiverScene() {
     const ro = new ResizeObserver(resize);
     ro.observe(root);
 
-    // Off screen, nothing runs at all.
+    // Off screen, nothing runs at all. And nothing starts until the browser is
+    // idle after load: the first frames are behind the intro anyway, and
+    // starting them during hydration was measurable blocking time.
     const io = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()));
-    io.observe(root);
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 300));
+    const cancelIdle = window.cancelIdleCallback ?? window.clearTimeout;
+    const waiting = idle(() => io.observe(root));
 
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("pointerdown", onDown, { passive: true });
     document.documentElement.addEventListener("pointerleave", onLeave);
 
     return () => {
+      cancelIdle(waiting);
       stop();
       themeWatch.disconnect();
       ro.disconnect();

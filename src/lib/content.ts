@@ -65,6 +65,20 @@ export async function getNavigationSafe(location: "HEADER" | "FOOTER") {
   }
 }
 
+/** Every published project, small enough for the command palette to carry. */
+export async function getPaletteProjectsSafe() {
+  try {
+    const rows = await prisma.project.findMany({
+      where: PUBLISHED,
+      orderBy: [{ displayOrder: "asc" }, { createdAt: "desc" }],
+      select: { slug: true, title: true, technologies: { select: { name: true } } },
+    });
+    return rows.map((r) => ({ slug: r.slug, title: r.title, keywords: r.technologies.map((t) => t.name).join(" ") }));
+  } catch {
+    return [];
+  }
+}
+
 export async function getProfileSafe() {
   try {
     return await getProfile();
@@ -171,6 +185,13 @@ export const getAchievements = cache(async () => {
   });
 });
 
+export const getTestimonials = cache(async () => {
+  return prisma.testimonial.findMany({
+    where: PUBLISHED,
+    orderBy: { displayOrder: "asc" },
+  });
+});
+
 export const getCaseEvidence = cache(async () => {
   return prisma.caseEvidence.findMany({
     where: PUBLISHED,
@@ -244,6 +265,7 @@ export async function getHomeData() {
     certifications,
     achievements,
     socials,
+    testimonials,
   ] = await Promise.all([
     getProfile(),
     getSettings(),
@@ -255,6 +277,7 @@ export async function getHomeData() {
     getCertifications(),
     getAchievements(),
     getSocialLinks(),
+    getTestimonials(),
   ]);
 
   return {
@@ -268,6 +291,7 @@ export async function getHomeData() {
     certifications,
     achievements,
     socials,
+    testimonials,
   };
 }
 

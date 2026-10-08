@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { imgProps } from "@/lib/img";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { Arrow } from "./Arrow";
@@ -149,7 +150,7 @@ export function WorkIndex({ projects }: { projects: CardProject[] }) {
               // Plain img: a thumbnail is whatever URL the CMS holds, and
               // next/image refuses hosts that are not allow-listed.
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={current.preview} alt="" loading="lazy" decoding="async" />
+              <img {...imgProps(current.preview, "(min-width: 1024px) 45vw, 100vw")} alt="" loading="lazy" decoding="async" />
             ) : (
               <p className="wi-slab-blank t-serif">{current.title}</p>
             )}
@@ -225,7 +226,7 @@ function Row({
         {project.preview ? (
           <span className="wi-inline" aria-hidden>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={project.preview} alt="" loading="lazy" decoding="async" />
+            <img {...imgProps(project.preview, "(min-width: 768px) 30vw, 90vw")} alt="" loading="lazy" decoding="async" />
           </span>
         ) : null}
 

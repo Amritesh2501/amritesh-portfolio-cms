@@ -715,6 +715,43 @@ export const RESOURCES: ResourceDef[] = [
   },
 
   {
+    key: "testimonials",
+    model: "testimonial",
+    label: "Testimonials",
+    singular: "Testimonial",
+    description: "What people who worked with you say. Published ones show on the home page, in display order.",
+    group: "content",
+    hasStatus: true,
+    hasOrder: true,
+    searchFields: ["name", "company", "quote"],
+    orderBy: [{ displayOrder: "asc" }],
+    listColumns: [
+      { field: "avatar", label: "", type: "image", width: "56px" },
+      { field: "name", label: "Name" },
+      { field: "company", label: "Company" },
+      { field: "status", label: "State", type: "badge" },
+      { field: "displayOrder", label: "Order", type: "order", width: "84px" },
+    ],
+    fields: [
+      { name: "quote", label: "Quote", type: "textarea", required: true, wide: true, section: "The quote" },
+      { name: "name", label: "Name", type: "text", required: true, section: "Who said it" },
+      { name: "role", label: "Role", type: "text", placeholder: "Engineering Manager", section: "Who said it" },
+      { name: "company", label: "Company", type: "text", section: "Who said it" },
+      { name: "avatar", label: "Photo", type: "media", section: "Who said it" },
+      {
+        name: "url",
+        label: "Link",
+        type: "text",
+        placeholder: "https://linkedin.com/in/...",
+        help: "Where a reader can check this person exists. Optional.",
+        section: "Who said it",
+      },
+      statusField,
+      orderField,
+    ],
+  },
+
+  {
     key: "case-evidence",
     model: "caseEvidence",
     label: "Evidence board",

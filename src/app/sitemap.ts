@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: base, changeFrequency: "monthly", priority: 1 },
     { url: `${base}/projects`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/now`, changeFrequency: "weekly", priority: 0.5 },
   ];
 
   // A dead database must not 500 the sitemap; a partial sitemap beats none.

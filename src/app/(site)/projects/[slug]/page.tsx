@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Arrow } from "@/components/site/Arrow";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getProjectBySlug, getProjects, getSettings } from "@/lib/content";
+import { getProjectBySlug, getProjects } from "@/lib/content";
 import { plainText } from "@/lib/utils";
 import { Markdown } from "@/components/site/Markdown";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
@@ -28,15 +28,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const [project, settings] = await Promise.all([
-    getProjectBySlug(slug),
-    getSettings(),
-  ]);
+  const project = await getProjectBySlug(slug);
 
   if (!project) notFound();
 
   const description = plainText(project.shortDescription, 160);
-  const image = project.heroImage ?? project.thumbnail ?? settings.get("seo.ogImage");
+  // A drawn card with the title and the hero image, rather than the bare
+  // image: a share preview with no words in it says nothing about the work.
+  const image = `/og?slug=${encodeURIComponent(project.slug)}`;
 
   return {
     title: project.title,
@@ -45,13 +44,13 @@ export async function generateMetadata({
       type: "article",
       title: project.title,
       description,
-      images: image ? [{ url: image }] : undefined,
+      images: [{ url: image, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: project.title,
       description,
-      images: image ? [image] : undefined,
+      images: [image],
     },
   };
 }

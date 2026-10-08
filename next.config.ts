@@ -17,11 +17,26 @@ const uploadMaxBytes = Number(process.env.UPLOAD_MAX_BYTES ?? 5 * 1024 * 1024);
 const bodySizeLimit =
   `${Math.ceil(uploadMaxBytes / (1024 * 1024)) + 2}mb` as `${number}mb`;
 
+// A CDN in front of the static assets: set ASSET_PREFIX to its origin (for
+// example https://cdn.example.com, pulling from this app) and every
+// /_next/static file is served from there. Unset, assets come from the app.
+const assetPrefix = process.env.ASSET_PREFIX || undefined;
+
 const config: NextConfig = {
+  assetPrefix,
   experimental: {
     serverActions: { bodySizeLimit },
+    // The site stylesheet goes into the HTML instead of a separate request,
+    // so first paint no longer waits on a render-blocking CSS download.
+    inlineCss: true,
   },
   images: {
+    // Uploads are served as whatever was uploaded (often multi-MB PNGs). The
+    // optimizer re-encodes them per browser; uploads have content-hashed
+    // names, so the result can be cached for a year (by the browser and by
+    // any CDN in front).
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "cdn.simpleicons.org" },

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Arrow } from "@/components/site/Arrow";
 import { getHomeData } from "@/lib/content";
-import { getGitHubActivity } from "@/lib/github";
+import { getDevLog, getGitHubActivity } from "@/lib/github";
+import { DevLog, type DevLogEntry } from "@/components/site/DevLog";
+import { Testimonials } from "@/components/site/Testimonials";
 import { Hero } from "@/components/site/Hero";
 import { Empty, Section } from "@/components/site/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
@@ -28,6 +30,7 @@ export default async function HomePage() {
     certifications,
     achievements,
     socials,
+    testimonials,
   } = await getHomeData();
 
   if (!profile) {
@@ -48,7 +51,29 @@ export default async function HomePage() {
   const base = await getSiteUrl();
   // Cached by fetch's own revalidate, so this does not cost a round trip on
   // every render of a force-dynamic page.
-  const github = await getGitHubActivity(settings.get("site.githubUser"));
+  const ghUser = settings.get("site.githubUser");
+  const [github, ghLog] = await Promise.all([getGitHubActivity(ghUser), getDevLog(ghUser)]);
+
+  // The dev log: GitHub pushes and new repositories, plus case studies
+  // published in the CMS lately, newest first.
+  const recentCut = Date.now() - 120 * 86400000;
+  const log: DevLogEntry[] = [
+    ...ghLog,
+    ...projects
+      .filter((p) => (p.publishedAt ?? p.createdAt).getTime() >= recentCut)
+      .map((p) => ({
+        id: `case:${p.id}`,
+        kind: "case-study" as const,
+        repo: p.slug,
+        url: `/projects/${p.slug}`,
+        at: (p.publishedAt ?? p.createdAt).toISOString(),
+        title: p.title,
+        lines: p.shortDescription ? [p.shortDescription] : [],
+        language: null,
+      })),
+  ]
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 10);
 
   const cards: CardProject[] = projects.map((p) => ({
     id: p.id,
@@ -151,6 +176,12 @@ export default async function HomePage() {
         <Experience experience={experience} education={education} />
       </Section>
 
+      {testimonials.length > 0 ? (
+        <Section id="testimonials" label="Kind words">
+          <Testimonials items={testimonials} />
+        </Section>
+      ) : null}
+
       <Section id="stack" label="Stack" aside={`${skillCount} entries`}>
         <Stack
           skillGroups={skillGroups}
@@ -158,6 +189,12 @@ export default async function HomePage() {
           github={github}
         />
       </Section>
+
+      {log.length > 0 ? (
+        <Section id="log" label="Dev log" aside="Live from GitHub">
+          <DevLog entries={log} user={ghUser} />
+        </Section>
+      ) : null}
 
       <Section id="contact" label="Contact">
         <Contact
