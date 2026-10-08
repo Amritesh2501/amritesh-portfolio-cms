@@ -5,7 +5,7 @@
  *   npx tsx scripts/check-calendar.ts
  */
 import assert from "node:assert/strict";
-import { layout, level, type Day } from "../src/lib/calendar";
+import { layout, level, parseContributions, type Day } from "../src/lib/calendar";
 
 function year(from: string, n: number): Day[] {
   const out: Day[] = [];
@@ -46,3 +46,24 @@ assert.equal(level(10, 10), 4);
 assert.equal(level(3, 0), 4, "a zero peak does not divide by zero");
 
 console.log("check-calendar: OK — whole weeks, weekday rows, labels apart.");
+
+// The public contributions page, as GitHub renders it (trimmed to two days).
+const html = `
+  <h2 id="js-contribution-activity-description">
+      1,203
+      contributions
+        in the last year
+  </h2>
+  <td tabindex="0" data-ix="0" aria-selected="false" data-date="2025-10-06" id="contribution-day-component-1-0" data-level="2" role="gridcell" class="ContributionCalendar-day"></td>
+  <td tabindex="0" data-ix="0" data-date="2025-10-05" id="contribution-day-component-0-0" data-level="0" class="ContributionCalendar-day"></td>
+  <tool-tip id="t1" for="contribution-day-component-1-0" popover="manual" class="sr-only">1,005 contributions on October 6th.</tool-tip>
+  <tool-tip id="t2" for="contribution-day-component-0-0" popover="manual" class="sr-only">No contributions on October 5th.</tool-tip>
+`;
+const parsed = parseContributions(html)!;
+assert.equal(parsed.total, 1203);
+assert.deepEqual(parsed.days, [
+  { date: "2025-10-05", count: 0 },
+  { date: "2025-10-06", count: 1005 },
+]);
+assert.equal(parseContributions("<html>redesigned</html>"), null);
+console.log("check-calendar: contributions page parsed.");

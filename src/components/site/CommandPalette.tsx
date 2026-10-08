@@ -14,7 +14,6 @@ const SECTIONS = [
   ["experience", "Experience"],
   ["testimonials", "Kind words"],
   ["stack", "Stack and GitHub"],
-  ["log", "Dev log"],
   ["contact", "Contact"],
 ] as const;
 

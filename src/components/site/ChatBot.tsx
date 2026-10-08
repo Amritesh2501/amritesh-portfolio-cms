@@ -19,7 +19,16 @@ const SUGGESTIONS = [
  * Nothing is kept: the conversation lives in this component and goes when the
  * tab does.
  */
-export function ChatBot({ name }: { name: string }) {
+export function ChatBot({
+  name,
+  enabled = true,
+  email = "",
+}: {
+  name: string;
+  /** False when the server has no API key: the tab still shows, and says so. */
+  enabled?: boolean;
+  email?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
@@ -46,7 +55,7 @@ export function ChatBot({ name }: { name: string }) {
 
   const ask = async (question: string) => {
     const q = question.trim();
-    if (!q || busy) return;
+    if (!q || busy || !enabled) return;
     const history: Msg[] = [...msgs, { role: "user", content: q }];
     setMsgs([...history, { role: "assistant", content: "" }]);
     setDraft("");
@@ -103,26 +112,51 @@ export function ChatBot({ name }: { name: string }) {
 
   return (
     <>
+      {/* A tab on the right edge: just the icon until hovered or focused,
+          then it slides out to say what it is. */}
       <button
         type="button"
         className={`cb-launch ${open ? "is-open" : ""}`}
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls="cb-panel"
+        aria-label={open ? "Close the assistant" : `Ask AI about ${name}`}
       >
-        <span aria-hidden className="cb-dot" />
-        {open ? "Close" : `Ask about ${name.split(" ")[0]}`}
+        <svg aria-hidden className="cb-icon" viewBox="0 0 24 24" width="20" height="20">
+          <path
+            d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4H6.5A2.5 2.5 0 0 1 4 13.5z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          <path d="M9 9.5h.01M12 9.5h.01M15 9.5h.01" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+        <span className="cb-label">{open ? "Close" : `Ask AI about ${name.split(" ")[0]}`}</span>
       </button>
 
       {open ? (
         <section id="cb-panel" className="cb-panel" aria-label={`Ask about ${name}`}>
           <header className="cb-head">
+            <button type="button" className="cb-close" onClick={() => setOpen(false)} aria-label="Close">
+              ×
+            </button>
             <p className="cb-title">Ask about {name}</p>
             <p className="cb-sub">Answers come from this portfolio. It can be wrong; check the source.</p>
           </header>
 
           <div ref={list} className="cb-list" aria-live="polite">
-            {msgs.length === 0 ? (
+            {!enabled ? (
+              <p className="cb-msg is-assistant">
+                The assistant is offline right now.
+                {email ? (
+                  <>
+                    {" "}
+                    Ask {name.split(" ")[0]} directly at <a href={`mailto:${email}`}>{email}</a>.
+                  </>
+                ) : null}
+              </p>
+            ) : msgs.length === 0 ? (
               <div className="cb-start">
                 {SUGGESTIONS.map((s) => (
                   <button key={s} type="button" className="cb-chip" onClick={() => ask(s)}>
@@ -158,7 +192,8 @@ export function ChatBot({ name }: { name: string }) {
               }}
               rows={1}
               maxLength={2000}
-              placeholder="Ask a question…"
+              placeholder={enabled ? "Ask a question…" : "Offline"}
+              disabled={!enabled}
               aria-label="Your question"
             />
             <button type="submit" className="btn btn-accent btn-sm" disabled={busy || !draft.trim()}>

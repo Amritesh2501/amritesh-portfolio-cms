@@ -1,4 +1,5 @@
 import "server-only";
+import { parseContributions } from "./calendar";
 
 /**
  * Live GitHub activity: the contribution calendar, and the dev log.
@@ -93,7 +94,9 @@ export async function getGitHubActivity(user: string): Promise<GitHubActivity | 
   if (!user) return null;
 
   const [years, events] = await Promise.all([
-    fetchYears(user),
+    // The API with a token; otherwise the public contributions page, which is
+    // what the profile itself draws from and is not under the API rate limit.
+    fetchYears(user).then((y) => y ?? scrapeYears(user)),
     getJson<GitHubEvent[]>(
       `https://api.github.com/users/${encodeURIComponent(user)}/events/public?per_page=100`,
       REVALIDATE,
@@ -306,4 +309,50 @@ export async function getDevLog(user: string, limit = 10): Promise<LogEntry[]> {
   });
 
   return entries.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
+}
+
+/* ---------------------------------------------------------------------------
+   Calendar without a token: the public contributions page
+   ------------------------------------------------------------------------- */
+
+/**
+ * github.com/users/:user/contributions is the fragment the profile page loads
+ * its calendar from. It needs no token and is not counted against the REST
+ * API's 60-an-hour limit, which a shared host IP (Railway, Vercel) can run
+ * out of on someone else's traffic. Parsing HTML is the price: if GitHub
+ * changes the markup this returns null and the token path is the fix.
+ */
+async function scrapeYears(user: string): Promise<ContributionYear[] | null> {
+  const page = async (query = "") => {
+    try {
+      const res = await fetch(`https://github.com/users/${encodeURIComponent(user)}/contributions${query}`, {
+        headers: { "User-Agent": HEADERS["User-Agent"] },
+        next: { revalidate: REVALIDATE },
+      });
+      return res.ok ? parseContributions(await res.text()) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const rolling = await page();
+  if (!rolling) return null;
+  const out: ContributionYear[] = [{ label: "Last year", ...rolling }];
+
+  // Which years exist: the account's age from the (rarely changing, cached a
+  // day) user record; three years back if that call is unavailable.
+  const now = new Date().getUTCFullYear();
+  const profile = await getJson<{ created_at?: string }>(
+    `https://api.github.com/users/${encodeURIComponent(user)}`,
+    86400,
+  );
+  const first = profile?.created_at ? new Date(profile.created_at).getUTCFullYear() : now - 3;
+  const years = Array.from({ length: Math.min(MAX_YEARS, now - first) }, (_, i) => now - 1 - i);
+
+  const pages = await Promise.all(years.map((y) => page(`?from=${y}-01-01&to=${y}-12-31`)));
+  years.forEach((y, i) => {
+    const p = pages[i];
+    if (p) out.push({ label: String(y), total: p.total, days: p.days.filter((d) => d.date.startsWith(String(y))) });
+  });
+  return out;
 }

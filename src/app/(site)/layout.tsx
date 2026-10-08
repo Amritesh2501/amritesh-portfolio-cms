@@ -25,7 +25,7 @@ export default async function SiteLayout({
     getNavigationSafe("HEADER"),
     getPaletteProjectsSafe(),
   ]);
-  const hasChat = Boolean(process.env.ANTHROPIC_API_KEY);
+  const hasChat = Boolean(process.env.GEMINI_API_KEY);
 
   const navItems = [
     ...nav.map((item) => ({
@@ -38,6 +38,9 @@ export default async function SiteLayout({
     // section of this page: it opens in its own tab, and deleting it from
     // admin would leave the route reachable with nothing pointing at it.
     // external drives target="_blank" in both the header and the palette.
+    // Its own page rather than a home-page section: the home page is the
+    // portfolio, the log is for people who want to see the work move.
+    { id: "log", label: "Dev log", href: "/log", external: false },
     {
       id: "experiments",
       label: "Experiments",
@@ -79,8 +82,13 @@ export default async function SiteLayout({
       </main>
 
       <ToTop />
-      {/* Only with a key: a button that cannot answer is worse than none. */}
-      {hasChat ? <ChatBot name={settings.get("site.title", "the author")} /> : null}
+      {/* Always there; without an API key it opens on a note and an email
+          address instead of a conversation. */}
+      <ChatBot
+        name={settings.get("site.title", "the author")}
+        enabled={hasChat}
+        email={settings.get("site.contactEmail")}
+      />
       <CommandPalette
         navItems={navItems}
         projects={paletteProjects}
