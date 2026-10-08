@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
  *
  * The browser-window card that used to live here is gone with the stacked
  * layout it belonged to; what is left is the part that was worth keeping. See
- * WorkIndex for what shows a project now.
+ * FeaturedWork for what shows a project now.
  */
 
 export type CardProject = {

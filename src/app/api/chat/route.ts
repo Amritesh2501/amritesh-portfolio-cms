@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { ApiError, GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import { briefing } from "@/lib/assistant";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
@@ -7,15 +7,17 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * The portfolio chatbot. Streams plain text back to the widget.
+ * The portfolio chatbot, on Google Gemini. Streams plain text to the widget.
  *
  * A public endpoint that spends money per call, so it is fenced three ways:
  * the input is small and validated, each IP gets a fixed number of questions
  * per window (in Postgres, like the contact form), and the answer is capped.
- * Without ANTHROPIC_API_KEY it answers 503 and the widget is not rendered.
+ * Without GEMINI_API_KEY it answers 503 and the widget says it is offline.
  */
 
-const MODEL = "claude-opus-5-5";
+// The "latest Flash" alias, so the model keeps up without a code change. Pin a
+// specific version with GEMINI_MODEL if answers ever need to stay identical.
+const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 // ponytail: 20 questions per 10 minutes per IP; raise if real visitors hit it.
 const LIMIT = 20;
 const WINDOW_S = 600;
@@ -28,13 +30,13 @@ const Body = z.object({
     .refine((m) => m[0].role === "user" && m[m.length - 1].role === "user", "must start and end with the visitor"),
 });
 
-const client = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
+const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 
 const text = (body: string, status: number) =>
   new Response(body, { status, headers: { "Content-Type": "text/plain; charset=utf-8" } });
 
 export async function POST(req: Request) {
-  if (!client) return text("The assistant is not switched on for this site.", 503);
+  if (!ai) return text("The assistant is not switched on for this site.", 503);
 
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return text("That message could not be read.", 400);
@@ -50,51 +52,48 @@ export async function POST(req: Request) {
   }
 
   const { system } = await briefing();
-
-  const stream = client.beta.messages.stream(
-    {
-      model: MODEL,
-      max_tokens: 4096,
-      // Chat: short factual answers from the briefing, so low effort is plenty.
-      output_config: { effort: "low" },
-      // If a safety classifier declines, the API retries on a fallback model.
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      // The briefing is the same for every visitor until the CMS changes, so
-      // it is cached; only the conversation is new on each question.
-      system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
-      messages: parsed.data.messages,
-    },
-    { signal: req.signal },
-  );
-
   const encoder = new TextEncoder();
+
   const body = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        for await (const event of stream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
+        const stream = await ai.models.generateContentStream({
+          model: MODEL,
+          // Gemini names the assistant's turns "model".
+          contents: parsed.data.messages.map((m) => ({
+            role: m.role === "assistant" ? "model" : "user",
+            parts: [{ text: m.content }],
+          })),
+          config: {
+            // The briefing is the same for every visitor until the CMS
+            // changes, which is what Gemini's implicit caching rewards.
+            systemInstruction: system,
+            maxOutputTokens: 1024,
+            temperature: 0.4,
+            abortSignal: req.signal,
+          },
+        });
+        let wrote = false;
+        for await (const chunk of stream) {
+          const t = chunk.text;
+          if (t) {
+            wrote = true;
+            controller.enqueue(encoder.encode(t));
           }
         }
-        const final = await stream.finalMessage();
-        if (final.stop_reason === "refusal") {
-          controller.enqueue(encoder.encode("I can't help with that one. Ask me about the work instead."));
-        }
+        // Blocked by a safety filter, or nothing came back.
+        if (!wrote) controller.enqueue(encoder.encode("I can't help with that one. Ask me about the work instead."));
       } catch (error) {
         if (!req.signal.aborted) {
           const msg =
-            error instanceof Anthropic.RateLimitError
+            error instanceof ApiError && error.status === 429
               ? "The assistant is busy. Try again in a moment."
               : "Something went wrong answering that.";
-          controller.enqueue(encoder.encode(`\n\n${msg}`));
+          controller.enqueue(encoder.encode(msg));
         }
       } finally {
         controller.close();
       }
-    },
-    cancel() {
-      stream.abort();
     },
   });
 

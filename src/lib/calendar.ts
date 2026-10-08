@@ -54,3 +54,25 @@ export function level(count: number, peak: number): 0 | 1 | 2 | 3 | 4 {
   if (share <= 0.75) return 3;
   return 4;
 }
+
+/**
+ * The days and total out of GitHub's public contributions page
+ * (github.com/users/:user/contributions): each day is a <td data-date> whose
+ * id a <tool-tip> names with "N contributions on ...". Null when the markup
+ * has none of that, which is what a GitHub redesign would look like.
+ */
+export function parseContributions(html: string): { total: number; days: Day[] } | null {
+  const counts = new Map<string, number>();
+  for (const m of html.matchAll(/for="(contribution-day-component-[\d-]+)"[^>]*>\s*(No|[\d,]+) contributions?/g)) {
+    counts.set(m[1], m[2] === "No" ? 0 : Number(m[2].replace(/,/g, "")));
+  }
+  const days: Day[] = [];
+  for (const m of html.matchAll(/<td[^>]*data-date="(\d{4}-\d{2}-\d{2})"[^>]*>/g)) {
+    const id = /id="(contribution-day-component-[\d-]+)"/.exec(m[0])?.[1];
+    days.push({ date: m[1], count: counts.get(id ?? "") ?? 0 });
+  }
+  if (!days.length) return null;
+  days.sort((a, b) => a.date.localeCompare(b.date));
+  const total = Number(/([\d,]+)\s+contributions?\s+in /.exec(html)?.[1]?.replace(/,/g, "") ?? NaN);
+  return { days, total: Number.isFinite(total) ? total : days.reduce((n, d) => n + d.count, 0) };
+}
