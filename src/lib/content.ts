@@ -104,6 +104,23 @@ export const getSocialLinks = cache(async () => {
   });
 });
 
+/**
+ * Whose GitHub to show: the "GitHub username" setting, or failing that the
+ * username in a GitHub social link. The fallback exists because a database
+ * seeded before the setting was added has no such row, and an empty setting
+ * switched the calendar and the dev log off without a word.
+ */
+export const getGitHubUser = cache(async () => {
+  const [settings, socials] = await Promise.all([getSettings(), getSocialLinks()]);
+  const set = settings.get("site.githubUser").trim().replace(/^@/, "");
+  if (set) return set;
+  for (const s of socials) {
+    const m = /^https?:\/\/(?:www\.)?github\.com\/([A-Za-z0-9-]+)\/?$/.exec(s.url.trim());
+    if (m) return m[1];
+  }
+  return "";
+});
+
 export const getProjects = cache(async () => {
   return prisma.project.findMany({
     where: PUBLISHED,

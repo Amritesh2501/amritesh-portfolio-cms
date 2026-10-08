@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getProjects, getSettings } from "@/lib/content";
+import { getGitHubUser, getProjects, getSettings } from "@/lib/content";
 import { getDevLog } from "@/lib/github";
 import { DevLog, type DevLogEntry } from "@/components/site/DevLog";
 import { Reveal } from "@/components/site/Reveal";
@@ -24,8 +24,7 @@ const RECENT_DAYS = 180;
  * published lately). Reached from the nav, not shown on the home page.
  */
 export default async function LogPage() {
-  const settings = await getSettings();
-  const user = settings.get("site.githubUser");
+  const user = await getGitHubUser();
   const [gh, projects] = await Promise.all([getDevLog(user, 30), getProjects()]);
 
   const cut = Date.now() - RECENT_DAYS * 86400000;
