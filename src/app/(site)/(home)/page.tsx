@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Arrow } from "@/components/site/Arrow";
-import { getHomeData } from "@/lib/content";
+import { getGitHubUser, getHomeData } from "@/lib/content";
 import { getGitHubActivity } from "@/lib/github";
 import { Testimonials } from "@/components/site/Testimonials";
 import { Hero } from "@/components/site/Hero";
@@ -50,7 +50,7 @@ export default async function HomePage() {
   const base = await getSiteUrl();
   // Cached by fetch's own revalidate, so this does not cost a round trip on
   // every render of a force-dynamic page.
-  const ghUser = settings.get("site.githubUser");
+  const ghUser = await getGitHubUser();
   const github = await getGitHubActivity(ghUser);
 
   const cards: CardProject[] = projects.map((p) => ({
