@@ -48,13 +48,6 @@ export function ToTop() {
   }, []);
 
   const toTop = () => {
-    const lenis = (window as unknown as {
-      __lenis?: { scrollTo: (target: number) => void };
-    }).__lenis;
-    if (lenis) {
-      lenis.scrollTo(0);
-      return;
-    }
     window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
   };
 

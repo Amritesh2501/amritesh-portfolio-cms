@@ -1,12 +1,10 @@
-import { getNavigationSafe, getSettingsSafe } from "@/lib/content";
+import { getNavigationSafe, getPaletteProjectsSafe, getSettingsSafe } from "@/lib/content";
 import { SiteHeader } from "@/components/site/SiteHeader";
-import { CommandPalette } from "@/components/site/CommandPalette";
 import { BootScreen } from "@/components/site/BootScreen";
 import { ScrollProgress } from "@/components/site/Parallax";
 import { HoverFx } from "@/components/site/HoverFx";
-import { SmoothScroll } from "@/components/site/SmoothScroll";
-import { SiteMist } from "@/components/site/SiteMist";
 import { ToTop } from "@/components/site/ToTop";
+import { ChatBot, CommandPalette } from "@/components/site/LazyChrome";
 
 // Runs before first paint. When a page is framed (the project card previews
 // load case study pages into a window), it drops the site chrome and skips the
@@ -22,10 +20,12 @@ export default async function SiteLayout({
   // error boundary, so a database blip here would replace the whole site with
   // a bare 500. The shell degrades instead, and the page below still surfaces
   // the failure through error.tsx.
-  const [settings, nav] = await Promise.all([
+  const [settings, nav, paletteProjects] = await Promise.all([
     getSettingsSafe(),
     getNavigationSafe("HEADER"),
+    getPaletteProjectsSafe(),
   ]);
+  const hasChat = Boolean(process.env.ANTHROPIC_API_KEY);
 
   const navItems = [
     ...nav.map((item) => ({
@@ -50,9 +50,7 @@ export default async function SiteLayout({
     <div className="fx relative flex min-h-[100dvh] flex-col">
       <script dangerouslySetInnerHTML={{ __html: MARK_EMBED }} />
       <div aria-hidden className="page-wash" />
-      <SiteMist />
       <HoverFx />
-      <SmoothScroll />
 
       {settings.get("site.showIntro", "true") === "true" ? (
         <BootScreen
@@ -81,7 +79,15 @@ export default async function SiteLayout({
       </main>
 
       <ToTop />
-      <CommandPalette navItems={navItems} />
+      {/* Only with a key: a button that cannot answer is worse than none. */}
+      {hasChat ? <ChatBot name={settings.get("site.title", "the author")} /> : null}
+      <CommandPalette
+        navItems={navItems}
+        projects={paletteProjects}
+        hasNow={settings.get("now.body").trim().length > 0}
+        hasChat={hasChat}
+        email={settings.get("site.contactEmail")}
+      />
     </div>
   );
 }

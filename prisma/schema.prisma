@@ -524,3 +524,57 @@ model CaseEvidence {
   @@index([status, displayOrder])
   @@map("case_evidence")
 }
+
+// ---------------------------------------------------------------------------
+// TESTIMONIALS
+// ---------------------------------------------------------------------------
+
+/// What people who worked with the owner say. Shown on the home page.
+model Testimonial {
+  id           String  @id @default(cuid())
+  quote        String  @db.Text
+  name         String
+  role         String?
+  company      String?
+  avatar       String?
+  /// A link to the person (LinkedIn, site) so the quote can be checked.
+  url          String?
+  displayOrder Int     @default(0)
+
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, displayOrder])
+  @@map("testimonials")
+}
+
+// ---------------------------------------------------------------------------
+// VISITOR ANALYTICS
+// ---------------------------------------------------------------------------
+
+/// Page views per path per day. Counters only: no IP, no cookie, no visitor id
+/// is stored anywhere, so there is nothing personal to consent to or leak.
+model PageStat {
+  day   DateTime @db.Date
+  path  String
+  views Int      @default(0)
+
+  @@id([day, path])
+  @@index([day])
+  @@map("page_stats")
+}
+
+/// Where visits came from, per referring site per day. Host only, never the
+/// full referring URL (which can carry search terms or tokens).
+model RefStat {
+  day   DateTime @db.Date
+  host  String
+  views Int      @default(0)
+
+  @@id([day, host])
+  @@index([day])
+  @@map("ref_stats")
+}

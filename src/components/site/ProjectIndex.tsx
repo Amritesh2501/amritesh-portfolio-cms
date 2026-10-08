@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { imgProps } from "@/lib/img";
 import { useMemo, useState } from "react";
 import { Arrow } from "./Arrow";
 import { Empty } from "./Section";
@@ -147,7 +148,7 @@ function IndexCard({
       <span className={`index-thumb plate-${tone}`} aria-hidden>
         {project.preview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={project.preview} alt="" loading="lazy" decoding="async" />
+          <img {...imgProps(project.preview, "(min-width: 1024px) 33vw, 100vw")} alt="" loading="lazy" decoding="async" />
         ) : (
           <span className="t-serif index-thumb-letter">
             {project.title.trim().charAt(0)}

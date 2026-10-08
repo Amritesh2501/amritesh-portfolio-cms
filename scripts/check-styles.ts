@@ -52,7 +52,9 @@ const PREFIXES = [
 ];
 
 const SRC = path.join(import.meta.dirname, "..", "src");
-const CSS = path.join(SRC, "app", "globals.css");
+// The rooms have their own stylesheet (loaded by /experiments only); a class
+// is styled if either file has a rule for it.
+const CSS = [path.join(SRC, "app", "globals.css"), path.join(SRC, "app", "experiments", "rooms.css")];
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -63,7 +65,7 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-const css = readFileSync(CSS, "utf8");
+const css = CSS.map((f) => readFileSync(f, "utf8")).join("\n");
 
 /**
  * Defined as a rule anywhere in the stylesheet.

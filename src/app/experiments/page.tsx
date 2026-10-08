@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCaseRoomData, getSettings } from "@/lib/content";
 import { ExperimentsIntro } from "@/components/site/ExperimentsIntro";
+import "./rooms.css";
 
 export const dynamic = "force-dynamic";
 

@@ -1,5 +1,6 @@
 import type { HomeData } from "@/lib/content";
 import { plainText } from "@/lib/utils";
+import { imgProps } from "@/lib/img";
 import { Markdown } from "./Markdown";
 import { Parallax } from "./Parallax";
 import { Reveal, RevealGroup, RevealItem, ScrollLitText } from "./Reveal";
@@ -50,7 +51,7 @@ export function About({ profile }: { profile: Profile }) {
                 {/* Plain img: the portrait URL can be any host set in the CMS. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={profile.profileImage}
+                  {...imgProps(profile.profileImage, "(min-width: 1024px) 30vw, 80vw")}
                   alt={profile.name}
                   loading="lazy"
                   decoding="async"

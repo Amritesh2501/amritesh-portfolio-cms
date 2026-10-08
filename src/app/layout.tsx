@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EB_Garamond, Geist, JetBrains_Mono } from "next/font/google";
 import { getSettings } from "@/lib/content";
 import "./globals.css";
+import { Track } from "@/components/site/Track";
 
 // Geist, not Inter: the same neutral-grotesque clarity with a little more
 // character in the numerals and a tighter display cut, which the big headings
@@ -45,7 +46,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = settings.get("seo.title", "Portfolio");
   const description = settings.get("seo.description", "");
   const canonical = settings.get("seo.canonicalUrl") || SITE_URL;
-  const ogImage = settings.get("seo.ogImage");
+  // An uploaded share image wins; otherwise the card drawn at /og.
+  const ogImage = settings.get("seo.ogImage") || "/og";
   const favicon = settings.get("seo.favicon");
   const robots = settings.get("seo.robots", "index,follow");
   const twitterHandle = settings.get("seo.twitterHandle");
@@ -183,7 +185,10 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInit(defaultMode) }} />
         <script dangerouslySetInnerHTML={{ __html: GRADE_DEVICE }} />
       </head>
-      <body className={effects}>{children}</body>
+      <body className={effects}>
+        {children}
+        <Track />
+      </body>
     </html>
   );
 }

@@ -3,7 +3,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Command = { id: string; label: string; hint: string; run: () => void };
+type Command = { id: string; label: string; hint: string; run: () => void; keywords?: string };
+
+export type PaletteProject = { slug: string; title: string; keywords: string };
+
+/** The home page's sections, in page order. Ones missing from the page are harmless: the jump does nothing. */
+const SECTIONS = [
+  ["work", "Selected work"],
+  ["about", "About"],
+  ["experience", "Experience"],
+  ["testimonials", "Kind words"],
+  ["stack", "Stack and GitHub"],
+  ["log", "Dev log"],
+  ["contact", "Contact"],
+] as const;
 
 /**
  * Cmd/Ctrl+K. Motivated: this is a developer portfolio and its audience already
@@ -12,8 +25,18 @@ type Command = { id: string; label: string; hint: string; run: () => void };
  */
 export function CommandPalette({
   navItems,
+  projects = [],
+  hasNow = false,
+  hasChat = false,
+  email = "",
 }: {
   navItems: { id: string; label: string; href: string }[];
+  /** Every published project, to jump straight to its case study. */
+  projects?: PaletteProject[];
+  hasNow?: boolean;
+  /** The assistant is switched on: offer to ask it whatever was typed. */
+  hasChat?: boolean;
+  email?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -41,7 +64,36 @@ export function CommandPalette({
         hint: "section",
         run: go(item.href),
       })),
+      ...SECTIONS.filter(([id]) => !navItems.some((n) => n.href === `/#${id}`)).map(([id, label]) => ({
+        id: `section-${id}`,
+        label,
+        hint: "section",
+        run: go(`/#${id}`),
+      })),
+      ...projects.map((pr) => ({
+        id: `project-${pr.slug}`,
+        label: pr.title,
+        hint: "project",
+        keywords: pr.keywords,
+        run: go(`/projects/${pr.slug}`),
+      })),
       { id: "all-projects", label: "All projects", hint: "page", run: go("/projects") },
+      ...(hasNow ? [{ id: "now", label: "What I'm doing now", hint: "page", keywords: "now current", run: go("/now") }] : []),
+      { id: "experiments", label: "Experiments (the case room)", hint: "page", keywords: "game play", run: go("/experiments") },
+      ...(email
+        ? [
+            {
+              id: "copy-email",
+              label: `Copy email (${email})`,
+              hint: "action",
+              keywords: "contact mail",
+              run: () => {
+                void navigator.clipboard?.writeText(email);
+                setOpen(false);
+              },
+            },
+          ]
+        : []),
       { id: "cms", label: "Open CMS", hint: "admin", run: go("/admin") },
       {
         id: "top",
@@ -53,13 +105,26 @@ export function CommandPalette({
         },
       },
     ];
-  }, [navItems, router]);
+  }, [navItems, router, projects, hasNow, email]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return commands;
-    return commands.filter((c) => c.label.toLowerCase().includes(q));
-  }, [commands, query]);
+    const hits = commands.filter((c) => `${c.label} ${c.keywords ?? ""}`.toLowerCase().includes(q));
+    // Whatever was typed can also go to the assistant, as the last option.
+    if (hasChat && q.length > 2) {
+      hits.push({
+        id: "ask",
+        label: `Ask: "${query.trim()}"`,
+        hint: "assistant",
+        run: () => {
+          setOpen(false);
+          window.dispatchEvent(new CustomEvent("chatbot:ask", { detail: query.trim() }));
+        },
+      });
+    }
+    return hits;
+  }, [commands, query, hasChat]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -117,7 +182,7 @@ export function CommandPalette({
                 results[cursor]?.run();
               }
             }}
-            placeholder="Jump to"
+            placeholder={hasChat ? "Jump to a page or project, or ask a question" : "Jump to a page or project"}
             aria-label="Search commands"
             className="w-full bg-transparent py-3.5 text-[0.9375rem] tracking-[-0.012em] text-[var(--fg)] outline-none placeholder:text-[var(--muted)]"
           />

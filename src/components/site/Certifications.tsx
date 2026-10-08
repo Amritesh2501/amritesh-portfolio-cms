@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { imgProps } from "@/lib/img";
 import { Arrow } from "./Arrow";
 import type { HomeData } from "@/lib/content";
 import { Reveal, RevealGroup, RevealItem } from "./Reveal";
@@ -97,7 +98,7 @@ export function Certifications({ certifications }: { certifications: Cert[] }) {
                 {cert.certificateImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={cert.certificateImage}
+                    {...imgProps(cert.certificateImage, "(min-width: 768px) 25vw, 50vw")}
                     alt=""
                     loading="lazy"
                     decoding="async"
@@ -141,7 +142,7 @@ export function Certifications({ certifications }: { certifications: Cert[] }) {
       <div ref={floatRef} aria-hidden className="cert-float">
         <div className={`cert-float-card ${shown ? "is-shown" : ""}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {src ? <img src={src} alt="" decoding="async" /> : null}
+          {src ? <img {...imgProps(src, "90vw")} alt="" decoding="async" /> : null}
         </div>
       </div>
     </div>

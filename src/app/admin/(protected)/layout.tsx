@@ -46,6 +46,7 @@ export default async function AdminLayout({
     {
       title: "System",
       links: [
+        { href: "/admin/analytics", label: "Analytics" },
         { href: "/admin/media", label: "Media" },
         { href: "/admin/messages", label: "Messages", badge: unread || undefined },
       ],
