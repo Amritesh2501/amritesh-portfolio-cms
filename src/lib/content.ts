@@ -79,6 +79,15 @@ export async function getPaletteProjectsSafe() {
   }
 }
 
+/** Whether any "Currently working on" entry is published (for the nav). */
+export async function hasCurrentWorkSafe() {
+  try {
+    return (await prisma.currentWork.count({ where: PUBLISHED })) > 0;
+  } catch {
+    return false;
+  }
+}
+
 export async function getProfileSafe() {
   try {
     return await getProfile();

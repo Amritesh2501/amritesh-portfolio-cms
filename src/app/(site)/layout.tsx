@@ -1,4 +1,4 @@
-import { getNavigationSafe, getPaletteProjectsSafe, getSettingsSafe } from "@/lib/content";
+import { getNavigationSafe, getPaletteProjectsSafe, getSettingsSafe, hasCurrentWorkSafe } from "@/lib/content";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { BootScreen } from "@/components/site/BootScreen";
 import { ScrollProgress } from "@/components/site/Parallax";
@@ -20,20 +20,35 @@ export default async function SiteLayout({
   // error boundary, so a database blip here would replace the whole site with
   // a bare 500. The shell degrades instead, and the page below still surfaces
   // the failure through error.tsx.
-  const [settings, nav, paletteProjects] = await Promise.all([
+  const [settings, nav, paletteProjects, building] = await Promise.all([
     getSettingsSafe(),
     getNavigationSafe("HEADER"),
     getPaletteProjectsSafe(),
+    hasCurrentWorkSafe(),
   ]);
   const hasChat = Boolean(process.env.GEMINI_API_KEY);
 
+  const cmsNav = nav.map((item) => ({
+    id: item.id,
+    label: item.label,
+    href: item.href,
+    external: item.external,
+  }));
+  // "Currently working" goes in right before the work section, and only when
+  // something is published: a link to a section that is not on the page goes
+  // nowhere. Added in code so it needs no navigation row in the CMS.
+  if (building && !cmsNav.some((n) => n.href === "/#now-building")) {
+    const at = cmsNav.findIndex((n) => n.href === "/#work" || n.href === "/projects");
+    cmsNav.splice(at < 0 ? cmsNav.length : at, 0, {
+      id: "now-building",
+      label: "Currently working",
+      href: "/#now-building",
+      external: false,
+    });
+  }
+
   const navItems = [
-    ...nav.map((item) => ({
-      id: item.id,
-      label: item.label,
-      href: item.href,
-      external: item.external,
-    })),
+    ...cmsNav,
     // Appended in code rather than seeded as a CMS row, because it is not a
     // section of this page: it opens in its own tab, and deleting it from
     // admin would leave the route reachable with nothing pointing at it.

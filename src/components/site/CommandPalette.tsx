@@ -9,8 +9,8 @@ export type PaletteProject = { slug: string; title: string; keywords: string };
 
 /** The home page's sections, in page order. Ones missing from the page are harmless: the jump does nothing. */
 const SECTIONS = [
-  ["work", "Selected work"],
   ["now-building", "Currently working on"],
+  ["work", "Selected work"],
   ["about", "About"],
   ["experience", "Experience"],
   ["testimonials", "Kind words"],

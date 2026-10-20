@@ -143,6 +143,12 @@ export default async function HomePage() {
         </div>
       ) : null}
 
+      {currentWork.length > 0 ? (
+        <Section id="now-building" label="Currently working on">
+          <CurrentWork items={currentWork} pulses={pulses} />
+        </Section>
+      ) : null}
+
       <Section id="work" label="Selected work">
         {shown.length > 0 ? (
           <FeaturedWork projects={shown} />
@@ -151,12 +157,6 @@ export default async function HomePage() {
         )}
         {cards.length > 0 ? <AllProjectsRow rest={rest} /> : null}
       </Section>
-
-      {currentWork.length > 0 ? (
-        <Section id="now-building" label="Currently working on">
-          <CurrentWork items={currentWork} pulses={pulses} />
-        </Section>
-      ) : null}
 
       <Section id="about" label="About" intro={profile.heroDescription ?? undefined}>
         <About profile={profile} />
