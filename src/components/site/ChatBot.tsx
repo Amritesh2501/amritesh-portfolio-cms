@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SUGGESTIONS } from "@/lib/chat";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const SUGGESTIONS = [
-  "What do they work on now?",
-  "Which project should I look at first?",
-  "What is their tech stack?",
-  "Are they open to work?",
-];
 
 /**
  * Ask the portfolio. A launcher in the corner, a small panel, answers streamed
