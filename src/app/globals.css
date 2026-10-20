@@ -846,6 +846,11 @@ html {
     align-items: flex-start;
   }
 
+  .gh-wrap,
+  .gh-card {
+    min-width: 0;
+  }
+
   .gh-card {
     flex: 1;
     min-width: 0;
@@ -856,8 +861,13 @@ html {
   }
 
   .gh-scroll {
-    /* Scrolls rather than shrinking below legibility on a phone. */
+    /* Scrolls rather than shrinking below legibility on a phone. The
+       containment is what lets it: without it the grid's full width (about
+       760px) became this box's minimum, every ancestor grew to fit, and a
+       phone zoomed the whole page out to half size. */
     overflow-x: auto;
+    contain: inline-size;
+    max-width: 100%;
     padding-bottom: 0.25rem;
   }
 
@@ -3522,4 +3532,13 @@ a.tm-name:focus-visible {
 
 .cw-week {
   white-space: nowrap;
+}
+
+/* The site's root column. Decorations that bleed past the edge on purpose
+   (the contact ripples, the hero water) are cut off at the viewport rather
+   than widening the page; on a phone a wider page means the browser zooms the
+   whole site out. `clip`, not `hidden`, so it is not a scroll container and
+   sticky elements inside still stick. */
+.fx {
+  overflow-x: clip;
 }
