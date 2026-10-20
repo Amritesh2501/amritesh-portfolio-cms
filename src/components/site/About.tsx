@@ -45,7 +45,9 @@ export function About({ profile }: { profile: Profile }) {
     <div className="grid gap-14 lg:grid-cols-12 lg:gap-20">
       <aside className="lg:sticky lg:top-28 lg:col-span-5 lg:self-start">
         <Reveal>
-          <figure className="about-portrait">
+          {/* Focusable so a tap (no hover on a phone) or a keyboard can reveal
+              the photo too. */}
+          <figure className="about-portrait" tabIndex={profile.profileImage ? 0 : undefined}>
             {profile.profileImage ? (
               <Parallax speed={0.08} className="absolute inset-x-0 inset-y-[-10%]">
                 {/* Plain img: the portrait URL can be any host set in the CMS. */}
@@ -63,6 +65,11 @@ export function About({ profile }: { profile: Profile }) {
                 {initials}
               </span>
             )}
+            {profile.profileImage ? (
+              <span aria-hidden className="about-reveal t-meta">
+                Hover to reveal
+              </span>
+            ) : null}
             <span aria-hidden className="about-tint" />
             <figcaption className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
               <p className="t-serif pb-1 text-[clamp(2.25rem,4vw,3.25rem)] leading-[1.1] text-[#efe7ff]">
