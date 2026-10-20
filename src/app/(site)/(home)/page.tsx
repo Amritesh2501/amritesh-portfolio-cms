@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Arrow } from "@/components/site/Arrow";
 import { getGitHubUser, getHomeData } from "@/lib/content";
-import { getGitHubActivity } from "@/lib/github";
+import { getGitHubActivity, getRepoPulse } from "@/lib/github";
+import { CurrentWork } from "@/components/site/CurrentWork";
 import { Testimonials } from "@/components/site/Testimonials";
 import { Hero } from "@/components/site/Hero";
 import { Empty, Section } from "@/components/site/Section";
@@ -30,6 +31,7 @@ export default async function HomePage() {
     achievements,
     socials,
     testimonials,
+    currentWork,
   } = await getHomeData();
 
   if (!profile) {
@@ -51,7 +53,11 @@ export default async function HomePage() {
   // Cached by fetch's own revalidate, so this does not cost a round trip on
   // every render of a force-dynamic page.
   const ghUser = await getGitHubUser();
-  const github = await getGitHubActivity(ghUser);
+  const [github, pulseList] = await Promise.all([
+    getGitHubActivity(ghUser),
+    Promise.all(currentWork.map((w) => getRepoPulse(w.repoUrl))),
+  ]);
+  const pulses = Object.fromEntries(currentWork.map((w, i) => [w.id, pulseList[i]]));
 
   const cards: CardProject[] = projects.map((p) => ({
     id: p.id,
@@ -145,6 +151,12 @@ export default async function HomePage() {
         )}
         {cards.length > 0 ? <AllProjectsRow rest={rest} /> : null}
       </Section>
+
+      {currentWork.length > 0 ? (
+        <Section id="now-building" label="Currently working on">
+          <CurrentWork items={currentWork} pulses={pulses} />
+        </Section>
+      ) : null}
 
       <Section id="about" label="About" intro={profile.heroDescription ?? undefined}>
         <About profile={profile} />
