@@ -578,3 +578,72 @@ model RefStat {
   @@index([day])
   @@map("ref_stats")
 }
+
+// ---------------------------------------------------------------------------
+// CURRENTLY WORKING ON
+// ---------------------------------------------------------------------------
+
+/// Something in progress right now: what it is, where it has got to, and
+/// what is next. Shown on the home page under the selected work.
+model CurrentWork {
+  id           String    @id @default(cuid())
+  title        String
+  /// One line under the title.
+  tagline      String?
+  /// What it is and why it is being built.
+  summary      String    @db.Text
+  cover        String?
+  /// IDEA | PLANNING | DESIGN | BUILDING | TESTING | LAUNCHING
+  stage        String    @default("BUILDING")
+  /// ON_TRACK | AHEAD | AT_RISK | BLOCKED | PAUSED
+  health       String    @default("ON_TRACK")
+  /// 0-100.
+  progress     Int       @default(0)
+  startedAt    DateTime?
+  targetDate   DateTime?
+  /// What changed lately, in a sentence or two.
+  latestUpdate String?   @db.Text
+  /// The very next step.
+  nextUp       String?
+  repoUrl      String?
+  previewUrl   String?
+  technologies String[]  @default([])
+  displayOrder Int       @default(0)
+
+  images     CurrentWorkImage[]
+  milestones CurrentWorkMilestone[]
+
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, displayOrder])
+  @@map("current_work")
+}
+
+model CurrentWorkImage {
+  id           String      @id @default(cuid())
+  url          String
+  caption      String?
+  displayOrder Int         @default(0)
+  workId       String
+  work         CurrentWork @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@index([workId, displayOrder])
+  @@map("current_work_images")
+}
+
+model CurrentWorkMilestone {
+  id           String      @id @default(cuid())
+  label        String
+  done         Boolean     @default(false)
+  dueDate      DateTime?
+  displayOrder Int         @default(0)
+  workId       String
+  work         CurrentWork @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@index([workId, displayOrder])
+  @@map("current_work_milestones")
+}

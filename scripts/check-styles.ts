@@ -49,6 +49,7 @@ const PREFIXES = [
   "xt-", // and the backlog board
   "mg-", // the minigames
   "fw-", // selected work on the front page
+  "cw-", // currently working on
 ];
 
 const SRC = path.join(import.meta.dirname, "..", "src");

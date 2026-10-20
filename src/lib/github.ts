@@ -2,7 +2,7 @@ import "server-only";
 import { parseContributions } from "./calendar";
 
 /**
- * Live GitHub activity: the contribution calendar, and the dev log.
+ * Live GitHub activity: the contribution calendar, and a pulse per repo.
  *
  * The calendar has two sources, because the good one is not free of charge in
  * credentials:
@@ -15,10 +15,6 @@ import { parseContributions } from "./calendar";
  *    the last ninety days. It is NOT the contribution graph, and the UI says so:
  *    it counts public events on public repositories, at most ninety days back.
  *
- * The dev log is REST: the most recently pushed repositories, their newest
- * commits, and the ones created lately. It works without a token (60 requests
- * an hour per server IP, comfortably inside that with the cache below) and
- * gets 5,000 with one.
  *
  * Everything fails soft. A portfolio does not go down because GitHub is having
  * an afternoon: every error returns null or an empty list and the section stops
@@ -45,8 +41,6 @@ const HEADERS: Record<string, string> = { "User-Agent": "portfolio-site", Accept
 // Long enough that a reload does not spend the hourly budget, short enough to
 // still read as live.
 const REVALIDATE = 1800;
-/** The dev log refreshes faster: it is the part people check for news. */
-const LOG_REVALIDATE = 900;
 /** How many past calendar years to offer, besides the rolling one. */
 const MAX_YEARS = 5;
 
@@ -213,105 +207,6 @@ async function fetchYears(user: string): Promise<ContributionYear[] | null> {
 }
 
 /* ---------------------------------------------------------------------------
-   Dev log: what was started and what was pushed, newest first
-   ------------------------------------------------------------------------- */
-
-export type LogEntry = {
-  id: string;
-  kind: "new-repo" | "commits";
-  repo: string;
-  url: string;
-  at: string;
-  title: string;
-  /** Commit subjects for a push; the description for a new repository. */
-  lines: string[];
-  language?: string | null;
-};
-
-type Repo = {
-  name: string;
-  full_name: string;
-  html_url: string;
-  description: string | null;
-  fork: boolean;
-  archived: boolean;
-  created_at: string;
-  pushed_at: string;
-  language: string | null;
-};
-
-type Commit = {
-  sha: string;
-  html_url: string;
-  commit: { message: string; author?: { date?: string } };
-  author?: { login?: string } | null;
-};
-
-/** How far back a repository counts as "new". */
-const NEW_REPO_DAYS = 120;
-
-export async function getDevLog(user: string, limit = 10): Promise<LogEntry[]> {
-  if (!user) return [];
-  const repos = await getJson<Repo[]>(
-    `https://api.github.com/users/${encodeURIComponent(user)}/repos?sort=pushed&per_page=12&type=owner`,
-    LOG_REVALIDATE,
-  );
-  if (!repos) return [];
-
-  const own = repos.filter((r) => !r.fork && !r.archived);
-  const entries: LogEntry[] = [];
-  const cutoff = Date.now() - NEW_REPO_DAYS * 86400000;
-
-  for (const r of own) {
-    if (new Date(r.created_at).getTime() >= cutoff) {
-      entries.push({
-        id: `repo:${r.full_name}`,
-        kind: "new-repo",
-        repo: r.name,
-        url: r.html_url,
-        at: r.created_at,
-        title: `Started ${r.name}`,
-        lines: r.description ? [r.description] : [],
-        language: r.language,
-      });
-    }
-  }
-
-  // The newest commits on the five most recently pushed repositories, grouped
-  // per repository per day so one busy afternoon is one entry, not twelve.
-  const pushed = own.slice(0, 5);
-  const commits = await Promise.all(
-    pushed.map((r) =>
-      getJson<Commit[]>(`https://api.github.com/repos/${r.full_name}/commits?per_page=8`, LOG_REVALIDATE),
-    ),
-  );
-
-  pushed.forEach((r, i) => {
-    const groups = new Map<string, Commit[]>();
-    for (const c of commits[i] ?? []) {
-      const date = c.commit.author?.date ?? r.pushed_at;
-      const key = date.slice(0, 10);
-      groups.set(key, [...(groups.get(key) ?? []), c]);
-    }
-    for (const [day, list] of groups) {
-      const subjects = list.map((c) => c.commit.message.split("\n")[0].trim()).filter(Boolean);
-      entries.push({
-        id: `commits:${r.full_name}:${day}`,
-        kind: "commits",
-        repo: r.name,
-        url: list.length === 1 ? list[0].html_url : `${r.html_url}/commits`,
-        at: list[0].commit.author?.date ?? r.pushed_at,
-        title: `${list.length} commit${list.length === 1 ? "" : "s"} to ${r.name}`,
-        lines: subjects.slice(0, 4),
-        language: r.language,
-      });
-    }
-  });
-
-  return entries.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
-}
-
-/* ---------------------------------------------------------------------------
    Calendar without a token: the public contributions page
    ------------------------------------------------------------------------- */
 
@@ -355,4 +250,50 @@ async function scrapeYears(user: string): Promise<ContributionYear[] | null> {
     if (p) out.push({ label: String(y), total: p.total, days: p.days.filter((d) => d.date.startsWith(String(y))) });
   });
   return out;
+}
+
+/* ---------------------------------------------------------------------------
+   A repository's pulse, for "Currently working on"
+   ------------------------------------------------------------------------- */
+
+export type RepoPulse = {
+  /** When the newest commit was made. */
+  at: string;
+  message: string;
+  url: string;
+  /** Commits in the last seven days (capped at 100). */
+  week: number;
+};
+
+type Commit = { html_url: string; commit: { message: string; author?: { date?: string } } };
+
+/** owner/name from a github.com repository link, or null for anything else. */
+export function repoOf(url: string | null | undefined): string | null {
+  const m = /^https?:\/\/(?:www\.)?github\.com\/([A-Za-z0-9-]+\/[A-Za-z0-9._-]+?)(?:\.git)?\/?$/.exec(url?.trim() ?? "");
+  return m ? m[1] : null;
+}
+
+/**
+ * The newest commit and the last week's count, so an in-progress project can
+ * show that it is actually moving. Null for non-GitHub links, private repos
+ * or an unreachable API; the card simply leaves the line out.
+ */
+export async function getRepoPulse(url: string | null | undefined): Promise<RepoPulse | null> {
+  const repo = repoOf(url);
+  if (!repo) return null;
+  // Rounded to the day so the URL (and so the cache entry) is stable for 24h.
+  const since = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const recent = await getJson<Commit[]>(
+    `https://api.github.com/repos/${repo}/commits?since=${since}T00:00:00Z&per_page=100`,
+    900,
+  );
+  const latest = recent?.length ? recent : await getJson<Commit[]>(`https://api.github.com/repos/${repo}/commits?per_page=1`, 900);
+  const c = latest?.[0];
+  if (!c?.commit.author?.date) return null;
+  return {
+    at: c.commit.author.date,
+    message: c.commit.message.split("\n")[0].trim(),
+    url: c.html_url,
+    week: recent?.length ?? 0,
+  };
 }

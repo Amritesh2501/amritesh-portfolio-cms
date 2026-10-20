@@ -2382,114 +2382,6 @@ html {
 }
 
 /* ---------------------------------------------------------------------------
-   Dev log (components/site/DevLog)
-   ------------------------------------------------------------------------- */
-
-.dl-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid var(--line);
-}
-
-.dl-item {
-  display: grid;
-  grid-template-columns: 8.5rem 1fr;
-  gap: 1.5rem;
-  padding: 1.5rem 0;
-  border-bottom: 1px solid var(--line);
-}
-
-@media (max-width: 640px) {
-  .dl-item {
-    grid-template-columns: 1fr;
-    gap: 0.4rem;
-  }
-}
-
-.dl-when {
-  padding-top: 0.2rem;
-  font-size: 0.75rem;
-  color: var(--muted);
-}
-
-.dl-body {
-  display: grid;
-  gap: 0.45rem;
-  min-width: 0;
-}
-
-.dl-kind {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-  margin: 0;
-}
-
-.dl-tag {
-  padding: 0.12rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.6875rem;
-  letter-spacing: 0.04em;
-  color: var(--fg);
-  background: color-mix(in srgb, var(--fg) 8%, transparent);
-}
-
-.dl-tag.is-new-repo {
-  background: color-mix(in srgb, var(--accent) 30%, transparent);
-}
-
-.dl-tag.is-case-study {
-  background: var(--accent);
-  color: #150a26;
-}
-
-.dl-lang {
-  font-size: 0.75rem;
-  color: var(--muted);
-}
-
-.dl-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: fit-content;
-  font-size: 1.125rem;
-  letter-spacing: -0.015em;
-  color: var(--fg);
-  transition: color 0.2s ease;
-}
-
-.dl-title:hover,
-.dl-title:focus-visible {
-  color: var(--accent-ink);
-}
-
-.dl-arrow {
-  color: var(--accent-ink);
-}
-
-.dl-lines {
-  display: grid;
-  gap: 0.2rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 0.9375rem;
-  color: var(--muted);
-}
-
-.dl-lines li {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dl-lines li::before {
-  content: "– ";
-}
-
-/* ---------------------------------------------------------------------------
    Ask the portfolio (components/site/ChatBot)
    ------------------------------------------------------------------------- */
 
@@ -3086,4 +2978,503 @@ a.tm-name:focus-visible {
   .fw-card:hover .fw-media img {
     transform: none;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Currently working on (components/site/CurrentWork)
+
+   One card per project in progress: the gallery on one side, the state of
+   the work on the other. Progress and time used sit together so they can be
+   read against each other; the stage road shows where it is from idea to
+   launch.
+   ------------------------------------------------------------------------- */
+
+.cw {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.cw-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--fg) 2.5%, var(--bg));
+}
+
+@media (max-width: 960px) {
+  .cw-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Gallery */
+
+.cw-gallery {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 100%;
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+}
+
+.cw-stage {
+  position: relative;
+  min-height: 20rem;
+  margin: 0;
+  overflow: hidden;
+}
+
+.cw-stage img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  animation: cw-in 0.45s var(--ease-out);
+}
+
+@keyframes cw-in {
+  from { opacity: 0; transform: scale(1.02); }
+}
+
+.cw-blank {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 7rem;
+  color: var(--accent-ink);
+}
+
+.cw-caption {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  max-width: calc(100% - 1.5rem);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(6px);
+  font-size: 0.8125rem;
+  color: var(--fg);
+}
+
+.cw-thumbs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+}
+
+.cw-thumb {
+  flex: none;
+  width: 4.5rem;
+  aspect-ratio: 16 / 10;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: none;
+  opacity: 0.65;
+  cursor: pointer;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.cw-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cw-thumb:hover,
+.cw-thumb:focus-visible,
+.cw-thumb.is-on {
+  opacity: 1;
+  border-color: var(--accent);
+}
+
+/* Body */
+
+.cw-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.cw-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+}
+
+.cw-health,
+.cw-stage-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cw-health::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.cw-health.is-good {
+  background: color-mix(in srgb, #3fbf7f 18%, transparent);
+  color: #3fbf7f;
+}
+
+.cw-health.is-good::before {
+  animation: cw-beat 1.8s ease-in-out infinite;
+}
+
+@keyframes cw-beat {
+  50% { box-shadow: 0 0 0 5px color-mix(in srgb, #3fbf7f 25%, transparent); }
+}
+
+.cw-health.is-warn {
+  background: color-mix(in srgb, #e0a43b 20%, transparent);
+  color: #d99a2b;
+}
+
+.cw-health.is-bad {
+  background: color-mix(in srgb, #e5534b 18%, transparent);
+  color: #e5534b;
+}
+
+.cw-health.is-idle {
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  color: var(--muted);
+}
+
+.cw-stage-pill {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--fg);
+}
+
+.cw-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.4vw, 2.6rem);
+  line-height: 1.08;
+  color: var(--fg);
+}
+
+.cw-tagline {
+  margin: -0.4rem 0 0;
+  font-size: 1.0625rem;
+  color: var(--accent-ink);
+}
+
+.cw-summary {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+/* Progress, and time used beside it */
+
+.cw-progress {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.cw-progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.cw-pct {
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--fg);
+}
+
+.cw-bar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fg) 9%, transparent);
+}
+
+.cw-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 65%, transparent), var(--accent));
+  transform-origin: left;
+  animation: cw-grow 1.2s var(--ease-out) both;
+}
+
+@keyframes cw-grow {
+  from { transform: scaleX(0); }
+}
+
+.cw-time {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.cw-time-bar {
+  flex: none;
+  width: 5rem;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fg) 9%, transparent);
+}
+
+.cw-time-bar span {
+  display: block;
+  height: 100%;
+  background: var(--muted);
+}
+
+/* The road from idea to launch */
+
+.cw-road {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cw-road li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  text-align: center;
+}
+
+/* The line between dots, drawn from each dot to the next. */
+.cw-road li + li::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: color-mix(in srgb, var(--fg) 12%, transparent);
+}
+
+.cw-road li.is-done + li::before,
+.cw-road li.is-done + li.is-now::before {
+  background: var(--accent);
+}
+
+.cw-road-dot {
+  position: relative;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  border: 2px solid color-mix(in srgb, var(--fg) 25%, transparent);
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.cw-road li.is-done .cw-road-dot {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.cw-road li.is-now .cw-road-dot {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.cw-road-label {
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.cw-road li.is-now .cw-road-label {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+@media (max-width: 520px) {
+  .cw-road-label {
+    font-size: 0.5625rem;
+  }
+}
+
+/* Facts */
+
+.cw-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cw-facts dt {
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.cw-facts dd {
+  display: grid;
+  margin: 0.2rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--fg);
+}
+
+.cw-left {
+  font-size: 0.75rem;
+  color: var(--accent-ink);
+}
+
+.cw-left.is-over {
+  color: #e5534b;
+}
+
+/* Milestones */
+
+.cw-milestones {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cw-milestones li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9375rem;
+  color: var(--fg);
+}
+
+.cw-milestones li.is-done > span:nth-child(2) {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent);
+}
+
+.cw-check {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 1.5px solid color-mix(in srgb, var(--fg) 30%, transparent);
+  border-radius: 5px;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.cw-milestones li.is-done .cw-check {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #150a26;
+}
+
+.cw-due {
+  margin-left: auto;
+  font-size: 0.6875rem;
+}
+
+/* Notes, pulse, links */
+
+.cw-notes {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.cw-notes p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--fg);
+}
+
+.cw-note-k {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+
+.cw-pulse {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.cw-pulse a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--fg) 30%, transparent);
+  text-underline-offset: 3px;
+}
+
+.cw-pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background: #3fbf7f;
+  vertical-align: middle;
+  animation: cw-beat 1.8s ease-in-out infinite;
+}
+
+.cw-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: auto 0 0;
+}
+
+.cw-links .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-stage img,
+  .cw-fill,
+  .cw-health.is-good::before,
+  .cw-pulse-dot {
+    animation: none;
+  }
+}
+
+.cw-week {
+  white-space: nowrap;
 }

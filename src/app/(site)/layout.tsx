@@ -38,9 +38,6 @@ export default async function SiteLayout({
     // section of this page: it opens in its own tab, and deleting it from
     // admin would leave the route reachable with nothing pointing at it.
     // external drives target="_blank" in both the header and the palette.
-    // Its own page rather than a home-page section: the home page is the
-    // portfolio, the log is for people who want to see the work move.
-    { id: "log", label: "Dev log", href: "/log", external: false },
     {
       id: "experiments",
       label: "Experiments",

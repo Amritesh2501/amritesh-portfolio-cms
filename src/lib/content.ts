@@ -108,7 +108,7 @@ export const getSocialLinks = cache(async () => {
  * Whose GitHub to show: the "GitHub username" setting, or failing that the
  * username in a GitHub social link. The fallback exists because a database
  * seeded before the setting was added has no such row, and an empty setting
- * switched the calendar and the dev log off without a word.
+ * switched the calendar off without a word.
  */
 export const getGitHubUser = cache(async () => {
   const [settings, socials] = await Promise.all([getSettings(), getSocialLinks()]);
@@ -202,6 +202,17 @@ export const getAchievements = cache(async () => {
   });
 });
 
+export const getCurrentWork = cache(async () => {
+  return prisma.currentWork.findMany({
+    where: PUBLISHED,
+    orderBy: { displayOrder: "asc" },
+    include: {
+      images: { orderBy: { displayOrder: "asc" } },
+      milestones: { orderBy: { displayOrder: "asc" } },
+    },
+  });
+});
+
 export const getTestimonials = cache(async () => {
   return prisma.testimonial.findMany({
     where: PUBLISHED,
@@ -283,6 +294,7 @@ export async function getHomeData() {
     achievements,
     socials,
     testimonials,
+    currentWork,
   ] = await Promise.all([
     getProfile(),
     getSettings(),
@@ -295,6 +307,7 @@ export async function getHomeData() {
     getAchievements(),
     getSocialLinks(),
     getTestimonials(),
+    getCurrentWork(),
   ]);
 
   return {
@@ -309,6 +322,7 @@ export async function getHomeData() {
     achievements,
     socials,
     testimonials,
+    currentWork,
   };
 }
 

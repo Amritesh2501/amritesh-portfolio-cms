@@ -36,6 +36,7 @@
     "check:games": "tsx scripts/check-games.ts",
     "check:calendar": "tsx scripts/check-calendar.ts",
     "check:analytics": "tsx scripts/check-analytics.ts",
+    "check:current": "tsx scripts/check-current.ts",
     "room": "tsx --tsconfig scripts/tsconfig.json scripts/render-room.ts"
   },
   "prisma": {
